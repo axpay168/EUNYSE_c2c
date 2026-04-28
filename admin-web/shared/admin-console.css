@@ -1,0 +1,2584 @@
+/**
+ * EURNYSE 後台指揮台 — 靜態原型樣式
+ * Token 對齊 docs/design/DESIGN.md
+ */
+:root {
+  --ac-canvas: #f6fbff;
+  --ac-subtle: #edf5fc;
+  --ac-surface: #ffffff;
+  --ac-surface-2: #f4f9fe;
+  --ac-border: rgba(30, 79, 162, 0.12);
+  --ac-border-mid: rgba(30, 79, 162, 0.18);
+  --ac-text: #13273d;
+  --ac-text-2: #49637b;
+  --ac-text-3: #6b8095;
+  --ac-brand: #3e8fd8;
+  --ac-brand-dim: #2b69c5;
+  --ac-navy: #163b79;
+  --ac-ice: #eaf8ff;
+  --ac-shadow: 0 12px 32px rgba(22, 59, 121, 0.08);
+  --ac-shadow-soft: 0 4px 16px rgba(22, 59, 121, 0.06);
+  --ac-sidebar-w: 260px;
+  --ac-top-h: 52px;
+  --ac-radius: 14px;
+  --ac-radius-sm: 10px;
+  --ac-font: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --ac-font-mono: ui-monospace, "SF Mono", monospace;
+  --ac-success: #14a36e;
+  --ac-warning: #f2a33b;
+  --ac-danger: #e45d5d;
+  --ac-info: #2d79d4;
+  /* 按鈕立體感：由上淺到下深 + 內高光 */
+  --ac-btn-inset-light: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  --ac-btn-inset-dark: inset 0 -1px 0 rgba(15, 40, 70, 0.12);
+  --ac-btn-press: inset 0 2px 4px rgba(15, 40, 70, 0.12);
+}
+
+.admin-api-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 90;
+  width: min(520px, calc(100vw - 32px));
+  max-height: min(54vh, 520px);
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--ac-border-mid);
+  border-radius: var(--ac-radius);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--ac-shadow);
+  backdrop-filter: blur(16px);
+}
+
+.admin-api-panel__head,
+.admin-api-login {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-api-panel__head {
+  justify-content: space-between;
+  color: var(--ac-text);
+}
+
+.admin-api-output {
+  overflow: auto;
+  max-height: 260px;
+  margin: 0;
+  padding: 10px;
+  border-radius: var(--ac-radius-sm);
+  background: #f4f9fe;
+  color: var(--ac-text-2);
+  font-family: var(--ac-font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.admin-action-notice {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 220;
+  max-width: min(520px, calc(100vw - 32px));
+  transform: translate(-50%, 16px);
+  opacity: 0;
+  pointer-events: none;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 16px 36px rgba(22, 59, 121, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  /* 固定深色：此節點常掛在 body，勿用 var(--ac-text)，否則玻璃主題淺字會配淺底無法閱讀 */
+  color: #13273d;
+  font-size: 13px;
+  font-weight: 800;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  backdrop-filter: blur(16px) saturate(150%);
+}
+
+.admin-action-notice.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.admin-skeleton-table {
+  padding: 6px 0;
+}
+
+.admin-skeleton-row {
+  display: grid;
+  grid-template-columns: repeat(var(--admin-skeleton-cols, 6), minmax(0, 1fr));
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+.admin-skeleton-line {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(45, 121, 212, 0.08) 0%, rgba(45, 121, 212, 0.2) 45%, rgba(45, 121, 212, 0.08) 100%);
+  background-size: 220% 100%;
+  animation: adminSkeletonShimmer 1.15s ease-in-out infinite;
+}
+
+.admin-skeleton-line--sm {
+  width: 70%;
+}
+
+.admin-skeleton-line--md {
+  width: 84%;
+}
+
+.admin-skeleton-line--lg {
+  width: 95%;
+}
+
+.admin-btn__spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-top-color: rgba(255, 255, 255, 1);
+  animation: adminBtnSpin .7s linear infinite;
+  vertical-align: -2px;
+  margin-right: 6px;
+}
+
+.admin-btn--ghost .admin-btn__spinner,
+.admin-btn--warning .admin-btn__spinner {
+  border-color: rgba(36, 88, 151, 0.25);
+  border-top-color: rgba(36, 88, 151, 0.95);
+}
+
+.admin-batch-progress {
+  position: fixed;
+  right: 20px;
+  bottom: 22px;
+  z-index: 210;
+  min-width: 280px;
+  max-width: min(420px, calc(100vw - 32px));
+  border: 1px solid var(--ac-border-mid);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 14px 36px rgba(22, 59, 121, 0.18);
+  padding: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.admin-batch-progress[hidden] {
+  display: none !important;
+}
+
+.admin-batch-progress__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ac-text-2);
+  margin-bottom: 8px;
+}
+
+.admin-batch-progress__track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(45, 121, 212, 0.13);
+  overflow: hidden;
+}
+
+.admin-batch-progress__fill {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #58aef1, #2d79d4);
+  transition: width .2s ease;
+}
+
+@keyframes adminSkeletonShimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@keyframes adminBtnSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.admin-api-output--error {
+  color: var(--ac-danger);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.admin-app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: var(--ac-sidebar-w) 1fr;
+  grid-template-rows: var(--ac-top-h) 1fr;
+  grid-template-areas:
+    "sidebar topbar"
+    "sidebar main";
+  background: var(--ac-canvas);
+  color: var(--ac-text);
+  font-family: var(--ac-font);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.admin-app.admin-app--nav-open .admin-sidebar {
+  transform: translateX(0);
+}
+
+/* Sidebar */
+.admin-sidebar {
+  grid-area: sidebar;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f9fe 100%);
+  border-right: 1px solid var(--ac-border);
+  display: flex;
+  flex-direction: column;
+  z-index: 40;
+  transition: transform 0.22s ease;
+}
+
+.admin-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--ac-border);
+  min-height: var(--ac-top-h);
+}
+
+.admin-sidebar__brand img,
+.admin-sidebar__brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.admin-sidebar__brand img {
+  object-fit: contain;
+}
+
+.admin-sidebar__brand-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  color: #eaf8ff;
+  background: linear-gradient(135deg, rgba(95, 188, 242, 0.92), rgba(31, 95, 142, 0.96));
+  font-weight: 900;
+  letter-spacing: -0.06em;
+}
+
+.admin-sidebar__title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+  color: var(--ac-navy);
+}
+
+.admin-sidebar__subtitle {
+  font-size: 0.68rem;
+  color: var(--ac-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-top: 2px;
+}
+
+.admin-sidebar__scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 10px 24px;
+}
+
+.admin-nav-group {
+  margin-bottom: 18px;
+}
+
+.admin-nav-group__label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ac-text-3);
+  padding: 8px 10px 6px;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 9px 12px 9px 14px;
+  margin-bottom: 2px;
+  border-radius: var(--ac-radius-sm);
+  color: var(--ac-text-2);
+  font: inherit;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-nav-item:hover {
+  background: rgba(62, 143, 216, 0.08);
+  color: var(--ac-text);
+}
+
+.admin-nav-item[aria-current="page"] {
+  background: rgba(62, 143, 216, 0.12);
+  color: var(--ac-brand-dim);
+  font-weight: 600;
+}
+
+.admin-nav-item[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #bfefff 0%, #66c6ee 45%, #2e72cd 100%);
+}
+
+.admin-nav-item__icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+/* Topbar */
+.admin-topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px 0 12px;
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid var(--ac-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.admin-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-topbar__menu {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: var(--ac-radius-sm);
+  cursor: pointer;
+  color: var(--ac-navy);
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-topbar__menu:hover {
+  background: var(--ac-ice);
+}
+
+.admin-topbar__crumb {
+  font-size: 0.8rem;
+  color: var(--ac-text-3);
+}
+
+.admin-topbar__crumb strong {
+  color: var(--ac-text);
+  font-weight: 600;
+}
+
+.admin-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: var(--ac-text-2);
+}
+
+.admin-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.admin-pill--staging {
+  background: rgba(242, 163, 59, 0.15);
+  color: #b86a00;
+}
+
+.admin-pill--live {
+  background: rgba(20, 163, 110, 0.12);
+  color: var(--ac-success);
+}
+
+.admin-user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  background: var(--ac-surface-2);
+  border: 1px solid var(--ac-border);
+}
+
+.admin-user-chip__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d8f0ff, #8bcaff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--ac-navy);
+}
+
+.admin-user-chip__text {
+  min-width: 0;
+  max-width: min(42vw, 240px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--ac-text);
+}
+
+/* Main */
+.admin-main {
+  grid-area: main;
+  overflow: auto;
+  padding: 20px 24px 32px;
+}
+
+.admin-view {
+  display: none;
+  animation: ac-fade 0.2s ease;
+}
+
+.admin-view.is-active {
+  display: block;
+}
+
+@keyframes ac-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-page-head {
+  margin-bottom: 20px;
+}
+
+.admin-page-head h1 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--ac-navy);
+  margin: 0 0 6px;
+}
+
+.admin-page-head p {
+  margin: 0;
+  color: var(--ac-text-2);
+  font-size: 0.9rem;
+  max-width: 720px;
+}
+
+/* Cards & grid */
+.admin-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-grid--kpi {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.admin-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 1024px) {
+  .admin-grid--2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-card {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  border-radius: var(--ac-radius);
+  box-shadow: var(--ac-shadow-soft);
+  padding: 18px 20px;
+}
+
+.admin-card--flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.admin-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--ac-border);
+}
+
+.admin-card__title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ac-navy);
+  margin: 0;
+}
+
+.admin-kpi {
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-kpi::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 72px;
+  height: 72px;
+  background: radial-gradient(circle, rgba(62, 143, 216, 0.12), transparent 70%);
+  pointer-events: none;
+}
+
+.admin-kpi__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ac-text-3);
+  margin-bottom: 8px;
+}
+
+.admin-kpi__value {
+  font-size: 1.65rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  color: var(--ac-text);
+  line-height: 1.15;
+}
+
+.admin-kpi__delta {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.admin-kpi__delta--up {
+  color: var(--ac-success);
+}
+
+.admin-kpi__delta--down {
+  color: var(--ac-danger);
+}
+
+.admin-chart-placeholder {
+  height: 200px;
+  border-radius: var(--ac-radius-sm);
+  background: linear-gradient(180deg, var(--ac-subtle) 0%, #ffffff 100%);
+  border: 1px dashed var(--ac-border-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ac-text-3);
+  font-size: 0.85rem;
+}
+
+/* Filters */
+.admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+/* 將篩選列右側主操作（新增 / 刷新）推至行尾 */
+.admin-filters__push {
+  flex: 1 1 12px;
+  min-width: 12px;
+}
+
+/* KYC 列表：審核狀態分頁（置於篩選列右側） */
+.admin-kyc-status-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.admin-kyc-status-tabs__btn {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid var(--ac-border);
+  background: linear-gradient(180deg, var(--ac-surface-2) 0%, var(--ac-surface) 100%);
+  color: var(--ac-text-2);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 2px 0 rgba(15, 40, 70, 0.06);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease,
+    color 0.15s ease;
+}
+
+.admin-kyc-status-tabs__btn:hover {
+  border-color: var(--ac-border-mid);
+  color: var(--ac-text);
+  filter: brightness(1.04);
+}
+
+.admin-kyc-status-tabs__btn.is-active {
+  border-color: rgba(20, 70, 130, 0.38);
+  color: #fff;
+  background: linear-gradient(180deg, #7ec8f5 0%, #3e8fd8 52%, #2b69c5 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 40, 80, 0.12),
+    0 3px 0 rgba(30, 90, 150, 0.18),
+    0 6px 14px rgba(43, 105, 197, 0.2);
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-field label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ac-text-3);
+}
+
+.admin-input,
+.admin-select {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--ac-border-mid);
+  border-radius: 8px;
+  background: var(--ac-surface);
+  color: var(--ac-text);
+  font: inherit;
+  min-width: 160px;
+}
+
+.admin-input:focus,
+.admin-select:focus {
+  outline: none;
+  border-color: var(--ac-brand);
+  box-shadow: 0 0 0 3px rgba(62, 143, 216, 0.2);
+}
+
+/* 核取方塊：自訂外觀（與登入卡片的輸入框／主按鈕同一套圓角與邊光） */
+.admin-app input[type="checkbox"],
+.admin-modal input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid var(--ac-border-mid);
+  border-radius: 7px;
+  background: var(--ac-surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  vertical-align: middle;
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.admin-table input[type="checkbox"] {
+  display: block;
+  margin-inline: auto;
+}
+
+.admin-modal .admin-modal__label > input[type="checkbox"]:first-child {
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: -4px;
+}
+
+.admin-app input[type="checkbox"]:hover:not(:disabled),
+.admin-modal input[type="checkbox"]:hover:not(:disabled) {
+  border-color: var(--ac-brand);
+}
+
+.admin-app input[type="checkbox"]:focus-visible,
+.admin-modal input[type="checkbox"]:focus-visible {
+  outline: none;
+  border-color: var(--ac-brand);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 0 3px rgba(62, 143, 216, 0.28);
+}
+
+.admin-app input[type="checkbox"]:checked,
+.admin-modal input[type="checkbox"]:checked {
+  border-color: rgba(20, 70, 130, 0.42);
+  background: linear-gradient(180deg, #8ad0fb 0%, #4a9fe3 45%, #2f78c9 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 2px 6px rgba(43, 105, 197, 0.25);
+}
+
+.admin-app input[type="checkbox"]:checked::after,
+.admin-modal input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid #f8fcff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  box-sizing: content-box;
+}
+
+.admin-app input[type="checkbox"]:disabled,
+.admin-modal input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 商戶掛單：批量操作下拉 */
+.view-listings-batch-panel {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 40;
+  min-width: 240px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border-mid);
+  box-shadow: 0 10px 28px rgba(15, 35, 70, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.view-listings-batch-panel[hidden] {
+  display: none;
+}
+
+.view-listings-batch-panel__btn {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+/* ========== 後台按鈕：語意色區分 + 淺→深漸層立體感 ========== */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 9px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  transition:
+    filter 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.admin-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--ac-btn-inset-light),
+    var(--ac-btn-inset-dark),
+    0 0 0 3px rgba(62, 143, 216, 0.35);
+}
+
+.admin-btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
+  filter: brightness(0.97);
+}
+
+.admin-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 主操作 · 藍 */
+.admin-btn--primary {
+  color: #f8fcff;
+  border-color: rgba(20, 70, 130, 0.38);
+  background: linear-gradient(180deg, #8ad0fb 0%, #4a9fe3 38%, #2f78c9 78%, #235f9e 100%);
+  box-shadow:
+    var(--ac-btn-inset-light),
+    var(--ac-btn-inset-dark),
+    0 3px 0 rgba(30, 90, 150, 0.18),
+    0 8px 18px rgba(43, 105, 197, 0.28);
+}
+
+.admin-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.06) saturate(1.02);
+  box-shadow:
+    var(--ac-btn-inset-light),
+    var(--ac-btn-inset-dark),
+    0 4px 0 rgba(30, 90, 150, 0.2),
+    0 10px 22px rgba(43, 105, 197, 0.32);
+}
+
+.admin-btn--primary:active:not(:disabled) {
+  box-shadow: var(--ac-btn-press), 0 1px 0 rgba(30, 90, 150, 0.15);
+}
+
+/* 中性 · 灰（重置 / 刷新 / 匯出） */
+.admin-btn--ghost {
+  color: var(--ac-text-2);
+  border-color: rgba(30, 79, 162, 0.2);
+  background: linear-gradient(180deg, #ffffff 0%, #eef5fc 45%, #e2ecf6 100%);
+  box-shadow:
+    var(--ac-btn-inset-light),
+    var(--ac-btn-inset-dark),
+    0 2px 0 rgba(22, 59, 121, 0.06),
+    0 4px 10px rgba(22, 59, 121, 0.07);
+}
+
+.admin-btn--ghost:hover:not(:disabled) {
+  background: linear-gradient(180deg, #fbfdff 0%, #f0f7ff 50%, #e4f0fb 100%);
+  border-color: rgba(62, 143, 216, 0.35);
+  color: var(--ac-navy);
+}
+
+/* 停用感／占位：僅用於 disabled 或暫不可用的按鈕；可點擊次要操作請用 --ghost */
+.admin-btn--muted {
+  color: #3d4f62;
+  border-color: rgba(55, 75, 95, 0.22);
+  background: linear-gradient(180deg, #f5f8fb 0%, #e2e9f2 55%, #cfd9e6 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(55, 75, 95, 0.1),
+    0 2px 0 rgba(22, 59, 121, 0.06),
+    0 4px 10px rgba(22, 59, 121, 0.06);
+}
+
+.admin-btn--muted:hover:not(:disabled) {
+  filter: brightness(1.04);
+}
+
+/* 檢視 / 詳情 · 資訊藍 */
+.admin-btn--info {
+  color: #143c6b;
+  border-color: rgba(45, 121, 212, 0.35);
+  background: linear-gradient(180deg, #e8f4ff 0%, #cfe6fb 45%, #a8d1f5 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -1px 0 rgba(45, 121, 212, 0.12),
+    0 2px 0 rgba(45, 121, 212, 0.1),
+    0 4px 10px rgba(45, 121, 212, 0.12);
+}
+
+.admin-btn--info:hover:not(:disabled) {
+  filter: brightness(1.03);
+}
+
+/* 通過 / 放行 · 綠 */
+.admin-btn--success {
+  color: #fff;
+  border-color: rgba(12, 90, 58, 0.35);
+  background: linear-gradient(180deg, #5ed4a4 0%, #2db87a 45%, #148a5c 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 60, 40, 0.15),
+    0 3px 0 rgba(20, 130, 90, 0.2),
+    0 8px 16px rgba(20, 163, 110, 0.28);
+}
+
+.admin-btn--success:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+/* 審核 / 警示操作 · 琥珀 */
+.admin-btn--warning {
+  color: #4a3200;
+  border-color: rgba(180, 120, 0, 0.35);
+  background: linear-gradient(180deg, #ffe7b8 0%, #ffd08a 40%, #f0a33b 85%, #d98720 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(140, 90, 0, 0.12),
+    0 3px 0 rgba(200, 130, 30, 0.18),
+    0 6px 14px rgba(242, 163, 59, 0.25);
+}
+
+.admin-btn--warning:hover:not(:disabled) {
+  filter: brightness(1.03);
+}
+
+/* 駁回 / 拒絕 · 紅 */
+.admin-btn--danger {
+  color: #fff;
+  border-color: rgba(140, 40, 40, 0.4);
+  background: linear-gradient(180deg, #f8a0a0 0%, #e45d5d 45%, #c73a3a 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(80, 20, 20, 0.2),
+    0 3px 0 rgba(180, 60, 60, 0.2),
+    0 8px 16px rgba(228, 93, 93, 0.3);
+}
+
+.admin-btn--danger:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.admin-btn.admin-btn--danger:disabled {
+  opacity: 0.72;
+  color: #fff;
+  border-color: rgba(120, 45, 45, 0.42);
+  background: linear-gradient(180deg, #d08080 0%, #a84848 52%, #883838 100%);
+  cursor: not-allowed;
+}
+
+/* 資金 / 調帳 · 青藍強調 */
+.admin-btn--accent {
+  color: #0a3d52;
+  border-color: rgba(30, 130, 160, 0.38);
+  background: linear-gradient(180deg, #d4f7ff 0%, #8ee0f5 42%, #3eb8dc 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(20, 100, 130, 0.15),
+    0 3px 0 rgba(30, 150, 180, 0.15),
+    0 6px 14px rgba(62, 184, 220, 0.22);
+}
+
+.admin-btn--accent:hover:not(:disabled) {
+  filter: brightness(1.04);
+}
+
+/* Table */
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--ac-border);
+  color: var(--ac-text-2);
+  font-size: 0.8rem;
+}
+
+.admin-table-pager__meta {
+  min-width: 0;
+}
+
+.admin-table-pager__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ac-text-3);
+  background: var(--ac-surface-2);
+  border-bottom: 1px solid var(--ac-border);
+}
+
+.admin-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ac-border);
+  color: var(--ac-text);
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:hover td {
+  background: rgba(62, 143, 216, 0.04);
+}
+
+.admin-table tbody tr.admin-table-empty-row:hover td {
+  background: transparent;
+}
+
+.admin-table-empty-cell {
+  padding: 28px 20px 32px !important;
+  vertical-align: middle !important;
+  border-bottom: 1px solid var(--ac-border) !important;
+}
+
+/* 對齊前台 eurnyse-empty-card：插畫 + 標題 + 說明（深色主題玻璃質感） */
+.admin-empty-state {
+  position: relative;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 22px 18px 20px;
+  text-align: center;
+  border-radius: 22px;
+  border: 1px solid rgba(120, 170, 220, 0.22);
+  background: linear-gradient(
+    155deg,
+    rgba(36, 62, 98, 0.55) 0%,
+    rgba(14, 32, 58, 0.72) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 14px 36px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+
+.admin-empty-state__glow {
+  position: absolute;
+  right: -36px;
+  top: -48px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(64, 156, 255, 0.28), transparent 68%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.admin-empty-state__illustration {
+  position: relative;
+  z-index: 1;
+  width: 150px;
+  height: 118px;
+  margin: 0 auto 14px;
+}
+
+.admin-empty-state__box {
+  position: absolute;
+  left: 22px;
+  bottom: 10px;
+  width: 106px;
+  height: 58px;
+  border-radius: 16px 16px 20px 20px;
+  background: linear-gradient(180deg, rgba(100, 168, 238, 0.35), rgba(46, 118, 198, 0.22));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 16px 28px rgba(0, 40, 90, 0.35);
+}
+
+.admin-empty-state__box::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: -20px;
+  height: 34px;
+  border-radius: 12px 12px 6px 6px;
+  background: linear-gradient(180deg, rgba(200, 228, 255, 0.28), rgba(90, 150, 220, 0.18));
+  clip-path: polygon(0 35%, 50% 0, 100% 35%, 86% 100%, 14% 100%);
+}
+
+.admin-empty-state__cube {
+  position: absolute;
+  z-index: 2;
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(210, 235, 255, 0.42), rgba(70, 140, 220, 0.35));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 10px 20px rgba(0, 30, 70, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: rotate(45deg);
+  animation: adminEmptyFloat 4.8s ease-in-out infinite;
+}
+
+.admin-empty-state__cube--one {
+  width: 26px;
+  height: 26px;
+  left: 54px;
+  top: 10px;
+}
+
+.admin-empty-state__cube--two {
+  width: 18px;
+  height: 18px;
+  left: 98px;
+  top: 30px;
+  animation-delay: 0.6s;
+}
+
+.admin-empty-state__cube--three {
+  width: 14px;
+  height: 14px;
+  left: 34px;
+  top: 40px;
+  animation-delay: 0.3s;
+}
+
+@keyframes adminEmptyFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(45deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(45deg);
+  }
+}
+
+.admin-empty-state__title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--ac-text);
+}
+
+.admin-empty-state__sub {
+  position: relative;
+  z-index: 1;
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--ac-text-3);
+}
+
+.admin-table .mono {
+  font-family: var(--ac-font-mono);
+  font-size: 0.8rem;
+}
+
+/* Badges */
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.admin-badge--success {
+  background: rgba(20, 163, 110, 0.12);
+  color: #0d7a52;
+}
+
+.admin-badge--warning {
+  background: rgba(242, 163, 59, 0.15);
+  color: #a66a00;
+}
+
+.admin-badge--danger {
+  background: rgba(228, 93, 93, 0.12);
+  color: #c43a3a;
+}
+
+.admin-badge--neutral {
+  background: var(--ac-subtle);
+  color: var(--ac-text-2);
+}
+
+.admin-badge--info {
+  background: rgba(45, 121, 212, 0.12);
+  color: #1a5cad;
+}
+
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--ac-border);
+  background: var(--ac-surface-2);
+  align-items: center;
+}
+
+.admin-toolbar__muted {
+  margin-right: auto;
+  font-size: 0.78rem;
+  color: var(--ac-text-3);
+}
+
+/* flush 卡片內緊接在表格後的工具列（分頁等）：左右與下緣留白，勿貼齊外框線 */
+.admin-card--flush > .admin-table-wrap + .admin-toolbar {
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--ac-border);
+  border-bottom: none;
+}
+
+/* flush 卡片僅以表格結尾時，表格外層與底邊保留間距（多數列表頁） */
+.admin-card--flush > .admin-table-wrap:last-child {
+  padding-bottom: 10px;
+}
+
+/* 彈窗內表格：對話框已含左右內距，此處僅保留上下外距 */
+.admin-modal__dialog .admin-table-wrap {
+  margin: 12px 0 16px;
+}
+
+/* 彈窗內可捲動區（權限／模版模組矩陣）：捲軸與內容不貼齊外框 */
+.admin-modal__scroll-body {
+  overflow: auto;
+  padding: 10px 8px 14px;
+  margin: 6px 0 4px;
+  box-sizing: border-box;
+}
+
+.admin-modal__scroll-body--h46 {
+  max-height: min(46vh, 520px);
+}
+
+.admin-modal__scroll-body--h52 {
+  max-height: min(52vh, 580px);
+}
+
+/* 表格列多顆操作鈕（對齊 New_C2C：詳情 / 編輯 / 餘額 / 等級） */
+.admin-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* 使用者管理：上列 詳情·編輯，下列 餘額·等級 */
+.admin-row-actions.admin-row-actions--stack {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.admin-row-actions__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.admin-btn--sm {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 0.75rem;
+  border-radius: 8px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    inset 0 -1px 0 rgba(15, 40, 70, 0.08),
+    0 2px 0 rgba(22, 59, 121, 0.05),
+    0 3px 8px rgba(22, 59, 121, 0.06);
+}
+
+.admin-btn--align-self-start {
+  align-self: flex-start;
+}
+
+.admin-filter-actions {
+  display: contents;
+}
+
+.admin-mt-8 {
+  margin-top: 8px;
+}
+
+.admin-footnote {
+  margin-top: 12px;
+  font-size: 0.75rem;
+  color: var(--ac-text-3);
+}
+
+/* Dashboard: 總充值 / 總提現 + 區間 */
+.admin-dash-totals-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--ac-border);
+}
+
+.admin-dash-totals-head .admin-card__title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--ac-navy);
+}
+
+.admin-segment {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--ac-surface-2);
+  border: 1px solid var(--ac-border);
+  gap: 2px;
+}
+
+.admin-segment__btn {
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, transparent 100%);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ac-text-2);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.admin-segment__btn:hover {
+  color: var(--ac-navy);
+  background: linear-gradient(180deg, rgba(62, 143, 216, 0.12) 0%, rgba(62, 143, 216, 0.04) 100%);
+  border-color: rgba(62, 143, 216, 0.15);
+}
+
+.admin-segment__btn.is-active {
+  color: #fff;
+  border-color: rgba(20, 70, 130, 0.35);
+  background: linear-gradient(180deg, #7ec8f5 0%, #3e8fd8 50%, #2b69c5 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 40, 80, 0.15),
+    0 2px 0 rgba(30, 90, 150, 0.2),
+    0 4px 10px rgba(43, 105, 197, 0.22);
+}
+
+.admin-dash-date-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 16px;
+  padding: 12px 20px 16px;
+  background: linear-gradient(180deg, rgba(234, 248, 255, 0.45), transparent);
+  border-bottom: 1px solid var(--ac-border);
+}
+
+.admin-dash-date-bar .admin-field label {
+  font-size: 0.65rem;
+}
+
+.admin-dash-range-hint {
+  width: 100%;
+  font-size: 0.78rem;
+  color: var(--ac-text-2);
+  margin: 0;
+  padding-top: 4px;
+}
+
+.admin-dash-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+
+.admin-dash-stat {
+  padding: 22px 24px;
+  border-right: 1px solid var(--ac-border);
+}
+
+.admin-dash-stat:last-child {
+  border-right: none;
+}
+
+.admin-dash-stat__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ac-text-3);
+  margin-bottom: 8px;
+}
+
+.admin-dash-stat__value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  color: var(--ac-navy);
+  line-height: 1.2;
+}
+
+.admin-dash-stat__sub {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--ac-text-2);
+}
+
+.admin-dash-stat--in .admin-dash-stat__value {
+  color: #0d6e4a;
+}
+
+.admin-dash-stat--out .admin-dash-stat__value {
+  color: #b84a22;
+}
+
+@media (max-width: 640px) {
+  .admin-dash-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dash-stat {
+    border-right: none;
+    border-bottom: 1px solid var(--ac-border);
+  }
+
+  .admin-dash-stat:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .admin-app {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "topbar"
+      "main";
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(280px, 88vw);
+    transform: translateX(-100%);
+    box-shadow: var(--ac-shadow);
+  }
+
+  .admin-app.admin-app--nav-open .admin-sidebar {
+    transform: translateX(0);
+  }
+
+  .admin-topbar__menu {
+    display: inline-flex;
+  }
+
+  .admin-main {
+    padding: 16px;
+  }
+}
+
+.admin-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.admin-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(19, 39, 61, 0.35);
+  z-index: 35;
+}
+
+.admin-app.admin-app--nav-open .admin-backdrop {
+  display: block;
+}
+
+@media (min-width: 901px) {
+  .admin-backdrop {
+    display: none !important;
+  }
+}
+
+/* 對齊 New_C2C：提示條、內容分頁、三態切換 */
+.admin-callout {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: var(--ac-radius-sm);
+  border: 1px solid var(--ac-border);
+  background: rgba(45, 121, 212, 0.06);
+  color: var(--ac-text-2);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* 充值地址頁：平台預設三鏈對照（與列表「預設」顯示規則呼應） */
+.admin-da-platform-defaults__title {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ac-text-3);
+}
+
+.admin-da-platform-defaults__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ac-text);
+}
+
+.admin-da-platform-defaults__line {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 10px 14px;
+  align-items: start;
+}
+
+.admin-da-platform-defaults__chain {
+  font-weight: 800;
+  color: var(--ac-text-2);
+  padding-top: 2px;
+  letter-spacing: 0.04em;
+}
+
+.admin-da-platform-defaults__addr {
+  display: block;
+  margin: 0;
+  padding: 0;
+  font-family: var(--ac-font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ac-brand);
+  word-break: break-all;
+  line-height: 1.45;
+  background: transparent;
+}
+
+.admin-content-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.admin-content-switcher__btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--ac-border);
+  /* 跟隨主題表面：勿硬編白底，否則玻璃深色主題下非選中分頁會整塊反白 */
+  background: linear-gradient(180deg, var(--ac-surface-2) 0%, var(--ac-surface) 100%);
+  color: var(--ac-text-2);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 2px 0 rgba(15, 40, 70, 0.06);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease,
+    color 0.15s ease;
+}
+
+.admin-content-switcher__btn:hover {
+  border-color: var(--ac-border-mid);
+  color: var(--ac-text);
+  filter: brightness(1.04);
+}
+
+.admin-content-switcher__btn.is-active {
+  border-color: rgba(20, 70, 130, 0.38);
+  color: #fff;
+  background: linear-gradient(180deg, #7ec8f5 0%, #3e8fd8 52%, #2b69c5 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 40, 80, 0.12),
+    0 3px 0 rgba(30, 90, 150, 0.18),
+    0 6px 14px rgba(43, 105, 197, 0.2);
+}
+
+.admin-content-switcher--embedded {
+  margin-bottom: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 各視圖：子模組分頁／區間切換外框（與換匯提領列一致） */
+.admin-submodule-bar {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--ac-border);
+  background: linear-gradient(165deg, var(--ac-surface-2) 0%, var(--ac-surface) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.admin-submodule-bar__caption {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ac-text-3);
+  letter-spacing: 0.02em;
+}
+
+.admin-submodule-bar__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 儀表板卡片標題列右側：較緊湊、不額外推開下方邊界 */
+.admin-submodule-bar--compact {
+  margin-bottom: 0;
+  padding: 8px 10px;
+  max-width: min(100%, 320px);
+}
+
+.admin-submodule-bar--compact .admin-submodule-bar__caption {
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+}
+
+/* 運營配置：單一 tabpanel 可見（其餘 [hidden]） */
+.admin-hc-panel[hidden] {
+  display: none !important;
+}
+
+/* 後台管理員：帳號列表 / 管理員模版分頁 */
+.admin-au-panel[hidden] {
+  display: none !important;
+}
+
+.admin-toggle-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--ac-border);
+  background: var(--ac-surface-2);
+}
+
+.admin-toggle-group__btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  /* 未選中：跟隨主題文字色（淺色後台 / 玻璃深色後台皆可讀） */
+  background: transparent;
+  color: var(--ac-text-2);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.admin-toggle-group__btn:hover {
+  background: var(--ac-ice);
+  color: var(--ac-text);
+}
+
+/* 選中：淺色「島」+ 深字，與 .admin-btn--primary / 側欄當前項一致，在玻璃主題上對比足夠 */
+.admin-toggle-group__btn.is-active {
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #103042;
+  background: linear-gradient(180deg, #f9ffff 0%, #ddf5ff 52%, #bde8f7 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    inset 0 -1px 0 rgba(30, 79, 162, 0.08),
+    0 2px 10px rgba(5, 24, 36, 0.16);
+}
+
+.admin-cell-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: var(--ac-text-3);
+  font-weight: 500;
+}
+
+.admin-upline-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-upline-cell__role {
+  color: var(--ac-text-1);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.admin-upline-cell__account {
+  color: var(--ac-text-2);
+  font-size: 0.86rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.admin-tier-user-card {
+  color: var(--ac-text-1);
+}
+
+.admin-tier-user-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.admin-tier-user-card__code {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.admin-tier-user-card__level {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  color: #eaf8ff;
+  background: linear-gradient(135deg, rgba(63, 153, 224, 0.95), rgba(21, 94, 139, 0.95));
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: 0 12px 24px rgba(6, 27, 44, 0.22);
+}
+
+.admin-tier-user-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-tier-user-grid > div {
+  padding: 10px 12px;
+  border: 1px solid var(--ac-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.admin-tier-user-grid span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ac-text-3);
+  font-size: 0.74rem;
+}
+
+.admin-tier-user-grid strong {
+  color: var(--ac-text-1);
+  font-size: 0.9rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.admin-textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 10px 12px;
+  border: 1px solid var(--ac-border-mid);
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+/* 充值詳情：憑證縮圖與點擊放大 */
+.admin-deposit-proof-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.admin-deposit-proof-thumb {
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--ac-border-mid);
+  border-radius: 10px;
+  overflow: hidden;
+  width: 104px;
+  height: 104px;
+  cursor: zoom-in;
+  background: rgba(0, 0, 0, 0.22);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-deposit-proof-thumb:hover {
+  border-color: var(--ac-brand);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25);
+}
+
+.admin-deposit-proof-thumb:focus-visible {
+  outline: 2px solid var(--ac-brand);
+  outline-offset: 2px;
+}
+
+.admin-deposit-proof-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-kyc-preview-thumb {
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--ac-border);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: zoom-in;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.admin-kyc-preview-thumb:hover {
+  border-color: var(--ac-brand);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25);
+  filter: brightness(1.04);
+}
+
+.admin-kyc-preview-thumb:focus-visible {
+  outline: 2px solid var(--ac-brand);
+  outline-offset: 2px;
+}
+
+.admin-kyc-preview-thumb img {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+}
+
+.admin-kyc-preview-thumb__hint {
+  display: block;
+  padding: 8px 10px;
+  border-top: 1px solid var(--ac-border);
+  color: var(--ac-text-3);
+  font-size: 0.78rem;
+}
+
+.admin-deposit-proof-tile--link {
+  display: flex;
+  align-items: center;
+  min-height: 104px;
+  padding: 8px;
+  border: 1px dashed var(--ac-border-mid);
+  border-radius: 10px;
+}
+
+.admin-deposit-proof-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px 20px;
+  box-sizing: border-box;
+  background: rgba(2, 10, 18, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.admin-deposit-proof-zoom[hidden] {
+  display: none !important;
+}
+
+.admin-deposit-proof-zoom__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+}
+
+.admin-deposit-proof-zoom__img {
+  max-width: min(96vw, 1200px);
+  max-height: 88vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--ac-radius-sm);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+/* ========== 後台彈窗（對齊 New_C2C modal + EURNYSE token） ========== */
+/* 使用者詳情內：刪除雙重確認覆蓋層（對齊 New_C2C 多步確認） */
+.admin-delete-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 14px;
+  background: rgba(4, 18, 28, 0.78);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  border-radius: var(--ac-radius);
+  box-sizing: border-box;
+}
+
+.admin-delete-overlay[hidden] {
+  display: none !important;
+}
+
+.admin-delete-overlay__card {
+  width: min(460px, 100%);
+  max-height: min(82vh, 640px);
+  overflow: auto;
+  padding: 22px 22px 18px;
+  border-radius: var(--ac-radius-sm);
+  border: 1px solid rgba(199, 235, 248, 0.28);
+  background: linear-gradient(165deg, rgba(22, 62, 82, 0.98) 0%, rgba(10, 38, 52, 0.96) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 24px 48px rgba(2, 14, 22, 0.45);
+  color: var(--ac-text);
+}
+
+.admin-delete-overlay__badge {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffe8ec;
+  background: linear-gradient(180deg, #e45d5d, #b83232);
+  border: 1px solid rgba(255, 200, 200, 0.35);
+}
+
+.admin-delete-overlay__title {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.admin-delete-overlay__lead {
+  margin: 0 0 14px;
+  font-size: 0.86rem;
+  color: var(--ac-text-2);
+  line-height: 1.55;
+}
+
+.admin-delete-overlay__list {
+  margin: 0 0 18px;
+  padding-left: 1.15rem;
+  font-size: 0.84rem;
+  color: var(--ac-text-2);
+  line-height: 1.55;
+}
+
+.admin-delete-overlay__hint {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  color: var(--ac-text-2);
+  line-height: 1.5;
+}
+
+.admin-delete-overlay__mono {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-family: var(--ac-font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ac-brand);
+  background: rgba(5, 27, 39, 0.55);
+  border: 1px solid var(--ac-border-mid);
+}
+
+.admin-delete-overlay__err {
+  min-height: 1.2em;
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--ac-danger);
+}
+
+.admin-delete-overlay__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.admin-modal[hidden] {
+  display: none !important;
+}
+
+.admin-modal:not([hidden]) {
+  display: block;
+}
+
+.admin-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.admin-modal:not([hidden]) {
+  pointer-events: auto;
+}
+
+.admin-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  /* 不鋪遮罩色：外側維持頁面原貌，仍接收點擊以關閉彈窗 */
+  background: transparent;
+  cursor: pointer;
+}
+
+.admin-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(640px, calc(100vw - 32px));
+  max-height: min(88vh, 900px);
+  margin: 5vh auto 0;
+  /* 全彈窗統一左右與底部內距，避免表單／按鈕貼齊外框線 */
+  padding: 0 18px 24px;
+  border-radius: var(--ac-radius);
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  box-shadow: var(--ac-shadow);
+  overflow: auto;
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.admin-modal__dialog--wide {
+  width: min(820px, calc(100vw - 32px));
+}
+
+.admin-modal__dialog--narrow {
+  width: min(440px, calc(100vw - 28px));
+}
+
+.admin-modal--generic .admin-modal__dialog {
+  box-shadow: 0 28px 80px rgba(2, 12, 22, 0.62);
+}
+
+/*
+ * 含模組矩陣的彈窗：對話框本身不捲動，只讓 .admin-modal__scroll-body 捲動，避免雙重捲軸。
+ * 兩種結構：① 矩陣在 form 內（管理員模版）；② 矩陣為 dialog 直屬子（模組權限）。
+ */
+.admin-modal__dialog:has(.admin-modal__form .admin-modal__scroll-body) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: min(88vh, 900px);
+}
+
+.admin-modal__dialog:has(.admin-modal__form .admin-modal__scroll-body) > .admin-modal__head,
+.admin-modal__dialog:has(.admin-modal__form .admin-modal__scroll-body) > .admin-modal__callout {
+  flex-shrink: 0;
+}
+
+.admin-modal__dialog:has(.admin-modal__form .admin-modal__scroll-body) > .admin-modal__form {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.admin-modal__dialog:has(.admin-modal__form .admin-modal__scroll-body) .admin-modal__form > *:not(.admin-modal__scroll-body) {
+  flex-shrink: 0;
+}
+
+.admin-modal__dialog:has(.admin-modal__form .admin-modal__scroll-body) .admin-modal__scroll-body {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.admin-modal__dialog:has(> .admin-modal__scroll-body):not(:has(.admin-modal__form .admin-modal__scroll-body)) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: min(88vh, 900px);
+}
+
+.admin-modal__dialog:has(> .admin-modal__scroll-body):not(:has(.admin-modal__form .admin-modal__scroll-body)) > *:not(.admin-modal__scroll-body) {
+  flex-shrink: 0;
+}
+
+.admin-modal__dialog:has(> .admin-modal__scroll-body):not(:has(.admin-modal__form .admin-modal__scroll-body)) > .admin-modal__scroll-body {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.admin-modal__dialog:has(.admin-modal__scroll-body) .admin-modal__scroll-body--h46,
+.admin-modal__dialog:has(.admin-modal__scroll-body) .admin-modal__scroll-body--h52 {
+  max-height: none;
+}
+
+.admin-modal__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.admin-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  /* 與 dialog 水平內距對齊：負 margin 讓標題列仍滿寬貼齊圓角框 */
+  margin-left: -18px;
+  margin-right: -18px;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--ac-border);
+  position: sticky;
+  top: 0;
+  background: linear-gradient(180deg, #fff 70%, rgba(255, 255, 255, 0.92));
+  z-index: 2;
+}
+
+.admin-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--ac-navy);
+  letter-spacing: -0.02em;
+}
+
+/* 標題列右上角關閉：與一般小鈕同級，避免佔滿標題列高度 */
+.admin-modal__head .admin-btn.admin-btn--sm[data-admin-modal-close] {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 0.78rem;
+  border-radius: 8px;
+  gap: 6px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    inset 0 -1px 0 rgba(15, 40, 70, 0.08),
+    0 2px 0 rgba(22, 59, 121, 0.05),
+    0 3px 8px rgba(22, 59, 121, 0.06);
+}
+
+.admin-modal__head .admin-btn[data-admin-modal-close]:not(.admin-btn--sm) {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 0.82rem;
+  border-radius: 9px;
+  gap: 8px;
+}
+
+.admin-modal__callout {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--ac-radius-sm);
+  border: 1px solid var(--ac-border);
+  background: rgba(45, 121, 212, 0.06);
+  color: var(--ac-text-2);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.admin-modal__cardbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 0;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--ac-border);
+}
+
+.admin-modal__cardbar-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--ac-text);
+}
+
+.admin-modal__cardbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-modal__empty-note {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--ac-radius-sm);
+  background: var(--ac-surface-2);
+  color: var(--ac-text-2);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.admin-modal__panel {
+  padding: 12px 0 8px;
+}
+
+.admin-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-modal__detail-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 8px 4px 14px;
+}
+
+.admin-modal__detail-list > div {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ac-border);
+  font-size: 0.86rem;
+}
+
+.admin-modal__detail-list dt {
+  margin: 0;
+  color: var(--ac-text-3);
+  font-weight: 600;
+}
+
+.admin-modal__detail-list dd {
+  margin: 0;
+  color: var(--ac-text);
+}
+
+.admin-modal__detail-list--compact > div {
+  padding: 6px 0;
+  font-size: 0.82rem;
+}
+
+.admin-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  padding-bottom: 4px;
+}
+
+.admin-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-modal__field--full {
+  grid-column: 1 / -1;
+}
+
+.admin-modal__label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ac-text-2);
+}
+
+.admin-modal__form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 16px 0 10px;
+}
+
+.admin-modal__form-actions--split {
+  justify-content: space-between;
+}
+
+.admin-modal__inline-actions {
+  margin: 12px 0 0;
+  padding: 0 0 4px;
+}
+
+.admin-modal__hint {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: var(--ac-text-3);
+  line-height: 1.45;
+}
+
+.admin-modal__check-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin-top: 8px;
+}
+
+.admin-inline-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.admin-modal__audit {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: var(--ac-radius-sm);
+  border: 1px solid var(--ac-border);
+  background: var(--ac-surface-2);
+}
+
+.admin-modal__audit-title {
+  font-weight: 700;
+  font-size: 0.82rem;
+  margin-bottom: 6px;
+}
+
+.admin-modal__audit-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.8rem;
+  color: var(--ac-text-2);
+}
+
+.admin-modal__message-slot {
+  margin: 12px 0 0;
+  padding: 0 2px 4px;
+  font-size: 0.78rem;
+  color: var(--ac-text-3);
+}
+
+.admin-modal__grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  padding: 12px 0 8px;
+}
+
+@media (max-width: 700px) {
+  .admin-modal__grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-modal__subgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0 0;
+}
+
+@media (max-width: 720px) {
+  .admin-modal__subgrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-modal__cardblock {
+  padding: 12px 14px;
+  border-radius: var(--ac-radius-sm);
+  border: 1px solid var(--ac-border);
+  background: var(--ac-surface-2);
+}
+
+.admin-modal__cardblock-title {
+  margin: 0 0 6px;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.admin-modal__btnrow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.admin-modal__asset-placeholder {
+  margin: 12px 0 0;
+  min-height: 120px;
+  border-radius: var(--ac-radius-sm);
+  border: 1px dashed var(--ac-border-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ac-text-3);
+  font-size: 0.85rem;
+}
+
+body.admin-modal--open {
+  overflow: hidden;
+}
+
+/* 後台模組權限／管理員模版：關閉·閱讀·修改（大型單選列） */
+.admin-module-access-row {
+  display: grid;
+  grid-template-columns: minmax(168px, 1fr) auto;
+  align-items: center;
+  gap: 10px 12px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ac-border, rgba(255, 255, 255, 0.08));
+}
+
+.admin-module-access-row:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.admin-module-access-row__label {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+/* 模組名稱略大於一般表單 label（0.78rem），與右側選項視覺權重平衡 */
+.admin-module-access-row__label .admin-modal__label {
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+}
+
+.admin-module-access-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.admin-module-access-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 10px;
+  min-height: 36px;
+  border-radius: var(--ac-radius-sm, 8px);
+  border: 1px solid var(--ac-border, rgba(255, 255, 255, 0.12));
+  background: var(--ac-surface-2, rgba(255, 255, 255, 0.04));
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.admin-module-access-choice:hover:not(.is-disabled) {
+  border-color: var(--ac-accent-muted, rgba(56, 189, 248, 0.45));
+  background: var(--ac-surface-3, rgba(255, 255, 255, 0.07));
+}
+
+.admin-module-access-choice.is-disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.admin-module-access-choice__input {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--ac-accent, #38bdf8);
+  cursor: inherit;
+}
+
+.admin-module-access-choice.is-disabled .admin-module-access-choice__input {
+  cursor: not-allowed;
+}
+
+.admin-module-access-choice__text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .admin-module-access-row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-module-access-choices {
+    justify-content: flex-start;
+  }
+}

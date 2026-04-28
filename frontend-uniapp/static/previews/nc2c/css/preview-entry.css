@@ -1,0 +1,34 @@
+@import url("../../shared/local-fonts-local.css");
+@import url("./draft-pixel-frozen.css");
+@import url("./nc2c-shell.css");
+@import url("./preview-engineered.css");
+@import url("./eurnyse-style-refresh.css");
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body.nc2c-page {
+  min-height: 100vh;
+  margin: 0;
+  font-family: "Manrope", "PingFang SC", "PingFang TC", "Microsoft YaHei", "Microsoft JhengHei", sans-serif;
+}
+
+.font-headline,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Space Grotesk", "Manrope", sans-serif;
+}
+
+body.nc2c-page[data-nc2c-locked="true"] {
+  isolation: isolate;
+}
+
+body.nc2c-page[data-nc2c-page] {
+  position: relative;
+}

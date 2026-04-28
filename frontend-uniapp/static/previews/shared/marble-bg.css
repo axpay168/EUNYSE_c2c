@@ -1,0 +1,124 @@
+/**
+ * EURNYSE 通用全屏冰蓝大理石背景（静态、无动画）
+ * 与 marble-bg.js 注入的 DOM 配套；body 首子节点应为 .eurnyse-marble-bg
+ */
+
+.eurnyse-marble-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.eurnyse-marble-bg__svgdefs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.eurnyse-marble-bg__base {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    168deg,
+    #b9dff0 0%,
+    #d8eef9 28%,
+    #c4e5f5 52%,
+    #e2f4fc 78%,
+    #bfe0f2 100%
+  );
+}
+
+.eurnyse-marble-bg__marble {
+  position: absolute;
+  inset: -4%;
+  width: 108%;
+  height: 108%;
+  background: linear-gradient(
+    152deg,
+    #a8d4ec 0%,
+    #dcedf8 32%,
+    #9ccce8 58%,
+    #e6f6ff 82%,
+    #b0daf0 100%
+  );
+  filter: url(#eurnyseIceMarbleFilter);
+  opacity: 0.97;
+  transform: translateZ(0);
+}
+
+.eurnyse-marble-bg__glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 85% 58% at 50% -8%, rgba(255, 255, 255, 0.58), transparent 55%),
+    radial-gradient(ellipse 55% 48% at 88% 72%, rgba(210, 244, 255, 0.42), transparent 52%),
+    radial-gradient(ellipse 42% 38% at 12% 88%, rgba(255, 255, 255, 0.28), transparent 56%),
+    radial-gradient(ellipse 50% 36% at 72% 18%, rgba(180, 230, 255, 0.22), transparent 48%);
+  mix-blend-mode: soft-light;
+  opacity: 0.88;
+}
+
+.eurnyse-marble-bg__orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  background: radial-gradient(
+    ellipse 72% 72% at 30% 26%,
+    rgba(255, 255, 255, 0.48) 0%,
+    rgba(188, 228, 248, 0.16) 42%,
+    rgba(140, 200, 235, 0.08) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 10px 48px rgba(45, 110, 160, 0.1);
+}
+
+.eurnyse-marble-bg__orb--1 {
+  width: 228px;
+  height: 228px;
+  top: -52px;
+  right: -48px;
+}
+
+.eurnyse-marble-bg__orb--2 {
+  width: 186px;
+  height: 186px;
+  bottom: 14%;
+  left: -56px;
+}
+
+.eurnyse-marble-bg__frost {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, transparent 22%, transparent 78%, rgba(255, 255, 255, 0.06) 100%);
+  mix-blend-mode: overlay;
+  opacity: 0.75;
+}
+
+/* 将内容抬到背景之上；body 底色透出大理石层 */
+html:has(body > .eurnyse-marble-bg) {
+  background: transparent;
+}
+
+body:has(> .eurnyse-marble-bg) {
+  background: transparent none !important;
+}
+
+/*
+ * 僅為「非 fixed / sticky」的直接子元素建立層疊，避免覆寫頂欄與底部導航的 position，
+ * 否則導航會變成 relative 而隨捲動離開視窗底部。
+ */
+body:has(> .eurnyse-marble-bg) > :not(.eurnyse-marble-bg):not(script):not(.fixed):not(.sticky) {
+  position: relative;
+  z-index: 1;
+}

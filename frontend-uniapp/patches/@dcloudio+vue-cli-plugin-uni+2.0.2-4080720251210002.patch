@@ -1,0 +1,16 @@
+diff --git a/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/loaders/templateLoader.js b/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/loaders/templateLoader.js
+index ada42e9..efbb244 100644
+--- a/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/loaders/templateLoader.js
++++ b/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/loaders/templateLoader.js
+@@ -75,7 +75,10 @@ module.exports = function (source) {
+     }
+   }
+ 
+-  const { code } = compiled
++  let { code } = compiled
++  // Vue 2.6 compiler doesn't output recyclableRender/components; add fallback for compatibility
++  if (!/var\s+recyclableRender\b/.test(code)) code += '\nvar recyclableRender'
++  if (!/\bvar\s+components\s*=/.test(code)) code += '\nvar components = {}'
+   // fixed by xxxxxx recyclableRender, components
+   // finish with ESM exports
+   return code + `\nexport { render, staticRenderFns, recyclableRender, components }`

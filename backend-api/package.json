@@ -1,0 +1,16 @@
+{
+  "name": "backend-api",
+  "version": "1.0.0",
+  "description": "PHP backend for EURNYSE_C2C auth, user, and admin APIs",
+  "scripts": {
+    "test": "npm run smoke",
+    "start": "php -S 0.0.0.0:8000 router.php",
+    "dev": "php -S 0.0.0.0:8000 router.php",
+    "smoke": "php scripts/smoke.php",
+    "smoke:cleanup:staging": "php scripts/cleanup-staging-smoke.php",
+    "smoke:api": "node scripts/smoke-api.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

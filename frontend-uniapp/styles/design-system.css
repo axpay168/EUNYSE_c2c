@@ -1,0 +1,453 @@
+@import url("./eurnyse-appbar-tokens.css");
+/* 與各頁 preview-entry 重複匯入可接受：確保首屏與切頁時 Material Symbols 的 @font-face 已在主包，避免短暫出現 "home" 等字串 */
+@import url("../static/previews/shared/local-fonts-local.css");
+
+:root {
+  --eur-bg-start: #f5fbff;
+  --eur-bg-mid: #eaf6ff;
+  --eur-bg-end: #dcecff;
+  --eur-primary: #1f7cff;
+  --eur-primary-strong: #005fe8;
+  --eur-primary-soft: #ddecff;
+  --eur-ice: #8ee7ff;
+  --eur-cyan: #62d9f6;
+  --eur-success: #18b88f;
+  --eur-warning: #f5a524;
+  --eur-danger: #ef5268;
+  --eur-title: #102d4d;
+  --eur-text: #27435f;
+  --eur-muted: #6d8198;
+  --eur-subtle: #8da0b4;
+  --eur-card: rgba(255, 255, 255, 0.72);
+  --eur-card-strong: rgba(255, 255, 255, 0.88);
+  --eur-card-border: rgba(112, 167, 226, 0.28);
+  --eur-highlight: rgba(255, 255, 255, 0.86);
+  --eur-shadow: 0 22px 54px rgba(63, 118, 175, 0.18);
+  --eur-soft-shadow: 0 14px 32px rgba(63, 118, 175, 0.13);
+  --eur-button-shadow: 0 14px 28px rgba(34, 124, 255, 0.28);
+  --eur-radius-xl: 28px;
+  --eur-radius-lg: 22px;
+  --eur-radius-md: 16px;
+  --eur-radius-sm: 12px;
+  --eur-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Text", "PingFang TC", "PingFang SC", "Hiragino Sans GB", "Microsoft JhengHei", "Microsoft YaHei", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+page {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  background: var(--eur-bg-mid);
+  color: var(--eur-text);
+  font-family: var(--eur-font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+button::after {
+  border: 0;
+}
+
+.eur-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  color: var(--eur-text);
+  background:
+    radial-gradient(circle at 16% 10%, rgba(121, 209, 255, 0.42), transparent 28%),
+    radial-gradient(circle at 86% 4%, rgba(180, 206, 255, 0.52), transparent 26%),
+    radial-gradient(circle at 78% 84%, rgba(202, 231, 255, 0.66), transparent 32%),
+    linear-gradient(180deg, var(--eur-bg-start) 0%, var(--eur-bg-mid) 48%, var(--eur-bg-end) 100%);
+}
+
+.eur-page::before,
+.eur-page::after {
+  content: "";
+  position: fixed;
+  pointer-events: none;
+}
+
+.eur-page::before {
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.52) 33%, transparent 52%),
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.7), transparent 34%);
+  opacity: 0.72;
+}
+
+.eur-page::after {
+  left: -18%;
+  right: -18%;
+  bottom: -22%;
+  z-index: 0;
+  height: 46vh;
+  background: radial-gradient(ellipse at center, rgba(128, 215, 255, 0.36), transparent 68%);
+  filter: blur(10px);
+}
+
+.eur-screen {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 460px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: max(18px, env(safe-area-inset-top)) clamp(14px, 4vw, 22px) max(28px, env(safe-area-inset-bottom));
+}
+
+.eur-appbar {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 72px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.eur-icon-button {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  color: var(--eur-primary-strong);
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 10px 22px rgba(57, 119, 190, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.eur-icon-button__mark {
+  display: block;
+  margin-top: -2px;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.eur-appbar__title {
+  overflow: hidden;
+  color: var(--eur-title);
+  font-size: clamp(18px, 5vw, 22px);
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eur-pill {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(98, 155, 219, 0.24);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--eur-primary-strong);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.glass-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--eur-card-border);
+  border-radius: var(--eur-radius-xl);
+  background:
+    radial-gradient(circle at 86% 0%, rgba(142, 231, 255, 0.24), transparent 36%),
+    linear-gradient(180deg, var(--eur-card-strong), var(--eur-card));
+  box-shadow: var(--eur-shadow);
+  backdrop-filter: blur(22px) saturate(1.18);
+  -webkit-backdrop-filter: blur(22px) saturate(1.18);
+}
+
+.glass-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 18px;
+  right: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--eur-highlight), transparent);
+  pointer-events: none;
+}
+
+.glass-card--soft {
+  border-radius: var(--eur-radius-lg);
+  background:
+    radial-gradient(circle at 90% 8%, rgba(31, 124, 255, 0.12), transparent 34%),
+    rgba(255, 255, 255, 0.62);
+  box-shadow: var(--eur-soft-shadow);
+}
+
+.card-tap {
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+}
+
+.card-tap:active {
+  transform: scale(0.985) translateY(1px);
+  filter: saturate(0.96) brightness(0.98);
+}
+
+.eur-eyebrow {
+  color: var(--eur-primary-strong);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.eur-title {
+  color: var(--eur-title);
+  font-size: clamp(25px, 7vw, 32px);
+  font-weight: 850;
+  line-height: 1.14;
+  letter-spacing: -0.04em;
+}
+
+.eur-muted {
+  color: var(--eur-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.eur-body {
+  color: var(--eur-text);
+  font-size: 15px;
+  line-height: 1.82;
+}
+
+.eur-button-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.eur-button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.eur-button--primary {
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 22% 0%, rgba(255, 255, 255, 0.38), transparent 34%),
+    linear-gradient(180deg, #39b4ff 0%, var(--eur-primary) 58%, #006bef 100%);
+  box-shadow: var(--eur-button-shadow);
+}
+
+.eur-button--secondary {
+  color: var(--eur-primary-strong);
+  border: 1px solid rgba(87, 145, 215, 0.24);
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: var(--eur-soft-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid rgba(88, 149, 218, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.48);
+  color: var(--eur-muted);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.66);
+}
+
+.chip--primary {
+  color: var(--eur-primary-strong);
+  background: rgba(221, 236, 255, 0.78);
+}
+
+.list-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.notice-card {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(88, 149, 218, 0.2);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.52);
+  color: var(--eur-muted);
+  font-size: 12px;
+  line-height: 1.65;
+  box-shadow: var(--eur-soft-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.auth-screen {
+  display: grid;
+  align-content: center;
+  gap: 16px;
+}
+
+.brand-card,
+.auth-card {
+  padding: 22px;
+}
+
+.auth-title {
+  display: block;
+  margin: 8px 0 8px;
+  color: var(--eur-title);
+  font-size: clamp(28px, 8vw, 36px);
+  font-weight: 860;
+  letter-spacing: -0.05em;
+}
+
+.form-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  color: var(--eur-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.form-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid rgba(88, 149, 218, 0.24);
+  border-radius: 16px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--eur-title);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+/* 移除瀏覽器在輸入中顯示的原生方形 focus 框；互動狀態交由外層圓角容器或局部樣式呈現。 */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+textarea {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus-visible,
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):active,
+textarea:focus,
+textarea:focus-visible,
+textarea:active {
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+.form-message {
+  display: block;
+  margin: 4px 0 12px;
+  color: var(--eur-success);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.form-message--error {
+  color: var(--eur-danger);
+}
+
+.auth-submit {
+  width: 100%;
+}
+
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--eur-primary-strong);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.page-copy {
+  display: block;
+  margin: 12px 0 18px;
+}
+
+@media (max-width: 360px) {
+  .eur-screen {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .eur-appbar {
+    grid-template-columns: 40px minmax(0, 1fr) 58px;
+  }
+
+  .eur-button-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * 主導航底欄（四 Tab：主頁／大廳／訂單／個人中心等）
+ * 自 App.vue 引入，不倚賴 body.nc2c-page（該 class 多數頁在 mounted 才寫入），
+ * 否則首幀或快取下會出現底欄「不見」。
+ * 凡底欄 <nav> 必含 class eurnyse-home-bottom-nav；勿僅寫 fixed bottom-0。
+ * -------------------------------------------------------------------------- */
+nav.eurnyse-home-bottom-nav {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  z-index: 10050 !important;
+  box-sizing: border-box;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* RootShell 全域底欄已接管主導航；頁面內殘留的舊底欄一律不顯示，避免雙底欄或漏樣式。 */
+.eurnyse-shell nav.eurnyse-home-bottom-nav:not(.eurnyse-shell-tabbar) {
+  display: none !important;
+}

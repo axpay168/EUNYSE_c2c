@@ -1,0 +1,764 @@
+/* Admin visual theme inspired by the user H5 login page, adapted for dense back-office UI. */
+:root {
+  --ac-canvas: #0a1f2c;
+  --ac-surface: rgba(255, 255, 255, 0.14);
+  --ac-surface-2: rgba(230, 248, 255, 0.12);
+  --ac-border: rgba(255, 255, 255, 0.16);
+  --ac-border-mid: rgba(255, 255, 255, 0.24);
+  --ac-text: #f4fbff;
+  --ac-text-2: rgba(244, 251, 255, 0.78);
+  --ac-text-3: rgba(230, 246, 255, 0.58);
+  --ac-brand: #bde8f7;
+  --ac-brand-dim: #e6f8ff;
+  --ac-navy: #f7fdff;
+  --ac-ice: rgba(255, 255, 255, 0.1);
+  --ac-shadow: 0 22px 60px rgba(5, 24, 36, 0.28);
+  --ac-shadow-soft: 0 12px 30px rgba(5, 24, 36, 0.18);
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(228, 247, 255, 0.48), transparent 26%),
+    radial-gradient(circle at 82% 16%, rgba(184, 225, 240, 0.24), transparent 23%),
+    radial-gradient(circle at 72% 78%, rgba(212, 241, 252, 0.16), transparent 24%),
+    linear-gradient(145deg, #0a1f2c 0%, #123546 34%, #2d6279 67%, #8dc4da 100%);
+  color: var(--ac-text);
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  pointer-events: none;
+}
+
+body::before {
+  inset: -18%;
+  z-index: 0;
+  opacity: 0.92;
+  filter: blur(12px);
+  background:
+    radial-gradient(ellipse at 18% 35%, rgba(255,255,255,0.14), transparent 30%),
+    radial-gradient(ellipse at 76% 26%, rgba(220,245,255,0.16), transparent 25%),
+    radial-gradient(ellipse at 58% 76%, rgba(152,209,228,0.1), transparent 28%),
+    radial-gradient(ellipse at 32% 84%, rgba(255,255,255,0.08), transparent 20%);
+}
+
+body::after {
+  inset: 0;
+  z-index: 0;
+  opacity: 0.45;
+  mix-blend-mode: screen;
+  background-image:
+    radial-gradient(circle at 22% 23%, rgba(255,255,255,.42) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 28%, rgba(218,244,255,.34) 0 1px, transparent 2px),
+    radial-gradient(circle at 58% 76%, rgba(255,255,255,.25) 0 1px, transparent 2px);
+}
+
+.admin-app {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  color: var(--ac-text);
+}
+
+.admin-sidebar,
+.admin-topbar,
+.admin-card,
+.admin-api-panel,
+.admin-filter-bar,
+.admin-dash-total,
+.admin-user-chip,
+.admin-pill {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08)) !important;
+  border-color: var(--ac-border) !important;
+  box-shadow: var(--ac-shadow-soft) !important;
+  backdrop-filter: blur(22px) saturate(135%);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+}
+
+.admin-sidebar {
+  border-right: 1px solid var(--ac-border);
+}
+
+.admin-sidebar__brand,
+.admin-topbar {
+  border-color: var(--ac-border) !important;
+}
+
+.admin-sidebar__brand img,
+.admin-sidebar__brand-mark {
+  box-shadow: 0 10px 24px rgba(5, 24, 36, 0.18);
+}
+
+.admin-nav-group__label,
+.admin-sidebar__subtitle,
+.admin-topbar__crumb,
+.admin-card__hint,
+.admin-kpi__label,
+.admin-table th,
+.admin-muted,
+.admin-form-help {
+  color: var(--ac-text-3) !important;
+}
+
+.admin-sidebar__title,
+.admin-page-head h1,
+.admin-card__title,
+.admin-kpi__value,
+.admin-topbar__crumb strong,
+.admin-table td,
+.admin-form-label,
+.admin-section-title {
+  color: var(--ac-text) !important;
+}
+
+.admin-page-head p,
+.admin-kpi__delta,
+.admin-table,
+.admin-form-input,
+.admin-select,
+.admin-api-output {
+  color: var(--ac-text-2) !important;
+}
+
+.admin-nav-item {
+  color: var(--ac-text-2);
+}
+
+.admin-nav-item:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--ac-text);
+}
+
+.admin-nav-item[aria-current="page"] {
+  color: #103042;
+  background: linear-gradient(180deg, #f9ffff 0%, #ddf5ff 52%, #bde8f7 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.78),
+    0 12px 26px rgba(5, 24, 36, 0.22);
+}
+
+.admin-nav-item[aria-current="page"]::before {
+  background: rgba(255,255,255,0.86);
+}
+
+.admin-main {
+  background: transparent !important;
+}
+
+.admin-card {
+  border: 1px solid var(--ac-border);
+}
+
+.admin-kpi::before {
+  background: radial-gradient(circle, rgba(255,255,255,0.16), transparent 70%);
+}
+
+.admin-table th {
+  background: rgba(255,255,255,0.08) !important;
+}
+
+.admin-table tbody tr:hover td {
+  background: rgba(255,255,255,0.06) !important;
+}
+
+.admin-form-input,
+.admin-select,
+.admin-textarea,
+.admin-api-output {
+  background: rgba(255,255,255,0.12) !important;
+  border-color: var(--ac-border-mid) !important;
+  color: var(--ac-text) !important;
+}
+
+.admin-form-input::placeholder,
+.admin-textarea::placeholder {
+  color: rgba(230,246,255,0.42);
+}
+
+.admin-btn--primary,
+.admin-segment__btn.is-active {
+  color: #103042 !important;
+  border-color: rgba(255,255,255,0.62) !important;
+  background: linear-gradient(180deg, #f9ffff 0%, #ddf5ff 52%, #bde8f7 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.78),
+    0 14px 30px rgba(5, 24, 36, 0.24) !important;
+}
+
+.admin-btn--ghost,
+.admin-btn--secondary,
+.admin-segment,
+.admin-segment__btn {
+  color: var(--ac-text-2) !important;
+  border-color: var(--ac-border) !important;
+  background: rgba(255,255,255,0.1) !important;
+}
+
+.admin-badge,
+.status,
+.admin-pill--staging,
+.admin-pill--success {
+  border-color: rgba(255,255,255,0.2) !important;
+  background: rgba(255,255,255,0.12) !important;
+}
+
+.admin-backdrop {
+  background: rgba(2, 18, 28, 0.48) !important;
+}
+
+.admin-auth-pending,
+.admin-auth-locked {
+  overflow: hidden;
+}
+
+.admin-auth-pending .admin-app,
+.admin-auth-locked .admin-app {
+  filter: blur(18px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.admin-auth-ready .admin-login-screen {
+  display: none;
+}
+
+.admin-login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(255,255,255,0.18), transparent 22%),
+    rgba(3, 18, 27, 0.28);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.admin-login-card {
+  width: min(430px, 100%);
+  padding: 30px;
+  border: 1px solid rgba(255,255,255,0.26);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.38),
+    0 28px 80px rgba(2, 18, 28, 0.38);
+  color: #f7fdff;
+  backdrop-filter: blur(26px) saturate(140%);
+  -webkit-backdrop-filter: blur(26px) saturate(140%);
+}
+
+.admin-login-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.admin-login-brand img,
+.admin-login-brand__mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(5, 24, 36, 0.24);
+}
+
+.admin-login-brand img {
+  object-fit: contain;
+}
+
+.admin-login-brand__mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  color: #eaf8ff;
+  background: linear-gradient(135deg, rgba(95, 188, 242, 0.92), rgba(31, 95, 142, 0.96));
+  font-size: 1.45rem;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+}
+
+.admin-login-kicker {
+  margin: 0 0 4px;
+  color: rgba(230, 246, 255, 0.64);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.admin-login-card h1 {
+  margin: 0;
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+}
+
+.admin-login-copy {
+  margin: 0 0 22px;
+  color: rgba(244,251,255,0.72);
+  line-height: 1.65;
+}
+
+.admin-login-form {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-login-form label {
+  display: grid;
+  gap: 8px;
+  color: rgba(244,251,255,0.78);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.admin-login-form input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 16px;
+  padding: 0 15px;
+  color: #f7fdff;
+  background: rgba(255,255,255,0.12);
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.admin-login-form input:focus {
+  border-color: rgba(255,255,255,0.72);
+  background: rgba(255,255,255,0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.26),
+    0 0 0 4px rgba(225,248,255,0.12);
+}
+
+.admin-login-error {
+  min-height: 18px;
+  margin: 0;
+  color: #ffd8d8;
+  font-size: 0.82rem;
+}
+
+.admin-login-submit {
+  min-height: 50px;
+  border: 1px solid rgba(255,255,255,0.72);
+  border-radius: 18px;
+  color: #103042;
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+  background: linear-gradient(180deg, #f9ffff 0%, #ddf5ff 52%, #bde8f7 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.86),
+    0 16px 34px rgba(5, 24, 36, 0.28);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.admin-login-submit:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 4px rgba(15, 40, 70, 0.16),
+    0 10px 20px rgba(5, 24, 36, 0.22);
+}
+
+/* 登入卡內核取方塊（若日後新增「記住我」等）與表單欄位一致 */
+.admin-login-form input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0 10px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  vertical-align: middle;
+  position: relative;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.admin-login-form input[type="checkbox"]:focus-visible {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    0 0 0 4px rgba(225, 248, 255, 0.12);
+}
+
+.admin-login-form input[type="checkbox"]:checked {
+  border-color: rgba(255, 255, 255, 0.72);
+  background: linear-gradient(180deg, #f9ffff 0%, #ddf5ff 52%, #bde8f7 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 8px 20px rgba(5, 24, 36, 0.22);
+}
+
+.admin-login-form input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid #103042;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  box-sizing: content-box;
+}
+
+/* Readability pass: dark dashboards need stronger surfaces than pure transparent glass. */
+:root {
+  --ac-canvas: #071c28;
+  --ac-surface: rgba(12, 43, 58, 0.9);
+  --ac-surface-2: rgba(15, 55, 72, 0.86);
+  --ac-border: rgba(199, 235, 248, 0.22);
+  --ac-border-mid: rgba(218, 246, 255, 0.34);
+  --ac-text: #f8fcff;
+  --ac-text-2: #d4e7f0;
+  --ac-text-3: #a9c1cc;
+  --ac-brand: #9fe8ff;
+  --ac-brand-dim: #dff8ff;
+}
+
+body::before {
+  opacity: 0.64;
+}
+
+body::after {
+  opacity: 0.24;
+}
+
+.admin-sidebar {
+  background: linear-gradient(180deg, rgba(13, 45, 61, 0.96), rgba(8, 32, 45, 0.94)) !important;
+}
+
+.admin-topbar {
+  background: rgba(14, 48, 64, 0.92) !important;
+}
+
+.admin-card,
+.admin-api-panel,
+.admin-filter-bar,
+.admin-modal__dialog,
+.admin-dash-total,
+.admin-user-chip,
+.admin-pill,
+.admin-table-wrap {
+  background: linear-gradient(180deg, rgba(17, 58, 76, 0.92), rgba(9, 37, 52, 0.88)) !important;
+  border-color: var(--ac-border) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 18px 45px rgba(2, 18, 28, 0.26) !important;
+}
+
+.admin-modal {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.admin-modal__backdrop {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.admin-page-head h1,
+.admin-card__title,
+.admin-sidebar__title,
+.admin-section-title,
+.admin-kpi__value,
+.admin-table td,
+.admin-field label,
+.admin-form-label {
+  color: var(--ac-text) !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.18);
+}
+
+.admin-page-head p,
+.admin-card__hint,
+.admin-kpi__delta,
+.admin-topbar__crumb,
+.admin-sidebar__subtitle,
+.admin-nav-group__label,
+.admin-muted,
+.admin-form-help {
+  color: var(--ac-text-2) !important;
+}
+
+.admin-table th {
+  color: #b9d1dc !important;
+  background: rgba(5, 27, 39, 0.72) !important;
+}
+
+.admin-table td {
+  background: rgba(11, 41, 57, 0.5);
+  border-color: rgba(199, 235, 248, 0.13) !important;
+}
+
+.admin-table tbody tr:hover td {
+  background: rgba(28, 82, 104, 0.56) !important;
+}
+
+.admin-callout {
+  background: rgba(15, 55, 72, 0.55) !important;
+  border-color: var(--ac-border) !important;
+  color: var(--ac-text-2) !important;
+}
+
+.admin-input,
+.admin-select,
+.admin-textarea,
+.admin-form-input,
+.admin-api-output {
+  background: rgba(5, 27, 39, 0.78) !important;
+  border: 1px solid rgba(199, 235, 248, 0.3) !important;
+  color: var(--ac-text) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+
+.admin-input::placeholder,
+.admin-textarea::placeholder,
+.admin-form-input::placeholder {
+  color: #88a9b8 !important;
+  opacity: 1;
+}
+
+.admin-input:focus,
+.admin-select:focus,
+.admin-textarea:focus,
+.admin-form-input:focus {
+  border-color: rgba(197, 244, 255, 0.82) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    0 0 0 4px rgba(159, 232, 255, 0.14) !important;
+}
+
+/* 核取方塊：對齊登入表單輸入框（霧面邊框）＋登入主按鈕（勾選態淺色漸層＋深色勾） */
+.admin-app input[type="checkbox"],
+.admin-modal input[type="checkbox"] {
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 7px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.admin-app input[type="checkbox"]:hover:not(:disabled),
+.admin-modal input[type="checkbox"]:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.48) !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+.admin-app input[type="checkbox"]:focus-visible,
+.admin-modal input[type="checkbox"]:focus-visible {
+  border-color: rgba(255, 255, 255, 0.72) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    0 0 0 4px rgba(225, 248, 255, 0.12) !important;
+}
+
+.admin-app input[type="checkbox"]:checked,
+.admin-modal input[type="checkbox"]:checked {
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  background: linear-gradient(180deg, #f9ffff 0%, #ddf5ff 52%, #bde8f7 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 8px 20px rgba(5, 24, 36, 0.22) !important;
+}
+
+.admin-app input[type="checkbox"]:checked::after,
+.admin-modal input[type="checkbox"]:checked::after {
+  border-color: #103042 !important;
+}
+
+.admin-select option {
+  color: #f8fcff;
+  background: #0b2b3a;
+}
+
+.admin-nav-item {
+  color: #d1e3ec !important;
+}
+
+.admin-nav-item:hover {
+  background: rgba(159, 232, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+.admin-nav-item[aria-current="page"] {
+  color: #eaf8ff !important;
+  background: linear-gradient(180deg, rgba(55, 128, 153, 0.72), rgba(31, 89, 112, 0.78)) !important;
+  border: 1px solid rgba(171, 221, 236, 0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    0 10px 24px rgba(2, 18, 28, 0.2) !important;
+}
+
+.admin-btn {
+  border-color: rgba(199, 235, 248, 0.32) !important;
+  color: var(--ac-text) !important;
+  background: rgba(7, 31, 44, 0.72) !important;
+}
+
+.admin-btn--primary,
+.admin-login-submit,
+.admin-segment__btn.is-active {
+  color: #eaf8ff !important;
+  border-color: rgba(171, 221, 236, 0.44) !important;
+  background: linear-gradient(180deg, #347b98 0%, #235a74 58%, #1a465e 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    0 12px 24px rgba(2, 18, 28, 0.22) !important;
+}
+
+.admin-btn--ghost,
+.admin-btn--secondary,
+.admin-segment,
+.admin-segment__btn {
+  color: #e2f3f8 !important;
+  border-color: rgba(199, 235, 248, 0.3) !important;
+  background: rgba(6, 29, 42, 0.74) !important;
+}
+
+.admin-btn--info {
+  color: #eaf8ff !important;
+  border-color: rgba(139, 204, 224, 0.44) !important;
+  background: linear-gradient(180deg, #2f7592 0%, #225a73 54%, #173f55 100%) !important;
+}
+
+.admin-btn--muted {
+  color: #dcecf3 !important;
+  border-color: rgba(184, 214, 225, 0.32) !important;
+  background: linear-gradient(180deg, #3b5968 0%, #2a4350 100%) !important;
+}
+
+.admin-btn--accent {
+  color: #e8fffb !important;
+  border-color: rgba(144, 229, 220, 0.42) !important;
+  background: linear-gradient(180deg, #2b7d78 0%, #1f625f 52%, #174d4b 100%) !important;
+}
+
+.admin-btn--success {
+  color: #e6fff2 !important;
+  border-color: rgba(116, 190, 151, 0.38) !important;
+  background: linear-gradient(180deg, #34765a 0%, #275d49 55%, #1d4839 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    0 10px 20px rgba(2, 18, 28, 0.18) !important;
+}
+
+.admin-btn--warning {
+  color: #fff2d3 !important;
+  border-color: rgba(193, 151, 76, 0.42) !important;
+  background: linear-gradient(180deg, #8a6734 0%, #6d4f29 54%, #533c22 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    0 10px 20px rgba(2, 18, 28, 0.18) !important;
+}
+
+.admin-btn--danger {
+  color: #ffffff !important;
+  border-color: rgba(255, 120, 130, 0.55) !important;
+  background: linear-gradient(180deg, #e85555 0%, #c72e34 45%, #951f24 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 10px 24px rgba(140, 30, 40, 0.38) !important;
+}
+
+.admin-btn:disabled,
+.admin-segment__btn[disabled] {
+  color: #8aa8b5 !important;
+  background: rgba(8, 32, 45, 0.52) !important;
+  border-color: rgba(199, 235, 248, 0.16) !important;
+  opacity: 1;
+}
+
+/* 刪除／駁回等危險鈕：停用時仍維持紅色系，避免被通用 disabled 樣式洗成灰 */
+.admin-btn.admin-btn--danger:disabled {
+  color: rgba(255, 228, 228, 0.92) !important;
+  border-color: rgba(200, 80, 90, 0.45) !important;
+  background: linear-gradient(180deg, #6a2a30 0%, #4a1c22 55%, #36151a 100%) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  cursor: not-allowed !important;
+}
+
+.admin-badge {
+  color: #eaf8ff !important;
+  border-color: rgba(199, 235, 248, 0.22) !important;
+  background: rgba(7, 31, 44, 0.72) !important;
+}
+
+.admin-badge--success {
+  color: #adf3d2 !important;
+  background: rgba(16, 126, 84, 0.24) !important;
+}
+
+.admin-badge--warning {
+  color: #ffe3a8 !important;
+  background: rgba(172, 108, 0, 0.24) !important;
+}
+
+.admin-badge--danger {
+  color: #ffc7c7 !important;
+  background: rgba(196, 58, 58, 0.24) !important;
+}
+
+.admin-badge--info {
+  color: #baeaff !important;
+  background: rgba(42, 143, 190, 0.24) !important;
+}
+
+.admin-login-card {
+  background: linear-gradient(180deg, rgba(17, 58, 76, 0.94), rgba(9, 37, 52, 0.9));
+}
+
+.admin-modal__head {
+  background: linear-gradient(180deg, rgba(17, 58, 76, 0.98), rgba(10, 38, 52, 0.94)) !important;
+  border-bottom-color: rgba(199, 235, 248, 0.22) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.admin-modal__title {
+  color: #f8fcff !important;
+}
+
+.admin-create-user-message--error {
+  color: #ffc7c7 !important;
+}
+
+.admin-create-user-message--success {
+  color: #adf3d2 !important;
+}
+
+#admin-create-user-form .admin-modal__form-actions {
+  justify-content: flex-end;
+  align-items: center;
+  margin: 14px 0 0;
+  padding: 16px 0 18px;
+  border-top: 1px solid rgba(199, 235, 248, 0.16);
+}
+
+#admin-create-user-form .admin-modal__form-actions .admin-btn--primary {
+  min-width: 136px;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 14px;
+  color: #edfaff !important;
+  border-color: rgba(142, 198, 217, 0.46) !important;
+  background: linear-gradient(180deg, #2e6f8a 0%, #20556e 58%, #173f55 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    0 12px 24px rgba(2, 18, 28, 0.24) !important;
+}

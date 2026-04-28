@@ -1,0 +1,7 @@
+/**
+ * New_C2C 定稿 HTML 殼層：僅語義掛鉤，不覆寫視覺。
+ * 實際排版／字級／顏色仍由 draft-pixel-frozen.css（凍結編譯結果）與各頁既有 class 決定。
+ */
+.nc2c-page {
+  /* intentional: no property overrides — pixel parity with定稿 */
+}

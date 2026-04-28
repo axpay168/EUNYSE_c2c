@@ -1,0 +1,1977 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EURNYSE 後台</title>
+<link rel="stylesheet" href="./shared/admin-console.css"/>
+<link rel="stylesheet" href="./shared/admin-glass-theme.css"/>
+</head>
+<body class="admin-auth-pending">
+<section class="admin-login-screen" id="admin-login-screen" aria-labelledby="admin-login-title">
+<div class="admin-login-card">
+<div class="admin-login-brand">
+<div class="admin-login-brand__mark" aria-hidden="true">E</div>
+<div>
+<p class="admin-login-kicker">營運總控</p>
+<h1 id="admin-login-title">後台管理登入</h1>
+</div>
+</div>
+<p class="admin-login-copy">請使用後台管理員帳號進入營運控制台。</p>
+<form class="admin-login-form" id="admin-login-form" autocomplete="on">
+<label>
+<span>管理帳號</span>
+<input id="admin-login-account" name="account" type="text" placeholder="請輸入管理帳號" autocomplete="username" required/>
+</label>
+<label>
+<span>登入密碼</span>
+<input id="admin-login-password" name="password" type="password" placeholder="請輸入登入密碼" autocomplete="current-password" required/>
+</label>
+<p class="admin-login-error" id="admin-login-error" role="alert" aria-live="polite"></p>
+<button class="admin-login-submit" type="submit">登入後台</button>
+</form>
+</div>
+</section>
+<div class="admin-app" id="admin-app">
+<aside class="admin-sidebar" aria-label="後台導航">
+<div class="admin-sidebar__brand">
+<div class="admin-sidebar__brand-mark" aria-hidden="true">E</div>
+<div>
+<div class="admin-sidebar__title">EURNYSE</div>
+<div class="admin-sidebar__subtitle">營運總控</div>
+</div>
+</div>
+<nav class="admin-sidebar__scroll">
+<div class="admin-nav-group">
+<div class="admin-nav-group__label">總覽</div>
+<button type="button" class="admin-nav-item" data-admin-view="dashboard" aria-current="page">
+<svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
+儀表板
+</button>
+</div>
+<div class="admin-nav-group">
+<div class="admin-nav-group__label">用戶與合規</div>
+<button type="button" class="admin-nav-item" data-admin-view="users"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>使用者管理</button>
+<button type="button" class="admin-nav-item" data-admin-view="kyc"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>實名 / KYC</button>
+<button type="button" class="admin-nav-item" data-admin-view="payout-methods"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>收款方</button>
+</div>
+<div class="admin-nav-group">
+<div class="admin-nav-group__label">資金</div>
+<button type="button" class="admin-nav-item" data-admin-view="wallets"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4z"/></svg>資金錢包</button>
+<button type="button" class="admin-nav-item" data-admin-view="tiers"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>等級與限額</button>
+<button type="button" class="admin-nav-item" data-admin-view="deposits"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>充值審核</button>
+<button type="button" class="admin-nav-item" data-admin-view="deposit-addresses"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>充值地址管理</button>
+<button type="button" class="admin-nav-item" data-admin-view="withdrawals"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 9V7a5 5 0 00-10 0v2"/><rect x="5" y="9" width="14" height="10" rx="2"/></svg>提現審核</button>
+<button type="button" class="admin-nav-item" data-admin-view="eur-swap-withdraw-config"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>換匯提領配置</button>
+</div>
+<div class="admin-nav-group">
+<div class="admin-nav-group__label">交易</div>
+<button type="button" class="admin-nav-item" data-admin-view="orders"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>訂單中心</button>
+<button type="button" class="admin-nav-item" data-admin-view="listings"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>商戶掛單</button>
+<button type="button" class="admin-nav-item" data-admin-view="trade-feed"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>成交播報</button>
+</div>
+<div class="admin-nav-group">
+<div class="admin-nav-group__label">理財</div>
+<button type="button" class="admin-nav-item" data-admin-view="financial-products"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 9l-5 5-4-4-3 3"/></svg>理財配置</button>
+<button type="button" class="admin-nav-item" data-admin-view="financial-orders"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>理財訂單</button>
+</div>
+<div class="admin-nav-group">
+<div class="admin-nav-group__label">運營與系統類</div>
+<button type="button" class="admin-nav-item" data-admin-view="home-content"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>運營配置</button>
+<button type="button" class="admin-nav-item" data-admin-view="auth-events"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>操作日誌</button>
+<button type="button" class="admin-nav-item" data-admin-view="system-config"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>系統配置</button>
+<button type="button" class="admin-nav-item" data-admin-view="admin-users"><svg class="admin-nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.53 0 1.04.21 1.41.59H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>後台管理員</button>
+</div>
+</nav>
+</aside>
+
+<header class="admin-topbar">
+<div class="admin-topbar__left">
+<button type="button" class="admin-topbar__menu" id="admin-menu-toggle" aria-expanded="false" aria-controls="admin-app" title="選單">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+<span class="admin-sr-only">開啟側欄</span>
+</button>
+<span class="admin-topbar__crumb">後台 / <strong id="admin-crumb-active">儀表板</strong></span>
+</div>
+<div class="admin-topbar__right">
+<span class="admin-pill admin-pill--staging">營運</span>
+<span id="admin-clock" class="mono"></span>
+<div class="admin-user-chip" title="">
+<div id="admin-user-chip-avatar" class="admin-user-chip__avatar" aria-hidden="true">—</div>
+<span id="admin-user-chip-label" class="admin-user-chip__text">未登入</span>
+</div>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" id="admin-settings-btn" data-admin-modal-open="admin-modal-admin-settings">設定</button>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" id="admin-logout-btn">登出</button>
+</div>
+</header>
+
+<main class="admin-main">
+<!-- ========== Dashboard ========== -->
+<section id="view-dashboard" class="admin-view is-active" aria-hidden="false" role="region" aria-labelledby="head-dash">
+<div class="admin-page-head">
+<h1 id="head-dash">營運儀表板</h1>
+<p>即時掌握待審核隊列與區間內已通過之充值／提現（折合 USDT，EUR 依系統匯率換算）。</p>
+</div>
+<div class="admin-grid admin-grid--kpi" style="margin-bottom:16px">
+<div class="admin-card admin-kpi">
+<div class="admin-kpi__label">待審核 · 充值</div>
+<div class="admin-kpi__value" id="dash-kpi-pending-deposits">—</div>
+<div class="admin-kpi__delta" id="dash-kpi-pending-deposits-note" aria-live="polite">載入中…</div>
+</div>
+<div class="admin-card admin-kpi">
+<div class="admin-kpi__label">待審核 · 提現</div>
+<div class="admin-kpi__value" id="dash-kpi-pending-withdrawals">—</div>
+<div class="admin-kpi__delta" id="dash-kpi-pending-withdrawals-note" aria-live="polite">載入中…</div>
+</div>
+<div class="admin-card admin-kpi">
+<div class="admin-kpi__label">糾紛 / 申訴中訂單</div>
+<div class="admin-kpi__value" id="dash-kpi-disputed-orders">—</div>
+<div class="admin-kpi__delta" id="dash-kpi-disputed-orders-note">即時彙總</div>
+</div>
+<div class="admin-card admin-kpi">
+<div class="admin-kpi__label">KYC 待審</div>
+<div class="admin-kpi__value" id="dash-kpi-pending-kyc">—</div>
+<div class="admin-kpi__delta" id="dash-kpi-pending-kyc-note">即時彙總</div>
+</div>
+</div>
+
+<div class="admin-card admin-card--flush" id="dashboard-fund-totals" style="margin-bottom:16px">
+<div class="admin-dash-totals-head">
+<h2 class="admin-card__title">總充值 / 總提現</h2>
+<div class="admin-submodule-bar admin-submodule-bar--compact" role="group" aria-label="統計區間">
+<div class="admin-submodule-bar__caption">（當日 / 本週 / 本月）</div>
+<div class="admin-submodule-bar__row">
+<div class="admin-segment" role="tablist" aria-label="統計區間">
+<button type="button" class="admin-segment__btn is-active" role="tab" aria-selected="true" data-dash-range="day" id="dash-tab-day">當日</button>
+<button type="button" class="admin-segment__btn" role="tab" aria-selected="false" data-dash-range="week" id="dash-tab-week">本週</button>
+<button type="button" class="admin-segment__btn" role="tab" aria-selected="false" data-dash-range="month" id="dash-tab-month">本月</button>
+</div>
+</div>
+</div>
+</div>
+<div class="admin-dash-date-bar">
+<div class="admin-field"><label for="dash-date-start">開始日期</label><input type="date" class="admin-input" id="dash-date-start" style="min-width:150px"/></div>
+<div class="admin-field"><label for="dash-date-end">結束日期</label><input type="date" class="admin-input" id="dash-date-end" style="min-width:150px"/></div>
+<button type="button" class="admin-btn admin-btn--primary" id="dash-date-apply">套用區間</button>
+<p class="admin-dash-range-hint" id="dash-range-desc" aria-live="polite">統計區間：當日 00:00 — 目前（台灣時間）</p>
+</div>
+<div class="admin-dash-stat-grid">
+<div class="admin-dash-stat admin-dash-stat--in">
+<div class="admin-dash-stat__label">總充值</div>
+<div class="admin-dash-stat__value mono" id="dash-total-deposit">—</div>
+<div class="admin-dash-stat__sub" id="dash-total-deposit-sub">折合 USDT · 含法幣入帳</div>
+</div>
+<div class="admin-dash-stat admin-dash-stat--out">
+<div class="admin-dash-stat__label">總提現</div>
+<div class="admin-dash-stat__value mono" id="dash-total-withdraw">—</div>
+<div class="admin-dash-stat__sub" id="dash-total-withdraw-sub">折合 USDT · 含法幣出金</div>
+</div>
+</div>
+</div>
+
+<p class="admin-footnote">各模組列表於切換左側導航時自動向後端載入（需有效 API token）。</p>
+</section>
+
+<!-- users — 列表欄位對齊 New_C2C usersTable（另增「等級」欄） -->
+<section id="view-users" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-users">
+<div class="admin-page-head"><h1 id="head-users">使用者管理</h1><p>帳號、邀請關係、狀態與風控標記。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>關鍵字</label><input class="admin-input" id="admin-users-keyword" type="search" placeholder="ID / UID / Email / 手機"/></div>
+<div class="admin-field"><label>狀態</label><select class="admin-select" id="admin-users-status"><option value="">全部</option><option value="normal">正常</option><option value="locked">鎖定</option><option value="disabled">禁用</option></select></div>
+<div class="admin-field"><label>註冊起日</label><input class="admin-input" id="admin-users-registered-from" type="date"/></div>
+<span data-admin-filter-actions="reset#admin-users-reset|search#admin-users-search"></span>
+<div class="admin-filters__push" aria-hidden="true"></div>
+<span data-admin-filter-actions="refresh#admin-users-refresh#刷新列表"></span>
+<button type="button" class="admin-btn admin-btn--primary" data-admin-modal-open="admin-modal-create-user">新增使用者</button>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-toolbar">
+<span class="admin-toolbar__muted" id="admin-users-count">正在載入真實資料...</span>
+<button type="button" class="admin-btn admin-btn--warning" id="admin-users-batch-lock">批量鎖定</button>
+<button type="button" class="admin-btn admin-btn--success" id="admin-users-batch-unlock">批量解禁</button>
+<button type="button" class="admin-btn admin-btn--warning" id="admin-users-batch-risk">批次標記風控</button>
+</div>
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="admin-users-select-all" title="全選本頁使用者" aria-label="全選使用者"/></th><th>ID</th><th>UID / 帳號</th><th>上級</th><th>類型</th><th>等級</th><th>狀態</th><th>邀請碼</th><th>邀請人數</th><th>USDT 餘額</th><th>歐元餘額</th><th>操作</th></tr></thead>
+<tbody id="admin-users-tbody">
+<tr><td colspan="12" class="admin-muted">正在載入真實使用者資料…</td></tr>
+</tbody></table></div>
+<div class="admin-table-pager" id="admin-users-pager">
+<div class="admin-table-pager__meta" id="admin-users-page-info">第 1 頁 · 每頁 25 筆</div>
+<div class="admin-table-pager__actions">
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" id="admin-users-prev" disabled>上一頁</button>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" id="admin-users-page-size">每頁筆數</button>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" id="admin-users-next" disabled>下一頁</button>
+</div>
+</div>
+</div>
+<p class="admin-footnote">關聯：錢包調帳、等級限額於用戶詳情內嵌（與舊後台一致）。</p>
+</section>
+
+<!-- wallets -->
+<section id="view-wallets" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-wallets">
+<div class="admin-page-head"><h1 id="head-wallets">資金錢包</h1><p>預設載入本分頁成員（預設每頁 25 筆），一用戶一列彙總 USDT／EUR 可用與凍結；填寫用戶 ID 則改為該用戶錢包明細（含「其他」資產）。ID 是使用者建立順序（如 01、09、10），UID 是使用者名稱（如 ENxxxxxx）。關鍵字搭配 <code>GET /api/admin/users</code> 篩選列表；資產篩選僅影響顯示欄位。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>關鍵字</label><input class="admin-input" id="view-wallets-keyword" placeholder="ID / UID / Email / 手機（列表模式）"/></div>
+<div class="admin-field"><label>用戶 ID</label><input class="admin-input mono" id="view-wallets-user-id" placeholder="留空＝全部；例如 09 或 10"/></div>
+<div class="admin-field"><label>資產</label><select class="admin-select" id="view-wallets-asset"><option value="">全部</option><option value="USDT">USDT</option><option value="EUR">歐元</option></select></div>
+<span data-admin-filter-actions="reset#view-wallets-reset|load#view-wallets-load|refresh#view-wallets-refresh"></span>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-toolbar"><button type="button" class="admin-btn admin-btn--accent" data-admin-modal-open="admin-modal-wallet-adjust" data-admin-wallet-adjust-toolbar="1">調整餘額</button><button type="button" class="admin-btn admin-btn--info" id="view-wallets-ledger" title="先填用戶 ID，或點列表列內「流水」">查看調帳紀錄</button></div>
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>ID</th><th>UID / 帳號</th><th>可用USDT</th><th>凍結USDT</th><th>可用EUR</th><th>凍結EUR</th><th>其他</th><th>更新時間</th><th>操作</th></tr></thead>
+<tbody id="view-wallets-tbody">
+<tr><td colspan="9" class="admin-muted">進入本頁或按「載入」以取得成員錢包彙總；填 ID 可查單一用戶明細。</td></tr>
+</tbody></table></div>
+</div>
+<p class="admin-footnote">API 參考：列表彙總 <code>GET /api/admin/users</code>（ID 留空）；單用戶明細 <code>GET /api/admin/users/:id/wallets</code></p>
+</section>
+
+<!-- tiers：New_C2C 單用戶等級 + EURNYSE 全站等級模板（只增不減） -->
+<section id="view-tiers" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-tiers">
+<div class="admin-page-head"><h1 id="head-tiers">等級與限額</h1><p>單用戶等級資料與全站等級模板；單筆 / 日累計限額、保證金與升降級規則。</p></div>
+<div class="admin-submodule-bar" role="group" aria-label="等級與限額子模組">
+<div class="admin-submodule-bar__caption">（用戶等級 / 等級模板）</div>
+<div class="admin-submodule-bar__row">
+<div class="admin-content-switcher admin-content-switcher--embedded" role="tablist" aria-label="等級與限額子模組">
+<button type="button" class="admin-content-switcher__btn is-active" id="admin-tier-tab-user" role="tab" aria-selected="true" aria-controls="admin-tier-panel-user" tabindex="0" data-hc-tab="tier-user">用戶等級</button>
+<button type="button" class="admin-content-switcher__btn" id="admin-tier-tab-template" role="tab" aria-selected="false" aria-controls="admin-tier-panel-template" tabindex="-1" data-hc-tab="tier-template">等級模板</button>
+</div>
+<span data-admin-filter-actions="refresh#view-tiers-refresh#刷新"></span>
+</div>
+</div>
+<div class="admin-hc-panel" id="admin-tier-panel-user" role="tabpanel" aria-labelledby="admin-tier-tab-user" data-hc-panel="tier-user">
+<div class="admin-card" style="margin-bottom:0">
+<h2 class="admin-card__title" style="margin:0 0 8px;font-size:0.95rem">用戶等級（單用戶）</h2>
+<div class="admin-filters" style="margin-bottom:0">
+<div class="admin-field"><label>用戶</label><input class="admin-input" id="view-tier-user-keyword" placeholder="ID / UID / Email / 手機"/></div>
+<span data-admin-filter-actions="reset#view-tier-user-reset|load#view-tier-user-load#載入等級|refresh#view-tier-user-refresh"></span>
+</div>
+<div id="view-tier-user-result" class="admin-table-wrap" style="border-top:1px solid var(--ac-border)">
+<table class="admin-table">
+<thead><tr><th>ID</th><th>UID / 帳號</th><th>等級</th><th>信用分</th><th>日交易上限</th><th>最低賣出</th><th>保證金</th><th>保證金比例</th><th>風控狀態</th><th>操作</th></tr></thead>
+<tbody><tr><td colspan="10" class="admin-muted">載入中…</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="admin-hc-panel" id="admin-tier-panel-template" role="tabpanel" aria-labelledby="admin-tier-tab-template" data-hc-panel="tier-template" hidden>
+<div class="admin-filters">
+<div class="admin-field"><label>搜尋等級模板</label><input class="admin-input" id="view-tier-template-keyword" placeholder="LV1 / 模板名"/></div>
+<span data-admin-filter-actions="reset#view-tier-template-reset|query#view-tier-template-query|refresh#view-tier-template-refresh"></span>
+<button type="button" class="admin-btn admin-btn--primary" data-admin-tt-open-create>新增等級模板</button>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>顯示名稱</th><th>等級</th><th>日交易上限</th><th>最低賣出</th><th>商家權限</th><th>保證金</th><th>操作</th></tr></thead>
+<tbody id="view-tiers-templates-tbody">
+<tr><td colspan="7" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</div>
+</section>
+
+<!-- deposits — 對齊 depositsTable 欄位 -->
+<section id="view-deposits" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-deposits">
+<div class="admin-page-head"><h1 id="head-deposits">充值審核</h1><p>法幣 / 鏈上充值憑證審核、駁回與補件。待審核列可操作通過／駁回；勾選多筆後可用上方批次按鈕。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>關鍵字</label><input id="view-dp-keyword" class="admin-input" placeholder="用戶名／參考號／資產"/></div>
+<div class="admin-field"><label>用戶</label><input id="view-dp-user" class="admin-input mono" placeholder="用戶 ID／郵箱／手機"/></div>
+<div class="admin-field"><label>狀態</label><select id="view-dp-status" class="admin-select"><option value="">全部狀態</option><option value="pending">待審核</option><option value="approved">已通過</option><option value="rejected">已駁回</option><option value="cancelled">已取消</option></select></div>
+<span data-admin-filter-actions="reset#view-dp-reset|query#view-dp-query|refresh#view-dp-refresh"></span>
+</div>
+<div class="admin-submodule-bar" role="group" aria-label="充值資產分類">
+<div class="admin-submodule-bar__caption">（全部 / USDT / EUR）</div>
+<div class="admin-submodule-bar__row">
+<div class="admin-content-switcher admin-content-switcher--embedded" role="tablist" aria-label="充值資產分類">
+<button type="button" class="admin-content-switcher__btn is-active" id="view-dp-tab-all" role="tab" aria-selected="true" tabindex="0" data-dp-asset-tab="">全部</button>
+<button type="button" class="admin-content-switcher__btn" id="view-dp-tab-usdt" role="tab" aria-selected="false" tabindex="-1" data-dp-asset-tab="USDT">USDT</button>
+<button type="button" class="admin-content-switcher__btn" id="view-dp-tab-eur" role="tab" aria-selected="false" tabindex="-1" data-dp-asset-tab="EUR">EUR</button>
+</div>
+</div>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-toolbar" style="flex-direction:column;align-items:flex-start;gap:8px">
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" class="admin-btn admin-btn--success" id="view-dp-batch-approve">批量通過</button>
+<button type="button" class="admin-btn admin-btn--danger" id="view-dp-batch-reject">批量駁回</button>
+</div>
+</div>
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="view-dp-select-all" title="本頁待審列全選" aria-label="全選待審"/></th><th>ID</th><th>用戶</th><th>金額</th><th>資產</th><th>網路</th><th>狀態</th><th>操作</th></tr></thead>
+<tbody id="view-deposits-tbody">
+<tr><td colspan="8" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<!-- deposit-addresses — 對齊 depositAddressesTable（TRC/ETH/BEP 矩陣） -->
+<section id="view-deposit-addresses" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-da">
+<div class="admin-page-head"><h1 id="head-da">充值地址管理</h1><p>依用戶列出 TRC / ETH / BEP 充值地址（含新註冊、尚未寫入地址者）。未設定之鏈別列表顯示 <code>--</code>；若地址與下方「平台預設」常數相同，列表僅顯示「預設」。編輯時空白欄位可帶入常數供參考，儲存後寫入 <code>deposit_addresses</code>（<strong>不會</strong>被全站預設配置覆寫）。<strong>App 邏輯：</strong> 一律優先使用該用戶在 <code>deposit_addresses</code> 的啟用地址；僅當該鏈無配置時才回退 <code>system_configs</code> 的 <code>finance.usdt_platform_deposit_*</code>。<strong>全站預設地址</strong>僅限登入帳號 <code>admin666</code> 於「系統配置」修改（其他管理員無法 PATCH）；修改全站預設不會改動任何用戶已儲存的充值地址。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>搜尋</label><input id="view-da-keyword" class="admin-input" type="search" placeholder="用戶 ID／郵箱／手機／地址"/></div>
+<span data-admin-filter-actions="reset#view-da-reset|query#view-da-query|refresh#view-da-refresh"></span>
+<div class="admin-filters__push" aria-hidden="true"></div>
+<button type="button" class="admin-btn admin-btn--primary" data-admin-da-open-create>新增地址</button>
+</div>
+<div class="admin-da-platform-defaults admin-callout" role="region" aria-labelledby="view-da-defaults-title">
+<div id="view-da-defaults-title" class="admin-da-platform-defaults__title">平台預設充值地址</div>
+<div class="admin-da-platform-defaults__list mono" id="view-da-defaults-list" aria-label="各鏈預設充值地址">
+<div class="admin-da-platform-defaults__line"><span class="admin-da-platform-defaults__chain">TRC</span><code class="admin-da-platform-defaults__addr" id="view-da-default-trc"></code></div>
+<div class="admin-da-platform-defaults__line"><span class="admin-da-platform-defaults__chain">ETH</span><code class="admin-da-platform-defaults__addr" id="view-da-default-eth"></code></div>
+<div class="admin-da-platform-defaults__line"><span class="admin-da-platform-defaults__chain">BEP</span><code class="admin-da-platform-defaults__addr" id="view-da-default-bep"></code></div>
+</div>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>序列</th><th>用戶</th><th>TRC</th><th>ETH</th><th>BEP</th><th>操作</th></tr></thead>
+<tbody id="view-deposit-addresses-tbody">
+<tr><td colspan="6" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<!-- withdrawals — 對齊 withdrawalsTable 欄位 -->
+<section id="view-withdrawals" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-wd">
+<div class="admin-page-head"><h1 id="head-wd">提現審核</h1><p>法幣 / 鏈上提現放款、風控攔截與人工覆核。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>關鍵字</label><input id="view-wd-keyword" class="admin-input" placeholder="搜索用户名 / 地址 / 资产"/></div>
+<div class="admin-field"><label>用戶</label><input id="view-wd-user" class="admin-input mono" placeholder="用户 ID / 邮箱 / 手机"/></div>
+<div class="admin-field"><label>渠道</label><select id="view-wd-channel" class="admin-select"><option value="">全部渠道</option><option value="bank">銀行卡</option><option value="usdt">鏈上 USDT</option><option value="pix">PIX</option></select></div>
+<div class="admin-field"><label>資產</label><select id="view-wd-asset" class="admin-select"><option value="">全部分類</option><option value="USDT">USDT</option><option value="USD">美元</option><option value="EUR">歐元</option></select></div>
+<div class="admin-field"><label>狀態</label><select id="view-wd-status" class="admin-select"><option value="">全部狀態</option><option value="pending">待審核</option><option value="approved">已通過</option><option value="rejected">已駁回</option><option value="cancelled">已取消</option></select></div>
+<span data-admin-filter-actions="reset#view-wd-reset|query#view-wd-query|refresh#view-wd-refresh"></span>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-toolbar" style="flex-direction:column;align-items:flex-start;gap:8px">
+<p class="admin-muted" style="margin:0;font-size:0.8rem">請先勾選狀態為「待審核」的列；拒絕時會提示填寫原因（後端必填）。需具備提現審核寫入權限。</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" class="admin-btn admin-btn--success" id="view-wd-batch-approve">放行放款</button>
+<button type="button" class="admin-btn admin-btn--danger" id="view-wd-batch-reject">拒絕並退回</button>
+</div>
+</div>
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="view-wd-select-all" title="本頁可勾選之待審列全選" aria-label="全選待審"/></th><th>ID</th><th>用戶</th><th>金額</th><th>資產</th><th>渠道</th><th>備註</th><th>狀態</th><th>操作</th></tr></thead>
+<tbody id="view-withdrawals-tbody">
+<tr><td colspan="9" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<!-- eur-swap — 對齊 eurSwapWithdrawConfigForm + 規則表（增） -->
+<section id="view-eur-swap-withdraw-config" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-swap">
+<div class="admin-page-head"><h1 id="head-swap">換匯提領配置</h1><p>EUR ↔ USDT 提領參數；說明：1 USDT = ? EUR。百分比模式按到帳 USDT 百分比扣除，固定模式按固定 USDT 扣除。</p></div>
+<div class="admin-submodule-bar" role="group" aria-label="換匯提領子模組">
+<div class="admin-submodule-bar__caption">（提領參數 + 規則與範本合併顯示）</div>
+<div class="admin-submodule-bar__row">
+<span data-admin-filter-actions="refresh#view-eur-swap-refresh"></span>
+</div>
+</div>
+<div class="admin-card" style="margin-bottom:0">
+<h2 class="admin-card__title" style="margin:0 0 12px">提領參數</h2>
+<p class="admin-footnote" id="view-eur-swap-current-config" style="margin-top:0">目前配置：由 API 載入</p>
+<div class="admin-filters" style="flex-direction:column;align-items:stretch;gap:12px;max-width:520px">
+<div class="admin-field"><label>匯率（1 USDT = ? EUR）</label><input class="admin-input mono" id="view-eur-swap-rate" type="number" step="0.00000001" placeholder="由 API 載入"/></div>
+<div class="admin-field"><label>手續費模式</label><select class="admin-select" id="view-eur-swap-fee-mode"><option value="percent">百分比扣費</option><option value="fixed_usdt">固定 USDT 扣費</option></select></div>
+<div class="admin-field" id="view-eur-swap-fee-rate-field"><label>手續費（%）</label><input class="admin-input mono" id="view-eur-swap-fee-rate" type="number" step="0.0001" placeholder="0.35"/></div>
+<div class="admin-field" id="view-eur-swap-fee-fixed-field"><label>固定手續費（USDT）</label><input class="admin-input mono" id="view-eur-swap-fee-fixed" type="number" step="0.00000001" placeholder="2.00"/></div>
+<div class="admin-field"><label>原因（選填）</label><input class="admin-input" id="view-eur-swap-reason" placeholder="選填，供稽核記錄"/></div>
+<button type="button" class="admin-btn admin-btn--primary admin-btn--align-self-start" id="view-eur-swap-save">保存提領配置</button>
+</div>
+</div>
+<div class="admin-card admin-card--flush" style="margin-bottom:0">
+<h2 class="admin-card__title" style="margin:0;padding:16px 20px;border-bottom:1px solid var(--ac-border)">規則版本 / 審計（擴充）</h2>
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>規則 ID</th><th>說明</th><th>最後修改</th><th>操作</th></tr></thead>
+<tbody>
+<tr><td class="mono">swap_eur_v3</td><td>預設換匯提領</td><td class="mono" id="view-eur-swap-rule-updated">由 API 載入</td><td><div class="admin-row-actions"><button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" id="view-eur-swap-rule-focus">編輯</button><button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" id="view-eur-swap-rule-copy">複製</button><button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" id="view-eur-swap-rule-history">版本紀錄</button></div></td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<!-- orders — 對齊 ordersTable（含買賣方向三態） -->
+<section id="view-orders" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-orders">
+<div class="admin-page-head"><h1 id="head-orders">訂單中心</h1><p>C2C 訂單列表、買賣方向篩選、糾紛與申訴工單串接。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>關鍵字</label><input id="view-orders-keyword" class="admin-input" placeholder="搜索单号 / 买家 / 卖家"/></div>
+<div class="admin-field"><label>用戶</label><input id="view-orders-user" class="admin-input mono" placeholder="用户 ID / 邮箱 / 手机"/></div>
+<div class="admin-field"><label>訂單方向</label><div id="view-orders-side-group" class="admin-toggle-group" role="group" aria-label="訂單方向"><button type="button" class="admin-toggle-group__btn is-active" data-order-side="">全部</button><button type="button" class="admin-toggle-group__btn" data-order-side="sell">賣單</button><button type="button" class="admin-toggle-group__btn" data-order-side="buy">買單</button></div></div>
+<div class="admin-field"><label>狀態</label><select id="view-orders-status" class="admin-select"><option value="">全部狀態</option><option value="pending_payment">待付款</option><option value="paid_pending_release">待放幣</option><option value="completed">已完成</option><option value="cancelled">已取消</option><option value="disputed">糾紛中</option></select></div>
+<span data-admin-filter-actions="reset#view-orders-reset|query#view-orders-query|refresh#view-orders-refresh"></span>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>編號</th><th>訂單號</th><th>方向</th><th>交易信息</th><th>買家帳戶</th><th>賣家帳戶</th><th>狀態</th><th>操作</th></tr></thead>
+<tbody id="view-orders-tbody">
+<tr><td colspan="8" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<!-- financial-products — 對齊 financialProductsTable -->
+<section id="view-financial-products" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-fp">
+<div class="admin-page-head"><h1 id="head-fp">理財配置</h1><p>產品編碼、收益、期限、申購限制與預設返還方式。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>關鍵字</label><input class="admin-input" id="view-fp-keyword" placeholder="搜索产品编码 / 名称 / 副标题"/></div>
+<div class="admin-field"><label>狀態</label><select class="admin-select" id="view-fp-status"><option value="">全部狀態</option><option value="active">啟用</option><option value="inactive">停用</option></select></div>
+<span data-admin-filter-actions="reset#view-fp-reset|query#view-fp-query|refresh#view-fp-refresh"></span>
+<div class="admin-filters__push" aria-hidden="true"></div>
+<button type="button" class="admin-btn admin-btn--primary" data-admin-fp-open-create>新增理財產品</button>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>ID</th><th>產品</th><th>收益</th><th>期限</th><th>申購限制</th><th>預設返還</th><th>狀態</th><th>操作</th></tr></thead>
+<tbody id="view-financial-products-tbody">
+<tr><td colspan="8" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<!-- financial-orders — 對齊 financialOrdersTable -->
+<section id="view-financial-orders" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-fo">
+<div class="admin-page-head"><h1 id="head-fo">理財訂單</h1><p>認購、持有、返還模式（手動 / 自動）與稽核。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>關鍵字</label><input class="admin-input" id="view-fo-keyword" placeholder="搜索订单 ID / 用户 / 邮箱 / 产品"/></div>
+<div class="admin-field"><label>用戶</label><input class="admin-input mono" id="view-fo-user" placeholder="用户 ID / 邮箱 / 手机"/></div>
+<div class="admin-field"><label>返還模式</label><select class="admin-select" id="view-fo-return-mode"><option value="">全部返還模式</option><option value="manual">手動返還</option><option value="auto">自動返還</option></select></div>
+<div class="admin-field"><label>狀態</label><select class="admin-select" id="view-fo-status"><option value="">全部狀態</option><option value="active">持有中</option><option value="returned">已返還</option></select></div>
+<span data-admin-filter-actions="reset#view-fo-reset|query#view-fo-query|refresh#view-fo-refresh"></span>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>ID</th><th>用戶</th><th>產品</th><th>金額</th><th>返還模式</th><th>狀態</th><th>操作</th></tr></thead>
+<tbody id="view-financial-orders-tbody">
+<tr><td colspan="7" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<!-- listings — 對齊 listingsTable -->
+<section id="view-listings" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-listings" data-listing-side="">
+<div class="admin-page-head"><h1 id="head-listings">商戶掛單</h1><p>掛單池、深度、限額範圍與庫存；支援買賣盤與啟停。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>關鍵字</label><input id="view-listings-keyword" class="admin-input" type="search" placeholder="商戶暱稱／用戶名／幣種"/></div>
+<div class="admin-field"><label>商戶用戶</label><input id="view-listings-owner" class="admin-input mono" placeholder="用戶 ID／郵箱／手機"/></div>
+<div class="admin-field"><label>狀態</label><select id="view-listings-status" class="admin-select"><option value="">全部狀態</option><option value="active">上架中</option><option value="inactive">已下架</option></select></div>
+<span data-admin-filter-actions="reset#view-listings-reset|query#view-listings-query|refresh#view-listings-refresh"></span>
+<div class="admin-filters__push" aria-hidden="true"></div>
+<button type="button" class="admin-btn admin-btn--primary" data-admin-listing-open-create>新增掛單</button>
+</div>
+<div class="admin-submodule-bar" role="group" aria-label="掛單方向">
+<div class="admin-submodule-bar__caption">（全部／賣出／買入）</div>
+<div class="admin-submodule-bar__row">
+<div class="admin-content-switcher admin-content-switcher--embedded" role="tablist" aria-label="掛單買賣方向">
+<button type="button" class="admin-content-switcher__btn is-active" id="view-listings-tab-all" role="tab" aria-selected="true" tabindex="0" data-listing-side-tab="">全部</button>
+<button type="button" class="admin-content-switcher__btn" id="view-listings-tab-sell" role="tab" aria-selected="false" tabindex="-1" data-listing-side-tab="sell">賣出</button>
+<button type="button" class="admin-content-switcher__btn" id="view-listings-tab-buy" role="tab" aria-selected="false" tabindex="-1" data-listing-side-tab="buy">買入</button>
+</div>
+</div>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-toolbar" style="flex-wrap:wrap;gap:10px;align-items:flex-start;padding-bottom:4px">
+<div style="position:relative;display:inline-block">
+<button type="button" class="admin-btn admin-btn--ghost" id="view-listings-batch-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="view-listings-batch-panel">批量操作</button>
+<div id="view-listings-batch-panel" class="view-listings-batch-panel" role="menu" hidden aria-label="掛單批量操作">
+<button type="button" class="admin-btn admin-btn--success admin-btn--sm view-listings-batch-panel__btn" id="view-listings-batch-activate" role="menuitem">批次上架（啟用）</button>
+<button type="button" class="admin-btn admin-btn--warning admin-btn--sm view-listings-batch-panel__btn" id="view-listings-batch-deactivate" role="menuitem">批次下架（停用）</button>
+<button type="button" class="admin-btn admin-btn--danger admin-btn--sm view-listings-batch-panel__btn" id="view-listings-batch-delete" role="menuitem">批次刪除</button>
+<p class="admin-muted" style="margin:6px 0 0;font-size:0.78rem;line-height:1.35">先勾選列表左側方塊，再選上方操作。批次刪除需確認並可填寫審計原因。</p>
+</div>
+</div>
+</div>
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="view-listings-select-all" title="本頁全選" aria-label="全選本頁掛單"/></th><th>ID</th><th>商戶</th><th>方向</th><th>價格</th><th>限額範圍（USDT）</th><th>庫存</th><th>狀態</th><th>操作</th></tr></thead>
+<tbody id="view-listings-tbody">
+<tr><td colspan="9" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<!-- trade-feed — 對齊 tradeFeed 表（含商戶/金額） -->
+<section id="view-trade-feed" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-tf">
+<div class="admin-page-head"><h1 id="head-tf">成交播報</h1><p>首頁 / 大廳跑馬燈；與運營配置分離以利權限拆分。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>關鍵字</label><input class="admin-input" id="view-tf-keyword" placeholder="搜索标题 / 商户名 / 币种"/></div>
+<div class="admin-field"><label>狀態</label><select class="admin-select" id="view-tf-status"><option value="">全部狀態</option><option value="active">啟用</option><option value="inactive">停用</option></select></div>
+<span data-admin-filter-actions="reset#view-tf-reset|query#view-tf-query|refresh#view-tf-refresh"></span>
+<div class="admin-filters__push" aria-hidden="true"></div>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-tf-random-create="completed_sell">随机新增卖出</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-tf-random-create="completed_buy">随机新增买入</button>
+<button type="button" class="admin-btn admin-btn--primary" data-admin-tf-open-create>新增播報</button>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>ID</th><th>標題</th><th>名稱</th><th>金額</th><th>排序</th><th>狀態</th><th>操作</th></tr></thead>
+<tbody id="view-trade-feed-tbody">
+<tr><td colspan="7" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<!-- home-content — 對齊 homeContentPanel（公告表單 + 橫幅表；成交播報見左欄獨立模組） -->
+<section id="view-home-content" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-hc">
+<div class="admin-page-head"><h1 id="head-hc">運營配置</h1><p>首頁公告、橫幅列表（與 New_C2C 分頁一致）；另可維護教學連結。成交播報請使用左欄「成交播報」。</p></div>
+<div class="admin-submodule-bar" role="group" aria-label="運營子模組">
+<div class="admin-submodule-bar__caption">（首頁公告 / 橫幅列表 / 教學連結）</div>
+<div class="admin-submodule-bar__row">
+<div class="admin-content-switcher admin-content-switcher--embedded" role="tablist" aria-label="運營子模組">
+<button type="button" class="admin-content-switcher__btn is-active" id="admin-hc-tab-notice" role="tab" aria-selected="true" aria-controls="admin-hc-panel-notice" tabindex="0" data-hc-tab="notice">首頁公告</button>
+<button type="button" class="admin-content-switcher__btn" id="admin-hc-tab-banners" role="tab" aria-selected="false" aria-controls="admin-hc-panel-banners" tabindex="-1" data-hc-tab="banners">橫幅列表</button>
+<button type="button" class="admin-content-switcher__btn" id="admin-hc-tab-tutorial" role="tab" aria-selected="false" aria-controls="admin-hc-panel-tutorial" tabindex="-1" data-hc-tab="tutorial">教學連結</button>
+</div>
+<span data-admin-filter-actions="refresh#view-home-content-refresh#刷新"></span>
+</div>
+</div>
+<div class="admin-hc-panel" id="admin-hc-panel-notice" role="tabpanel" aria-labelledby="admin-hc-tab-notice" data-hc-panel="notice">
+<div class="admin-card" style="margin-bottom:0">
+<h2 class="admin-card__title" style="margin:0 0 12px;font-size:0.95rem">首頁公告</h2>
+<div class="admin-field"><label>公告文案</label><textarea class="admin-textarea" id="view-home-notice-text" placeholder="載入後可編輯首頁跑馬燈文案"></textarea></div>
+<div class="admin-field" style="margin-top:10px"><label>修改原因</label><input class="admin-input" id="view-home-notice-reason" placeholder="儲存時必填，供審計"/></div>
+<button type="button" class="admin-btn admin-btn--primary admin-mt-8" id="view-home-notice-save">保存公告</button>
+</div>
+</div>
+<div class="admin-hc-panel" id="admin-hc-panel-banners" role="tabpanel" aria-labelledby="admin-hc-tab-banners" data-hc-panel="banners" hidden>
+<div class="admin-filters">
+<div class="admin-filters__push" aria-hidden="true"></div>
+<button type="button" class="admin-btn admin-btn--primary" data-admin-hb-open-create>新增橫幅</button>
+</div>
+<div class="admin-card admin-card--flush" style="margin-bottom:0">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>ID</th><th>標題</th><th>標籤</th><th>排序</th><th>狀態</th><th>操作</th></tr></thead>
+<tbody id="view-home-banners-tbody">
+<tr><td colspan="6" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</div>
+<div class="admin-hc-panel" id="admin-hc-panel-tutorial" role="tabpanel" aria-labelledby="admin-hc-tab-tutorial" data-hc-panel="tutorial" hidden>
+<div class="admin-filters">
+<div class="admin-filters__push" aria-hidden="true"></div>
+<button type="button" class="admin-btn admin-btn--primary" data-admin-tl-open-create>新增教學項目</button>
+</div>
+<div class="admin-card admin-card--flush" style="margin-bottom:0">
+<h2 class="admin-card__title" style="margin:0 0 8px;font-size:0.95rem;padding:16px 20px 0">教學連結</h2>
+<p style="margin:0 20px 12px;color:var(--ac-text-3);font-size:0.82rem">儲存於 <code>system_configs</code>（<code>home.tutorial_links</code>）；建立／修改須填寫異動原因供審計。</p>
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>ID</th><th>標題</th><th>連結</th><th>排序</th><th>狀態</th><th>操作</th></tr></thead>
+<tbody id="view-home-tutorial-tbody">
+<tr><td colspan="6" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</div>
+<p class="admin-footnote">獨立「成交播報」模組仍保留於左欄，便於權限拆分：<a href="#" data-admin-view="trade-feed" style="color:var(--ac-brand)">成交播報</a>。</p>
+</section>
+
+<!-- kyc — 對齊 kycTable -->
+<section id="view-kyc" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-kyc">
+<div class="admin-page-head"><h1 id="head-kyc">實名 / KYC</h1><p>證件與人臉資料；待審核列可單筆通過或開啟「審核」填寫駁回原因。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>關鍵字</label><input id="view-kyc-keyword" class="admin-input" placeholder="用戶名／姓名／證件號"/></div>
+<div class="admin-field"><label>用戶</label><input id="view-kyc-user" class="admin-input mono" placeholder="用戶 ID／郵箱／手機"/></div>
+<span data-admin-filter-actions="reset#view-kyc-reset|query#view-kyc-query|refresh#view-kyc-refresh"></span>
+<div class="admin-kyc-status-tabs" role="tablist" aria-label="審核狀態分類">
+<button type="button" class="admin-kyc-status-tabs__btn is-active" role="tab" aria-selected="true" data-kyc-status-tab="all">全部</button>
+<button type="button" class="admin-kyc-status-tabs__btn" role="tab" aria-selected="false" data-kyc-status-tab="approved">審批</button>
+<button type="button" class="admin-kyc-status-tabs__btn" role="tab" aria-selected="false" data-kyc-status-tab="pending">未審批</button>
+</div>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-toolbar">
+<button type="button" class="admin-btn admin-btn--success" id="view-kyc-batch-approve">批量通過</button>
+<button type="button" class="admin-btn admin-btn--danger" id="view-kyc-batch-reject">批量駁回</button>
+</div>
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="view-kyc-select-all" title="本頁待審列全選" aria-label="全選待審 KYC"/></th><th>序號</th><th>用戶 ID / 帳號</th><th>姓名</th><th>證件號</th><th>操作</th></tr></thead>
+<tbody id="view-kyc-tbody">
+<tr><td colspan="6" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<!-- payout-methods — 對齊 payoutMethodsTable -->
+<section id="view-payout-methods" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-pm">
+<div class="admin-page-head"><h1 id="head-pm">收款方</h1><p>按用戶彙總已綁定的鏈上地址與銀行卡數量，僅供查閱；此列表不顯示審核狀態。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>關鍵字</label><input id="view-pm-keyword" class="admin-input" placeholder="用戶名 / 卡號尾號 / 地址"/></div>
+<div class="admin-field"><label>用戶</label><input id="view-pm-user" class="admin-input mono" placeholder="用戶 ID / 郵箱 / 手機"/></div>
+<div class="admin-field"><label>渠道</label><select id="view-pm-channel" class="admin-select"><option value="">全部渠道</option><option value="bank">銀行卡</option><option value="usdt">鏈上 USDT</option><option value="pix">PIX</option></select></div>
+<span data-admin-filter-actions="reset#view-pm-reset|query#view-pm-query|refresh#view-pm-refresh"></span>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>序號</th><th>用戶 ID / 帳號</th><th>地址</th><th>銀行</th><th>操作</th></tr></thead>
+<tbody id="view-payout-methods-tbody">
+<tr><td colspan="5" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<!-- auth-events — 對齊認證問題排查（帳號 + AUTH_*） -->
+<section id="view-auth-events" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-ae">
+<div class="admin-page-head"><h1 id="head-ae">操作日誌</h1><p>可切換查看認證事件與最近後台操作，方便排查登入異常與管理員操作軌跡。</p></div>
+<div class="admin-submodule-bar" role="group" aria-label="操作日誌子模組">
+<div class="admin-submodule-bar__caption">（認證事件 / 最近後台操作）</div>
+<div class="admin-submodule-bar__row">
+<div class="admin-content-switcher admin-content-switcher--embedded" role="tablist" aria-label="操作日誌子模組">
+<button type="button" class="admin-content-switcher__btn is-active" role="tab" aria-selected="true" data-auth-log-tab="auth">認證事件</button>
+<button type="button" class="admin-content-switcher__btn" role="tab" aria-selected="false" data-auth-log-tab="admin">最近後台操作</button>
+</div>
+<span data-admin-filter-actions="refresh#view-ae-refresh"></span>
+</div>
+</div>
+<div id="view-auth-events-auth-panel">
+<div class="admin-filters">
+<div class="admin-field"><label>帳號</label><input class="admin-input" id="view-ae-account" placeholder="账号"/></div>
+<div class="admin-field"><label>用戶</label><input class="admin-input mono" id="view-ae-user" placeholder="用户 ID / 邮箱 / 手机"/></div>
+<div class="admin-field"><label>AUTH 錯誤碼</label><input class="admin-input mono" id="view-ae-error" placeholder="AUTH_* 错误码"/></div>
+<div class="admin-field"><label>類型</label><select class="admin-select" id="view-ae-action"><option value="">全部</option><option value="login">登入</option><option value="register">註冊</option><option value="password_reset">重設密碼</option></select></div>
+<span data-admin-filter-actions="reset#view-ae-reset|query#view-ae-query|refresh#view-ae-refresh"></span>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>ID</th><th>事件</th><th>帳號</th><th>錯誤碼</th><th>IP</th><th>時間</th><th>操作</th></tr></thead>
+<tbody id="view-auth-events-tbody">
+<tr><td colspan="7" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</div>
+<div id="view-auth-events-admin-panel" hidden>
+<div class="admin-card admin-card--flush">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>時間</th><th>管理員</th><th>動作</th><th>模組</th></tr></thead>
+<tbody id="view-auth-events-admin-tbody">
+<tr><td colspan="4" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</div>
+</section>
+
+<!-- system-config — 對齊 systemConfigsTable + 分組篩選 -->
+<section id="view-system-config" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-sc">
+<div class="admin-page-head"><h1 id="head-sc">系統配置</h1><p>分組 KV：認證、資金、語言、站點、交易、驗證碼等。</p></div>
+<div class="admin-filters">
+<div class="admin-field"><label>分組</label><select class="admin-select" id="view-sc-group"><option value="">全部分組</option><option value="auth">認證</option><option value="finance">資金</option><option value="language">語言</option><option value="site">站點</option><option value="trade">交易</option><option value="captcha">驗證碼</option></select></div>
+<span data-admin-filter-actions="reset#view-sc-reset|query#view-sc-query|refresh#view-sc-refresh"></span>
+</div>
+<div class="admin-callout">站點域名配置用於運營維護、連結展示與運行後讀取；後台與前台首次啟動仍優先使用部署注入或自動識別，不會被此處反向卡住。</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>分組</th><th>配置項</th><th>值</th><th>操作</th></tr></thead>
+<tbody id="view-system-config-tbody">
+<tr><td colspan="4" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<!-- admin-users — 帳號列表 + 管理員模版（對齊 New_C2C 後台分頁） -->
+<section id="view-admin-users" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-au">
+<div class="admin-page-head"><h1 id="head-au">後台管理員</h1><p>後台帳號、角色模板、底層權限與模組權限矩陣；「管理員模版」為後端預設可套用角色與模組權限對照。</p></div>
+<div class="admin-submodule-bar" role="group" aria-label="後台管理員子模組">
+<div class="admin-submodule-bar__caption">（後台管理員 / 管理員模版）</div>
+<div class="admin-submodule-bar__row">
+<div class="admin-content-switcher admin-content-switcher--embedded" role="tablist" aria-label="後台管理員子模組">
+<button type="button" class="admin-content-switcher__btn is-active" id="admin-au-tab-operators" role="tab" aria-selected="true" aria-controls="admin-au-panel-operators" tabindex="0" data-au-tab="operators">後台管理員</button>
+<button type="button" class="admin-content-switcher__btn" id="admin-au-tab-templates" role="tab" aria-selected="false" aria-controls="admin-au-panel-templates" tabindex="-1" data-au-tab="templates">管理員模版</button>
+</div>
+</div>
+</div>
+<div class="admin-au-panel" id="admin-au-panel-operators" role="tabpanel" aria-labelledby="admin-au-tab-operators" data-au-panel="operators">
+<div class="admin-filters">
+<div class="admin-field"><label>關鍵字</label><input class="admin-input" id="view-admin-users-keyword" placeholder="搜尋後台帳號"/></div>
+<div class="admin-field"><label>狀態</label><select class="admin-select" id="view-admin-users-status"><option value="">全部狀態</option><option value="normal">正常</option><option value="disabled">禁用</option></select></div>
+<span data-admin-filter-actions="reset#view-admin-users-reset|search#view-admin-users-search|refresh#view-admin-users-refresh"></span>
+<div class="admin-filters__push" aria-hidden="true"><span class="admin-muted" id="view-admin-users-count"></span></div>
+<button type="button" class="admin-btn admin-btn--primary" data-admin-modal-open="admin-modal-create-admin-user">新增管理員</button>
+</div>
+<div class="admin-card admin-card--flush">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>ID</th><th>帳號</th><th>名稱備註</th><th>專屬邀請碼</th><th>角色模板</th><th>狀態</th><th>底層權限</th><th>模組權限</th><th>創建時間</th><th>操作</th></tr></thead>
+<tbody id="view-admin-users-tbody">
+<tr><td colspan="10" class="admin-muted">載入中…</td></tr>
+</tbody></table></div>
+<div class="admin-toolbar">
+<button type="button" class="admin-btn admin-btn--ghost" id="view-admin-users-prev" disabled>上一頁</button>
+<button type="button" class="admin-btn admin-btn--ghost" id="view-admin-users-page-size">每頁筆數</button>
+<span class="admin-muted" id="view-admin-users-page-info"></span>
+<button type="button" class="admin-btn admin-btn--ghost" id="view-admin-users-next" disabled>下一頁</button>
+</div>
+</div>
+</div>
+<div class="admin-au-panel" id="admin-au-panel-templates" role="tabpanel" aria-labelledby="admin-au-tab-templates" data-au-panel="templates" hidden>
+<div class="admin-filters">
+<div class="admin-filters__push" aria-hidden="true"></div>
+<button type="button" class="admin-btn admin-btn--primary" data-admin-modal-open="admin-modal-create-role-template">新增模版</button>
+</div>
+<p class="admin-callout" style="margin-bottom:12px">下列為後端 <code>admin_role_template_catalog</code> 與自訂模版合併列表（與 New_C2C 後台「角色模板」概念一致）。新增管理員時可選用；帳號級模組權限請於帳號列點「權限」編輯。內建模版可檢視不可刪除；自訂模版可新增、編輯與刪除（無人使用時）。</p>
+<div class="admin-card admin-card--flush">
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>模版鍵</th><th>顯示名稱</th><th>預設模組權限</th><th>操作</th></tr></thead>
+<tbody id="view-admin-role-templates-tbody">
+<tr><td colspan="4" class="admin-muted">請先於「後台管理員」分頁成功載入列表後顯示。</td></tr>
+</tbody></table></div>
+</div>
+</div>
+</section>
+
+</main>
+<!-- EURNYSE 後台彈窗骨架：對齊 New_C2C admin-web 各 *Modal；繁中標籤；提示文案不少於舊版 -->
+<div id="admin-modals-root" aria-live="polite">
+<div class="admin-modal" id="admin-modal-admin-settings" role="dialog" aria-modal="true" aria-labelledby="amt-settings-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-settings-title">管理員設定</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">帳號安全與後台通知設定。</p>
+<div class="admin-modal__panel admin-settings-actions">
+<button type="button" class="admin-btn admin-btn--primary" data-admin-modal-open="admin-modal-admin-change-password">更改密碼</button>
+<button type="button" class="admin-btn admin-btn--accent" data-admin-modal-open="admin-modal-deposit-alert-settings">通知設定</button>
+</div>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-admin-change-password" role="dialog" aria-modal="true" aria-labelledby="amt-change-password-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-change-password-title">更改密碼</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout" id="admin-change-password-callout">請輸入目前密碼與新密碼。</p>
+<form class="admin-modal__form" id="admin-change-password-form">
+<label class="admin-modal__field"><span class="admin-modal__label">目前密碼</span><input class="admin-input" id="admin-change-password-current" type="password" autocomplete="current-password" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">新密碼</span><input class="admin-input" id="admin-change-password-new" type="password" autocomplete="new-password" minlength="6" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">確認新密碼</span><input class="admin-input" id="admin-change-password-confirm" type="password" autocomplete="new-password" minlength="6" required/></label>
+<p class="admin-modal__message-slot" id="admin-change-password-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">更新密碼</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close id="admin-change-password-cancel">取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- 使用者詳情：對齊 userDetailModal -->
+<div class="admin-modal" id="admin-modal-user-detail" role="dialog" aria-modal="true" aria-labelledby="amt-user-detail-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-user-detail-title">使用者詳情</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<div class="admin-modal__cardbar">
+<span class="admin-modal__cardbar-title">用戶資料</span>
+<div class="admin-modal__cardbar-actions">
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-user-log>查看審計</button>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-user-edit>編輯</button>
+</div>
+</div>
+<div class="admin-modal__panel">
+<form class="admin-modal__form" id="admin-user-profile-form" data-user-id="">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">資料序號</span><input class="admin-input mono" name="id" value="" readonly/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">用戶名</span><input class="admin-input" name="username" value="" disabled/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">帳號類型</span><select class="admin-select" name="account_type" disabled><option value="email">郵箱帳號</option><option value="mobile">手機帳號</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">Email</span><input class="admin-input" name="email" type="email" value="" disabled/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">國家區號</span><input class="admin-input" name="country_code" value="" placeholder="+886" disabled/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">手機</span><input class="admin-input" name="mobile" value="" placeholder="912345678" disabled/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">語言</span><select class="admin-select" name="lang" disabled><option value="hkg">繁體中文</option><option value="zh-Hant">繁體中文（前端）</option><option value="eng">英文</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">邀請碼</span><input class="admin-input mono" name="invitation_code" value="" disabled/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">信用分</span><input class="admin-input mono" name="credit_score" type="number" inputmode="numeric" min="0" step="1" value="" title="對應 user_tier_profiles.score，與 App 個人中心信用分一致" disabled/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">新密碼</span><input class="admin-input" name="password" type="password" placeholder="不修改請留空" autocomplete="new-password" disabled/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" name="status" disabled><option value="normal">正常</option><option value="locked">鎖定</option><option value="disabled">禁用</option></select></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">備註 / 變更原因</span><input class="admin-input" name="reason" placeholder="可不填寫" disabled/></label>
+</div>
+<div class="admin-modal__form-actions admin-modal__form-actions--split">
+<button type="submit" class="admin-btn admin-btn--primary" disabled>儲存用戶</button>
+<button type="button" class="admin-btn admin-btn--danger" data-admin-user-delete>刪除用戶</button>
+</div>
+</form>
+<p class="admin-modal__inline-actions"><button type="button" class="admin-btn admin-btn--accent admin-btn--sm" data-admin-modal-open="admin-modal-tier-adjust">等級</button></p>
+<div class="admin-modal__audit">
+<div class="admin-modal__audit-title">最近審計記錄</div>
+<p class="admin-modal__hint">審計列表由 API 載入。</p>
+<ul class="admin-modal__audit-list"><li class="mono">請至「認證事件」或系統審計列表查看實際操作紀錄。</li></ul>
+</div>
+<p class="admin-modal__message-slot" id="admin-user-profile-message" role="status" aria-live="polite">點擊「編輯」後即可修改用戶資料。</p>
+</div>
+</div>
+<div id="admin-user-delete-overlay" class="admin-delete-overlay" hidden aria-hidden="true">
+<div class="admin-delete-overlay__card" role="dialog" aria-labelledby="admin-user-delete-title" aria-modal="true">
+<div class="admin-delete-overlay__badge">高風險操作</div>
+<h3 class="admin-delete-overlay__title" id="admin-user-delete-title">刪除用戶</h3>
+<p class="admin-delete-overlay__lead" id="admin-user-delete-lead"></p>
+<div id="admin-user-delete-step1" class="admin-delete-overlay__step">
+<ul class="admin-delete-overlay__list">
+<li>將永久刪除此用戶與其訂單、掛單、充值／提現、KYC、錢包餘額、邀請碼等關聯資料。</li>
+<li>本操作<strong>無法復原</strong>，請先確認無誤。</li>
+</ul>
+<div class="admin-delete-overlay__actions">
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-user-delete-cancel>取消</button>
+<button type="button" class="admin-btn admin-btn--danger" data-admin-user-delete-next>我已了解風險，繼續</button>
+</div>
+</div>
+<div id="admin-user-delete-step2" class="admin-delete-overlay__step" hidden>
+<p class="admin-delete-overlay__hint">第二步：請輸入下方<strong>完整用戶名</strong>以解鎖刪除按鈕（對齊 New_C2C 雙重確認）。</p>
+<p class="admin-delete-overlay__mono" id="admin-user-delete-username-target"></p>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">確認用戶名</span><input type="text" class="admin-input mono" id="admin-user-delete-confirm-input" autocomplete="off" placeholder="請輸入與上方一致的用戶名"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">刪除原因（選填，寫入審計）</span><input type="text" class="admin-input" id="admin-user-delete-reason" placeholder="例：測試帳號清理"/></label>
+<p class="admin-delete-overlay__err" id="admin-user-delete-err" role="alert"></p>
+<div class="admin-delete-overlay__actions">
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-user-delete-back>返回上一步</button>
+<button type="button" class="admin-btn admin-btn--danger" data-admin-user-delete-final disabled>確認永久刪除</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 會員列表（團隊下級） -->
+<div class="admin-modal" id="admin-modal-user-network" role="dialog" aria-modal="true" aria-labelledby="amt-user-net-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-user-net-title">會員列表（團隊下級）</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">對齊 <code>userNetworkMembersModal</code>：展示邀請樹下級用戶 ID、用戶名、層級與操作入口。</p>
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>用戶 ID</th><th>用戶名</th><th>層級</th><th>操作</th></tr></thead>
+<tbody><tr><td colspan="4" class="admin-muted">請從用戶詳情載入下級會員資料。</td></tr></tbody>
+</table></div>
+</div>
+</div>
+
+<!-- 新增用戶 createUserModal -->
+<div class="admin-modal" id="admin-modal-create-user" role="dialog" aria-modal="true" aria-labelledby="amt-create-user-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-create-user-title">新增使用者</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">欄位與 New_C2C <code>createUserModal</code> 對齊：帳號類型、郵箱/手機、密碼、語言、狀態、邀請人與備註；送出前請核對合規。</p>
+<form class="admin-modal__form" id="admin-create-user-form" novalidate>
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">帳號類型</span><select class="admin-select" name="account_type"><option value="email">郵箱帳號</option><option value="mobile">手機帳號</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">郵箱</span><input class="admin-input" name="email" type="email" placeholder="user@example.com"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">國家區號</span><input class="admin-input" name="country_code" value="+886" placeholder="+886"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">手機</span><input class="admin-input" name="mobile" inputmode="tel" placeholder="912345678"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">登入密碼</span><input class="admin-input" name="password" type="password" placeholder="至少 6 位字元" autocomplete="new-password" required minlength="6"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">語言</span><select class="admin-select" name="lang"><option value="zh-Hant">繁體中文</option><option value="eng">英文</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" name="status"><option value="normal">正常</option><option value="disabled">禁用</option><option value="locked">鎖定</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">邀請人用戶 ID</span><input class="admin-input" name="invited_by_user_id" inputmode="numeric" placeholder="可不填"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">備註</span><input class="admin-input" name="reason" placeholder="可不填寫"/></label>
+</div>
+<p class="admin-modal__message-slot" id="admin-create-user-message" role="alert" aria-live="polite"></p>
+<div class="admin-modal__form-actions"><button type="submit" class="admin-btn admin-btn--primary">確認新增</button></div>
+</form>
+</div>
+</div>
+
+<!-- 充值詳情 / 審核 -->
+<div class="admin-modal" id="admin-modal-deposit-detail" role="dialog" aria-modal="true" aria-labelledby="amt-dep-d-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-dep-d-title">充值申請詳情</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p id="view-deposit-detail-loading" class="admin-modal__empty-note">載入中…</p>
+<p id="view-deposit-detail-error" class="admin-modal__message-slot admin-create-user-message--error" style="display:none" role="alert"></p>
+<div id="view-deposit-detail-main" style="display:none">
+<dl id="view-deposit-detail-dl" class="admin-modal__detail-list"></dl>
+<div id="view-deposit-detail-proofs-wrap" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--ac-border)">
+<div class="admin-modal__label" style="margin-bottom:10px;font-weight:700">上傳憑證</div>
+<div id="view-deposit-detail-proofs" class="admin-deposit-proof-grid"></div>
+<p id="view-deposit-detail-proofs-empty" class="admin-modal__hint" style="display:none;margin-top:8px">此申請未提供憑證圖片連結。</p>
+<p class="admin-modal__hint" style="margin-top:10px;margin-bottom:0">點縮圖可放大預覽；非圖片連結將顯示為「開啟連結」。</p>
+</div>
+</div>
+</div>
+<div id="view-deposit-detail-img-zoom" class="admin-deposit-proof-zoom" hidden aria-hidden="true">
+<button type="button" class="admin-deposit-proof-zoom__close admin-btn admin-btn--ghost admin-btn--sm" data-deposit-proof-zoom-close>關閉</button>
+<img id="view-deposit-detail-zoom-img" class="admin-deposit-proof-zoom__img" alt="憑證預覽"/>
+</div>
+</div>
+
+<!-- 提現詳情 / 審核 -->
+<div class="admin-modal" id="admin-modal-withdrawal-detail" role="dialog" aria-modal="true" aria-labelledby="amt-wd-d-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-wd-d-title">提現申請詳情</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<div id="view-withdrawal-detail-body"><p class="admin-modal__empty-note">選擇一條提現申請後查看詳情。</p></div>
+</div>
+</div>
+
+<!-- 通用：取代原生 prompt / confirm / alert（與後台深色主題一致） -->
+<div class="admin-modal admin-modal--generic" id="admin-modal-generic-prompt" role="dialog" aria-modal="true" aria-labelledby="admin-generic-prompt-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--narrow">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="admin-generic-prompt-title">請輸入</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-generic-prompt-dismiss>關閉</button>
+</div>
+<p class="admin-modal__callout" id="admin-generic-prompt-message"></p>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label" id="admin-generic-prompt-label">內容</span><textarea id="admin-generic-prompt-textarea" class="admin-textarea" rows="4" placeholder=""></textarea></label>
+<p class="admin-modal__message-slot admin-create-user-message--error" id="admin-generic-prompt-error" style="display:none" role="alert"></p>
+<div class="admin-modal__form-actions">
+<button type="button" class="admin-btn admin-btn--ghost" id="admin-generic-prompt-cancel">取消</button>
+<button type="button" class="admin-btn admin-btn--primary" id="admin-generic-prompt-ok">確定</button>
+</div>
+</div>
+</div>
+
+<div class="admin-modal admin-modal--generic" id="admin-modal-generic-confirm" role="dialog" aria-modal="true" aria-labelledby="admin-generic-confirm-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--narrow">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="admin-generic-confirm-title">確認</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-generic-confirm-dismiss>關閉</button>
+</div>
+<p class="admin-modal__callout" id="admin-generic-confirm-message"></p>
+<div class="admin-modal__form-actions">
+<button type="button" class="admin-btn admin-btn--ghost" id="admin-generic-confirm-cancel">取消</button>
+<button type="button" class="admin-btn admin-btn--primary" id="admin-generic-confirm-ok">確定</button>
+</div>
+</div>
+</div>
+
+<div class="admin-modal admin-modal--generic" id="admin-modal-generic-alert" role="dialog" aria-modal="true" aria-labelledby="admin-generic-alert-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--narrow">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="admin-generic-alert-title">提示</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-generic-alert-dismiss>關閉</button>
+</div>
+<p class="admin-modal__callout" id="admin-generic-alert-message"></p>
+<div class="admin-modal__form-actions">
+<button type="button" class="admin-btn admin-btn--primary" id="admin-generic-alert-ok">知道了</button>
+</div>
+</div>
+</div>
+
+<!-- 訂單詳情 -->
+<div class="admin-modal" id="admin-modal-order-detail" role="dialog" aria-modal="true" aria-labelledby="amt-ord-d-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-ord-d-title">訂單詳情</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<div id="view-order-detail-body"><p class="admin-modal__empty-note">選擇一條訂單後查看詳情。</p></div>
+</div>
+</div>
+
+<!-- 理財訂單 / 產品 -->
+<div class="admin-modal" id="admin-modal-financial-order-detail" role="dialog" aria-modal="true" aria-labelledby="amt-fio-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-fio-title">理財訂單詳情</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">含資金返還模式（手動/自動）、延遲天數、備註與返還狀態。</p>
+<div id="view-financial-order-detail-body"><p class="admin-modal__empty-note">選擇一條理財訂單後查看詳情。</p></div>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-create-financial-product" role="dialog" aria-modal="true" aria-labelledby="amt-cfp-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-cfp-title">新增理財產品</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">與 New_C2C / 後端 <code>sanitize_financial_product_payload</code> 一致。產品編碼為 3–40 位小寫英數、底線或連字號；個人額度不可大於總額度。</p>
+<form class="admin-modal__form" id="view-financial-product-create-form">
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">產品編碼</span><input class="admin-input mono" id="view-fp-create-code" type="text" required maxlength="40" placeholder="例：earn_usdt_30d" pattern="[a-z0-9_-]{3,40}" title="3–40 位小寫英數、_ 或 -"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">顯示名稱</span><input class="admin-input" id="view-fp-create-display" type="text" maxlength="80" placeholder="留空則使用編碼大寫"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">資產代碼</span><input class="admin-input mono" id="view-fp-create-asset" type="text" value="USDT" required maxlength="32"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">副標題</span><input class="admin-input" id="view-fp-create-subtitle" type="text" maxlength="160" placeholder="選填"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">產品說明</span><textarea class="admin-textarea" id="view-fp-create-detail" rows="3" maxlength="500" placeholder="選填，最多 500 字"></textarea></label>
+<label class="admin-modal__field"><span class="admin-modal__label">年化 APR（%）</span><input class="admin-input mono" id="view-fp-create-apr" type="number" step="0.01" min="0" value="5" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">期限（天）</span><input class="admin-input mono" id="view-fp-create-term" type="number" step="1" min="1" value="30" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">最低申購</span><input class="admin-input mono" id="view-fp-create-min" type="number" step="any" min="0" value="100" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">個人額度上限</span><input class="admin-input mono" id="view-fp-create-personal" type="number" step="any" min="0" value="50000" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">總募集額度</span><input class="admin-input mono" id="view-fp-create-total" type="number" step="any" min="0" value="1000000" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">排序</span><input class="admin-input mono" id="view-fp-create-sort" type="number" step="1" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">預設返還模式</span><select class="admin-select" id="view-fp-create-return-mode"><option value="auto">自動</option><option value="manual">手動</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">返還延遲（天）</span><input class="admin-input mono" id="view-fp-create-return-delay" type="number" step="1" min="0" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-fp-create-status"><option value="active">啟用</option><option value="inactive">停用</option></select></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-fp-create-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">建立</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-financial-product-detail" role="dialog" aria-modal="true" aria-labelledby="amt-fpd-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-fpd-title">理財產品編輯</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">修改後儲存即更新資料庫；欄位與建立表單相同。</p>
+<form class="admin-modal__form" id="view-financial-product-detail-form">
+<input type="hidden" id="view-fp-detail-id" value=""/>
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">產品編碼</span><input class="admin-input mono" id="view-fp-detail-code" type="text" required maxlength="40" pattern="[a-z0-9_-]{3,40}"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">顯示名稱</span><input class="admin-input" id="view-fp-detail-display" type="text" maxlength="80"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">資產代碼</span><input class="admin-input mono" id="view-fp-detail-asset" type="text" required maxlength="32"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">副標題</span><input class="admin-input" id="view-fp-detail-subtitle" type="text" maxlength="160"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">產品說明</span><textarea class="admin-textarea" id="view-fp-detail-detail" rows="3" maxlength="500"></textarea></label>
+<label class="admin-modal__field"><span class="admin-modal__label">年化 APR（%）</span><input class="admin-input mono" id="view-fp-detail-apr" type="number" step="0.01" min="0" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">期限（天）</span><input class="admin-input mono" id="view-fp-detail-term" type="number" step="1" min="1" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">最低申購</span><input class="admin-input mono" id="view-fp-detail-min" type="number" step="any" min="0" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">個人額度上限</span><input class="admin-input mono" id="view-fp-detail-personal" type="number" step="any" min="0" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">總募集額度</span><input class="admin-input mono" id="view-fp-detail-total" type="number" step="any" min="0" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">排序</span><input class="admin-input mono" id="view-fp-detail-sort" type="number" step="1" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">預設返還模式</span><select class="admin-select" id="view-fp-detail-return-mode"><option value="auto">自動</option><option value="manual">手動</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">返還延遲（天）</span><input class="admin-input mono" id="view-fp-detail-return-delay" type="number" step="1" min="0" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-fp-detail-status"><option value="active">啟用</option><option value="inactive">停用</option></select></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-fp-detail-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">儲存</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- KYC -->
+<div class="admin-modal" id="admin-modal-kyc-detail" role="dialog" aria-modal="true" aria-labelledby="amt-kyc-d-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-kyc-d-title">實名申請詳情</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__message-slot" id="view-kyc-detail-msg" role="status"></p>
+<p id="view-kyc-detail-loading" class="admin-muted" style="margin:0 0 12px">載入中…</p>
+<div id="view-kyc-detail-body" class="admin-modal__scroll-body admin-modal__scroll-body--h52" style="display:none">
+<dl class="admin-modal__detail-list" id="view-kyc-detail-meta"></dl>
+<div class="admin-modal__grid2" style="margin-top:12px">
+<div class="admin-card" style="padding:12px">
+<div class="admin-modal__label" style="margin-bottom:8px">證件正面</div>
+<div id="view-kyc-preview-front"></div>
+</div>
+<div class="admin-card" style="padding:12px">
+<div class="admin-modal__label" style="margin-bottom:8px">證件反面</div>
+<div id="view-kyc-preview-back"></div>
+</div>
+</div>
+<div class="admin-card" style="padding:12px;margin-top:12px">
+<div class="admin-modal__label" style="margin-bottom:8px">自拍／人臉</div>
+<div id="view-kyc-preview-selfie"></div>
+</div>
+<div class="admin-modal__form-actions" id="view-kyc-detail-actions" style="margin-top:16px">
+<button type="button" class="admin-btn admin-btn--success" id="view-kyc-detail-approve">通過</button>
+<button type="button" class="admin-btn admin-btn--danger" id="view-kyc-detail-reject">駁回</button>
+</div>
+</div>
+<div id="view-kyc-detail-img-zoom" class="admin-deposit-proof-zoom" hidden aria-hidden="true">
+<button type="button" class="admin-deposit-proof-zoom__close admin-btn admin-btn--ghost admin-btn--sm" data-kyc-preview-zoom-close>關閉</button>
+<img id="view-kyc-detail-zoom-img" class="admin-deposit-proof-zoom__img" alt="KYC 圖片預覽"/>
+</div>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-kyc-review" role="dialog" aria-modal="true" aria-labelledby="amt-kyc-r-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-kyc-r-title">實名審核</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">通過或駁回；駁回須填寫原因（寫入審核備註）。</p>
+<form class="admin-modal__form" id="view-kyc-review-form">
+<input type="hidden" id="view-kyc-review-app-id" value=""/>
+<label class="admin-modal__field"><span class="admin-modal__label">審核動作</span><select class="admin-select" id="view-kyc-review-action"><option value="approve">通過</option><option value="reject">駁回</option></select></label>
+<label class="admin-modal__field" id="view-kyc-review-reason-wrap"><span class="admin-modal__label">原因</span><input class="admin-input" id="view-kyc-review-reason" type="text" placeholder="駁回時必填"/></label>
+<p class="admin-modal__message-slot" id="view-kyc-review-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary" id="view-kyc-review-submit">提交審核</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- 收款方式 -->
+<div class="admin-modal" id="admin-modal-payout-detail" role="dialog" aria-modal="true" aria-labelledby="amt-pm-d-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-pm-d-title">收款方詳情</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__empty-note" id="view-pm-detail-empty">選擇用戶後查看其已綁定銀行卡與地址卡片。</p>
+<div id="view-pm-detail-body" class="admin-modal__scroll-body admin-modal__scroll-body--h52" style="display:none">
+<div id="view-pm-detail-summary" class="admin-callout" style="margin:0 0 12px"></div>
+<div id="view-pm-detail-cards"></div>
+</div>
+</div>
+</div>
+
+<!-- 認證事件 / 系統配置 -->
+<div class="admin-modal" id="admin-modal-auth-event-detail" role="dialog" aria-modal="true" aria-labelledby="amt-ae-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-ae-title">認證事件詳情</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<div id="view-auth-event-detail-body"><p class="admin-modal__empty-note">選擇一條認證事件後查看詳情。</p></div>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-system-config-detail" role="dialog" aria-modal="true" aria-labelledby="amt-sc-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-sc-title">更新配置</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__empty-note" id="view-sc-edit-target">請從系統配置列表點「編輯」。</p>
+<form class="admin-modal__form" id="view-sc-edit-form">
+<input type="hidden" id="view-sc-edit-group" value=""/>
+<input type="hidden" id="view-sc-edit-key" value=""/>
+<label class="admin-modal__field"><span class="admin-modal__label">值</span><textarea class="admin-textarea mono" id="view-sc-edit-value" rows="5" placeholder="配置值"></textarea></label>
+<label class="admin-modal__field"><span class="admin-modal__label">原因</span><input class="admin-input" id="view-sc-edit-reason" placeholder="必填，供稽核"/></label>
+<p class="admin-modal__message-slot" id="view-sc-edit-msg" role="status"></p>
+<button type="submit" class="admin-btn admin-btn--primary">更新配置</button>
+</form>
+</div>
+</div>
+
+<!-- 後台管理員 -->
+<div class="admin-modal" id="admin-modal-admin-user-detail" role="dialog" aria-modal="true" aria-labelledby="amt-au-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-au-title">管理員詳情</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">由 API 載入目前選取之管理員資料。</p>
+<div id="admin-modal-admin-user-detail-body"><p class="admin-modal__empty-note">請從列表點「詳情」。</p></div>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-create-admin-user" role="dialog" aria-modal="true" aria-labelledby="amt-cau-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-cau-title">新增管理員</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">建立後台帳號；需具備超級管理員權限。</p>
+<form class="admin-modal__form" id="view-admin-create-user-form">
+<input type="hidden" name="_csrf" value=""/>
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">登入帳號</span><input class="admin-input" id="view-admin-create-account" type="text" autocomplete="username" required placeholder="例：admin001（自訂帳號，非 Email）"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">初始密碼</span><input class="admin-input" id="view-admin-create-password" type="password" autocomplete="new-password" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">顯示名稱</span><input class="admin-input" id="view-admin-create-display" placeholder="備註名稱"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">專屬邀請碼</span><input class="admin-input mono" id="view-admin-create-invite" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="留空自動產生 6 位數字"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-admin-create-status"><option value="normal">正常</option><option value="disabled">禁用</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">角色模板</span><select class="admin-select" id="view-admin-create-role-template"></select></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label"><input type="checkbox" id="view-admin-create-super"/> 設為超級管理員</span></label>
+</div>
+<div id="view-admin-create-custom-wrap" class="admin-modal__field admin-modal__field--full" hidden>
+<span class="admin-modal__label">模組權限（自訂）</span>
+<p class="admin-modal__hint" style="margin:6px 0 10px;font-size:0.82rem">選擇「自訂」後可為各模組設定關閉／閱讀／修改；至少一個模組須為閱讀或修改。</p>
+<div id="view-admin-create-module-matrix" class="admin-modal__scroll-body admin-modal__scroll-body--h46"></div>
+</div>
+<p class="admin-modal__message-slot" id="view-admin-create-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">建立</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-create-role-template" role="dialog" aria-modal="true" aria-labelledby="amt-crt-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-crt-title">新增管理員模版</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">自訂模版儲存於資料庫，與 PHP 內建 <code>admin_role_template_catalog</code> 合併後供「新增／編輯管理員」選用。內建鍵（<span class="mono">finance_ops</span>、<span class="mono">reviewer</span>、<span class="mono">customer_service</span> 等）不可覆寫或刪除。下方模組列請以「關閉／閱讀／修改」單選設定（至少一個模組為閱讀或修改）。</p>
+<form class="admin-modal__form" id="view-admin-rt-form" onsubmit="return false;">
+<input type="hidden" id="view-admin-rt-mode" value="create"/>
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">模版鍵</span><input class="admin-input mono" id="view-admin-rt-key" required maxlength="63" placeholder="例：ops_eu" autocomplete="off" pattern="[a-z][a-z0-9_]*"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">顯示名稱</span><input class="admin-input" id="view-admin-rt-label" required maxlength="191" placeholder="例：歐區營運"/></label>
+</div>
+<p class="admin-modal__message-slot" id="view-admin-rt-msg" role="status"></p>
+<div id="view-admin-rt-matrix" class="admin-modal__scroll-body admin-modal__scroll-body--h46"></div>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary" id="view-admin-rt-submit">建立</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-admin-user-edit" role="dialog" aria-modal="true" aria-labelledby="amt-aue-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-aue-title">編輯管理員</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<form class="admin-modal__form" id="view-admin-edit-user-form">
+<input type="hidden" id="view-admin-edit-id" value=""/>
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">登入帳號</span><input class="admin-input" id="view-admin-edit-account" type="text" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">顯示名稱</span><input class="admin-input" id="view-admin-edit-display"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">專屬邀請碼</span><input class="admin-input mono" id="view-admin-edit-invite" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="留空自動產生 6 位數字"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-admin-edit-status"><option value="normal">正常</option><option value="disabled">禁用</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">角色模板</span><select class="admin-select" id="view-admin-edit-role-template"></select></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label"><input type="checkbox" id="view-admin-edit-super"/> 超級管理員</span></label>
+</div>
+<p class="admin-modal__message-slot" id="view-admin-edit-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">儲存</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-admin-password" role="dialog" aria-modal="true" aria-labelledby="amt-apw-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-apw-title">修改登入密碼</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">由超管重設該帳號之登入密碼。</p>
+<form class="admin-modal__form" id="view-admin-password-form">
+<input type="hidden" id="view-admin-password-id" value=""/>
+<label class="admin-modal__field"><span class="admin-modal__label">新密碼</span><input class="admin-input" id="view-admin-password-new" type="password" autocomplete="new-password" required/></label>
+<p class="admin-modal__message-slot" id="view-admin-password-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">更新密碼</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-admin-user-permissions" role="dialog" aria-modal="true" aria-labelledby="amt-aup-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-aup-title">模組權限</h2>
+<div class="admin-modal__head-actions">
+<button type="button" class="admin-btn admin-btn--accent admin-btn--sm" id="view-admin-perm-copy-template" disabled>複製模版</button>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+</div>
+<p class="admin-modal__callout">依模組勾選「關閉／閱讀／修改」；儲存後角色模板將設為「自訂」並寫入後端。</p>
+<input type="hidden" id="view-admin-perm-target-id" value=""/>
+<p class="admin-modal__callout" id="view-admin-perm-super-note" hidden></p>
+<div id="view-admin-perm-matrix" class="admin-modal__scroll-body admin-modal__scroll-body--h52"></div>
+<p class="admin-modal__message-slot" id="view-admin-perm-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="button" class="admin-btn admin-btn--primary" id="view-admin-perm-save">儲存</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-deposit-alert-settings" role="dialog" aria-modal="true" aria-labelledby="amt-das-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-das-title">充值提醒設定</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">新充值訂單提示聲音；開啟後會定時檢查待審核充值數量，新增時播放提示音。</p>
+<form class="admin-modal__form" id="admin-deposit-alert-form">
+<label class="admin-modal__field"><span class="admin-modal__label"><input type="checkbox" id="admin-deposit-alert-enabled"/> 開啟充值訂單提示聲音</span></label>
+<label class="admin-modal__field"><span class="admin-modal__label">響鈴模式</span><select class="admin-select" id="admin-deposit-alert-mode"><option value="once">響一次</option><option value="loop">連續響三次</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">檢查間隔秒數</span><input class="admin-input" id="admin-deposit-alert-interval" type="number" min="5" max="120" step="1" value="15"/></label>
+<p class="admin-modal__message-slot" id="admin-deposit-alert-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">儲存設定</button>
+<button type="button" class="admin-btn admin-btn--accent" id="admin-deposit-alert-test">試聽</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-admin-user-audit" role="dialog" aria-modal="true" aria-labelledby="amt-aua-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-aua-title">管理員審計</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__empty-note">對齊 <code>adminUserAuditModal</code>：近期後台帳號操作列表。</p>
+</div>
+</div>
+
+<!-- 錢包調整 / 等級限額 -->
+<div class="admin-modal" id="admin-modal-wallet-adjust" role="dialog" aria-modal="true" aria-labelledby="amt-wa-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-wa-title">調整錢包</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">選擇錢包記錄後調整 USDT/EUR 可用或凍結餘額；操作類型、金額、原因；對齊 <code>walletAdjustModal</code>。</p>
+<p class="admin-modal__empty-note" id="view-wallet-adjust-target">請從資金錢包列表點擊某列「調帳」，或先填寫用戶 ID 後再點「調整餘額」。</p>
+<form class="admin-modal__form" id="view-wallet-adjust-form">
+<input type="hidden" id="view-wallet-adjust-user-id" value=""/>
+<input type="hidden" id="view-wallet-adjust-wallet-code" value="cash_usdt"/>
+<div class="admin-modal__btnrow" role="group" aria-label="選擇調整資產">
+<button type="button" class="admin-btn admin-btn--primary admin-btn--sm" data-wallet-adjust-asset="cash_usdt">USDT（已選）</button>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-wallet-adjust-asset="eur">EUR</button>
+</div>
+<label class="admin-modal__field"><span class="admin-modal__label">操作類型</span><select class="admin-select" id="view-wallet-adjust-operation"><option value="increase_available">增加可用餘額</option><option value="decrease_available">扣減可用餘額</option><option value="increase_reserved">增加凍結餘額</option><option value="decrease_reserved">扣減凍結餘額</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">金額</span><input class="admin-input mono" id="view-wallet-adjust-amount" type="number" step="any" min="0" placeholder="10.00000000" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">原因（可選）</span><input class="admin-input" id="view-wallet-adjust-reason" placeholder="可留空"/></label>
+<p class="admin-modal__message-slot" id="view-wallet-adjust-msg" role="status"></p>
+<button type="submit" class="admin-btn admin-btn--primary">更新錢包</button>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-wallet-ledger" role="dialog" aria-modal="true" aria-labelledby="amt-wl-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-wl-title">調帳紀錄</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout" id="view-wallet-ledger-target">請先選擇用戶。</p>
+<div class="admin-table-wrap"><table class="admin-table">
+<thead><tr><th>ID</th><th>資產</th><th>類型</th><th>可用變動</th><th>凍結變動</th><th>變動後</th><th>原因</th><th>時間</th></tr></thead>
+<tbody id="view-wallet-ledger-tbody"><tr><td colspan="8" class="admin-muted">尚未載入。</td></tr></tbody>
+</table></div>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-tier-adjust" role="dialog" aria-modal="true" aria-labelledby="amt-tier-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-tier-title">等級限額</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">更新等級資料：等級、組別代碼、積分、商戶權限、認證、賣單次數、最小賣出金額、保證金、風控狀態、違規提示與原因；對齊 <code>tierAdjustModal</code> 全表單。</p>
+<form class="admin-modal__form" id="view-tier-user-edit-form">
+<input type="hidden" id="view-tier-user-edit-id" value=""/>
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">用戶</span><input class="admin-input mono" id="view-tier-user-edit-user" type="text" readonly tabindex="-1"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">等級</span><select class="admin-select" id="view-tier-user-edit-level"><option value="1">LV1</option><option value="2">LV2</option><option value="3">LV3</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">分組</span><input class="admin-input mono" id="view-tier-user-edit-group" type="text" placeholder="basic / merchant / vip"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">信用分</span><input class="admin-input mono" id="view-tier-user-edit-score" type="number" step="1" min="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">日交易上限</span><input class="admin-input mono" id="view-tier-user-edit-daily" type="text" readonly tabindex="-1" title="後端依等級自動計算"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">最低賣出（USDT）</span><input class="admin-input mono" id="view-tier-user-edit-min-sell" type="number" step="any" min="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">保證金（USDT）</span><input class="admin-input mono" id="view-tier-user-edit-margin" type="number" step="any" min="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">保證金比例</span><input class="admin-input mono" id="view-tier-user-edit-margin-ratio" type="number" step="any" min="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">商戶權限</span><select class="admin-select" id="view-tier-user-edit-merchant"><option value="false">否</option><option value="true">是</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">需實名</span><select class="admin-select" id="view-tier-user-edit-verified"><option value="false">否</option><option value="true">是</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">風控狀態</span><select class="admin-select" id="view-tier-user-edit-risk"><option value="normal">正常</option><option value="warning">警示</option><option value="blocked">封鎖</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">異動原因</span><input class="admin-input" id="view-tier-user-edit-reason" type="text" placeholder="可留空"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">違規提示</span><textarea class="admin-textarea" id="view-tier-user-edit-violation" rows="3" placeholder="風控提示或違規原因，可留空"></textarea></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-tier-user-edit-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">儲存等級</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- 充值地址 -->
+<div class="admin-modal" id="admin-modal-create-deposit-address" role="dialog" aria-modal="true" aria-labelledby="amt-cda-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-cda-title">新增地址</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">為指定用戶設定 USDT 的 TRC20／ERC20／BEP20 充值地址；至少填寫一條鏈地址。與 New_C2C <code>createDepositAddressModal</code> 欄位一致。</p>
+<form class="admin-modal__form" id="view-da-create-form">
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">用戶 ID</span><input class="admin-input mono" id="view-da-create-user-id" type="number" min="1" step="1" required placeholder="數字 UID"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">TRC20 地址</span><input class="admin-input mono" id="view-da-create-trc20" type="text" placeholder="選填"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">ERC20 地址</span><input class="admin-input mono" id="view-da-create-erc20" type="text" placeholder="選填"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">BEP20 地址</span><input class="admin-input mono" id="view-da-create-bep20" type="text" placeholder="選填"/></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-da-create-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">建立</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-deposit-address-detail" role="dialog" aria-modal="true" aria-labelledby="amt-dad-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-dad-title">充值地址編輯</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">修改後儲存即呼叫 <code>PATCH /api/admin/deposit-addresses/:user_id</code>；清空某鏈欄位將移除該鏈地址。</p>
+<form class="admin-modal__form" id="view-da-detail-form">
+<input type="hidden" id="view-da-detail-user-id" value=""/>
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">用戶 ID</span><input class="admin-input mono" id="view-da-detail-user-id-display" type="text" readonly tabindex="-1"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">TRC20 地址</span><input class="admin-input mono" id="view-da-detail-trc20" type="text" placeholder="選填"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">ERC20 地址</span><input class="admin-input mono" id="view-da-detail-erc20" type="text" placeholder="選填"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">BEP20 地址</span><input class="admin-input mono" id="view-da-detail-bep20" type="text" placeholder="選填"/></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-da-detail-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">儲存</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- 成交播報 -->
+<div class="admin-modal" id="admin-modal-create-trade-feed" role="dialog" aria-modal="true" aria-labelledby="amt-ctf-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-ctf-title">新增播報</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">動作類型為「完成買入／完成賣出」時標題由系統帶入；選「自訂」時請填寫標題。其餘欄位與 New_C2C 建立播報表單一致。</p>
+<form class="admin-modal__form" id="view-trade-feed-create-form">
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">動作類型</span><select class="admin-select" id="view-tf-create-action" required>
+<option value="completed_buy">完成買入</option>
+<option value="completed_sell">完成賣出</option>
+<option value="custom">自訂</option>
+</select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-tf-create-status" required>
+<option value="active">啟用</option>
+<option value="inactive">停用</option>
+</select></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">自訂標題</span><input class="admin-input" id="view-tf-create-title" type="text" placeholder="僅「自訂」動作類型需填寫"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">商戶名</span><input class="admin-input" id="view-tf-create-actor" type="text" required placeholder="例：Prime Flow"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">資產代碼</span><input class="admin-input mono" id="view-tf-create-asset" type="text" value="USDT" required maxlength="32"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">金額</span><input class="admin-input mono" id="view-tf-create-amount" type="number" step="any" min="0" required placeholder="0.00000000"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">排序</span><input class="admin-input mono" id="view-tf-create-sort" type="number" step="1" value="0"/></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-tf-create-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">建立</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-trade-feed-detail" role="dialog" aria-modal="true" aria-labelledby="amt-tfd-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-tfd-title">播報編輯</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">修改後儲存即寫入 <code>trade_feed_events</code>；動作類型非自訂時標題仍由系統帶入。</p>
+<form class="admin-modal__form" id="view-trade-feed-detail-form">
+<input type="hidden" id="view-tf-detail-id" value=""/>
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">動作類型</span><select class="admin-select" id="view-tf-detail-action" required>
+<option value="completed_buy">完成買入</option>
+<option value="completed_sell">完成賣出</option>
+<option value="custom">自訂</option>
+</select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-tf-detail-status" required>
+<option value="active">啟用</option>
+<option value="inactive">停用</option>
+</select></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">自訂標題</span><input class="admin-input" id="view-tf-detail-title" type="text" placeholder="僅「自訂」動作類型需填寫"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">商戶名</span><input class="admin-input" id="view-tf-detail-actor" type="text" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">資產代碼</span><input class="admin-input mono" id="view-tf-detail-asset" type="text" required maxlength="32"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">金額</span><input class="admin-input mono" id="view-tf-detail-amount" type="number" step="any" min="0" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">排序</span><input class="admin-input mono" id="view-tf-detail-sort" type="number" step="1" value="0"/></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-tf-detail-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">儲存</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- 首頁橫幅（運營配置） -->
+<div class="admin-modal" id="admin-modal-create-home-banner" role="dialog" aria-modal="true" aria-labelledby="amt-chb-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-chb-title">新增橫幅</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">與 New_C2C 一致：標題、副標、角標、圖片網址、跳轉連結、排序、狀態。建立與修改皆需填寫<strong>異動原因</strong>供審計。</p>
+<form class="admin-modal__form" id="view-home-banner-create-form">
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">異動原因（審計）</span><input class="admin-input" id="view-hb-create-reason" type="text" required placeholder="例：首頁活動上線"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">標題</span><input class="admin-input" id="view-hb-create-title" type="text" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">副標</span><input class="admin-input" id="view-hb-create-subtitle" type="text" placeholder="選填"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">角標文字</span><input class="admin-input" id="view-hb-create-badge" type="text" placeholder="選填，如 HOT"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">圖片網址</span><input class="admin-input mono" id="view-hb-create-image-url" type="text" required placeholder="https://… 或站內路徑"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">跳轉連結</span><input class="admin-input mono" id="view-hb-create-link-url" type="text" placeholder="選填"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">排序</span><input class="admin-input mono" id="view-hb-create-sort" type="number" step="1" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-hb-create-status"><option value="active">啟用</option><option value="inactive">停用</option></select></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-hb-create-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">建立</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-home-banner-detail" role="dialog" aria-modal="true" aria-labelledby="amt-hbd-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-hbd-title">橫幅編輯</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">儲存時須填寫異動原因；欄位與建立表單相同。</p>
+<form class="admin-modal__form" id="view-home-banner-detail-form">
+<input type="hidden" id="view-hb-detail-id" value=""/>
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">異動原因（審計）</span><input class="admin-input" id="view-hb-detail-reason" type="text" required placeholder="例：更新圖片連結"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">標題</span><input class="admin-input" id="view-hb-detail-title" type="text" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">副標</span><input class="admin-input" id="view-hb-detail-subtitle" type="text"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">角標文字</span><input class="admin-input" id="view-hb-detail-badge" type="text"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">圖片網址</span><input class="admin-input mono" id="view-hb-detail-image-url" type="text" required/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">跳轉連結</span><input class="admin-input mono" id="view-hb-detail-link-url" type="text"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">排序</span><input class="admin-input mono" id="view-hb-detail-sort" type="number" step="1" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-hb-detail-status"><option value="active">啟用</option><option value="inactive">停用</option></select></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-hb-detail-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">儲存</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- 掛單 -->
+<div class="admin-modal" id="admin-modal-create-listing" role="dialog" aria-modal="true" aria-labelledby="amt-cl-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-cl-title">新增掛單</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">資產固定為 USDT、法幣為 EUR（後端預設）。商戶暱稱、方向、單價、限額與庫存為必填；買盤可填「收款方式摘要」。與 New_C2C <code>createListingModal</code> 一致。</p>
+<form class="admin-modal__form" id="view-listing-create-form">
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">持有人用戶 ID</span><input class="admin-input mono" id="view-listing-create-owner" type="number" min="0" step="1" placeholder="選填，0 表示未綁定"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">商戶暱稱</span><input class="admin-input" id="view-listing-create-nickname" type="text" required placeholder="列表顯示名稱"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">方向</span><select class="admin-select" id="view-listing-create-side" required>
+<option value="sell">賣盤</option>
+<option value="buy">買盤</option>
+</select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-listing-create-status" required>
+<option value="active">啟用</option>
+<option value="inactive">停用</option>
+</select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">單價（EUR）</span><input class="admin-input mono" id="view-listing-create-price" type="number" step="any" min="0" required placeholder="例：0.92"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">單筆最小（USDT）</span><input class="admin-input mono" id="view-listing-create-min" type="number" step="any" min="0" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">單筆最大（USDT）</span><input class="admin-input mono" id="view-listing-create-max" type="number" step="any" min="0" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">庫存（USDT）</span><input class="admin-input mono" id="view-listing-create-available" type="number" step="any" min="0" required/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">收款方式摘要（僅買盤）</span><input class="admin-input" id="view-listing-create-payment" type="text" placeholder="買盤時選填"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">成交率</span><input class="admin-input" id="view-listing-create-completion" type="text" placeholder="選填，例：98%"/></label>
+<label class="admin-modal__field admin-modal__field--full">
+<span class="admin-modal__label">交易大廳辨識標示</span>
+<span class="admin-modal__hint">勾選後在 App 交易大廳顯示 VIP／PRO／圓形「CERTIFIED」認證章；未勾認證章時仍可依成交率顯示星形圖示。</span>
+<div class="admin-modal__check-row">
+<label class="admin-inline-check"><input type="checkbox" id="view-listing-create-badge-vip"/> VIP</label>
+<label class="admin-inline-check"><input type="checkbox" id="view-listing-create-badge-pro"/> PRO</label>
+<label class="admin-inline-check"><input type="checkbox" id="view-listing-create-badge-stars"/> 認證章（CERTIFIED）</label>
+</div>
+</label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-listing-create-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">建立</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-listing-detail" role="dialog" aria-modal="true" aria-labelledby="amt-ld-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-ld-title">掛單編輯</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">儲存即寫入 <code>c2c_listings</code>；買盤以外時收款摘要會由後端清空。</p>
+<form class="admin-modal__form" id="view-listing-detail-form">
+<input type="hidden" id="view-listing-detail-id" value=""/>
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">持有人用戶 ID</span><input class="admin-input mono" id="view-listing-detail-owner" type="number" min="0" step="1" placeholder="0 表示未綁定"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">商戶暱稱</span><input class="admin-input" id="view-listing-detail-nickname" type="text" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">方向</span><select class="admin-select" id="view-listing-detail-side" required>
+<option value="sell">賣盤</option>
+<option value="buy">買盤</option>
+</select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-listing-detail-status" required>
+<option value="active">啟用</option>
+<option value="inactive">停用</option>
+</select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">單價（EUR）</span><input class="admin-input mono" id="view-listing-detail-price" type="number" step="any" min="0" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">單筆最小（USDT）</span><input class="admin-input mono" id="view-listing-detail-min" type="number" step="any" min="0" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">單筆最大（USDT）</span><input class="admin-input mono" id="view-listing-detail-max" type="number" step="any" min="0" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">庫存（USDT）</span><input class="admin-input mono" id="view-listing-detail-available" type="number" step="any" min="0" required/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">收款方式摘要（僅買盤）</span><input class="admin-input" id="view-listing-detail-payment" type="text"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">成交率</span><input class="admin-input" id="view-listing-detail-completion" type="text" placeholder="選填"/></label>
+<label class="admin-modal__field admin-modal__field--full">
+<span class="admin-modal__label">交易大廳辨識標示</span>
+<span class="admin-modal__hint">勾選後在 App 交易大廳顯示 VIP／PRO／圓形「CERTIFIED」認證章；未勾認證章時仍可依成交率顯示星形圖示。</span>
+<div class="admin-modal__check-row">
+<label class="admin-inline-check"><input type="checkbox" id="view-listing-detail-badge-vip"/> VIP</label>
+<label class="admin-inline-check"><input type="checkbox" id="view-listing-detail-badge-pro"/> PRO</label>
+<label class="admin-inline-check"><input type="checkbox" id="view-listing-detail-badge-stars"/> 認證章（CERTIFIED）</label>
+</div>
+</label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-listing-detail-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">儲存</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- 等級模板 -->
+<div class="admin-modal" id="admin-modal-create-tier-template" role="dialog" aria-modal="true" aria-labelledby="amt-ctt-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-ctt-title">新增等級模板</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">對齊 New_C2C 新增模板流程：提交 <code>POST /api/admin/tier-templates</code>。模板代碼、顯示名稱、等級 1–3 與交易/保證金參數請完整填寫；異動原因為審計留痕。</p>
+<form class="admin-modal__form" id="view-tt-create-form">
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">模板代碼</span><input class="admin-input mono" id="view-tt-create-code" type="text" required placeholder="例：vip_seller"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">顯示名稱</span><input class="admin-input" id="view-tt-create-display" type="text" required placeholder="例：VIP 商戶"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">等級（1–3）</span><input class="admin-input mono" id="view-tt-create-level" type="number" min="1" max="3" step="1" value="1" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">組別代碼</span><input class="admin-input mono" id="view-tt-create-group" type="text" placeholder="預設隨等級：basic / vip / vip_plus"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">積分</span><input class="admin-input mono" id="view-tt-create-score" type="number" step="1" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">日交易上限</span><input class="admin-input mono" id="view-tt-create-daily" type="number" step="1" min="0" placeholder="留空由系統依等級帶入（LV1=1 / LV2=2 / LV3=不限）"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">商戶權限</span><select class="admin-select" id="view-tt-create-merchant"><option value="false">否</option><option value="true">是</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">需實名</span><select class="admin-select" id="view-tt-create-verified"><option value="false">否</option><option value="true">是</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">最低賣出（USDT）</span><input class="admin-input mono" id="view-tt-create-min-sell" type="number" step="any" min="0" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">保證金（USDT）</span><input class="admin-input mono" id="view-tt-create-margin" type="number" step="any" min="0" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">保證金比例</span><input class="admin-input mono" id="view-tt-create-margin-ratio" type="number" step="any" min="0" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">風控狀態</span><select class="admin-select" id="view-tt-create-risk"><option value="normal">正常</option><option value="warning">警示</option><option value="blocked">封鎖</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-tt-create-status"><option value="active">啟用</option><option value="disabled">停用</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">排序</span><input class="admin-input mono" id="view-tt-create-sort" type="number" step="1" value="0"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">備註</span><textarea class="admin-input" id="view-tt-create-description" rows="2" placeholder="選填；例如模板適用對象與風控備註"></textarea></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">異動原因（審計，選填）</span><input class="admin-input" id="view-tt-create-reason" type="text" placeholder="例：新商戶等級檔"/></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-tt-create-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">建立</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-tier-template-detail" role="dialog" aria-modal="true" aria-labelledby="amt-ttd-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-ttd-title">編輯等級模板</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">對齊 New_C2C 編輯模板流程：儲存即 <code>PATCH /api/admin/tier-templates/:id</code>；請同時更新異動原因供審計追蹤。</p>
+<form class="admin-modal__form" id="view-tt-detail-form">
+<input type="hidden" id="view-tt-detail-id" value=""/>
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">模板代碼</span><input class="admin-input mono" id="view-tt-detail-code" type="text" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">顯示名稱</span><input class="admin-input" id="view-tt-detail-display" type="text" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">等級（1–3）</span><input class="admin-input mono" id="view-tt-detail-level" type="number" min="1" max="3" step="1" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">組別代碼</span><input class="admin-input mono" id="view-tt-detail-group" type="text" placeholder="預設隨等級：basic / vip / vip_plus"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">積分</span><input class="admin-input mono" id="view-tt-detail-score" type="number" step="1"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">日交易上限</span><input class="admin-input mono" id="view-tt-detail-daily" type="number" step="1" min="0" placeholder="留空由系統依等級帶入（LV1=1 / LV2=2 / LV3=不限）"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">商戶權限</span><select class="admin-select" id="view-tt-detail-merchant"><option value="false">否</option><option value="true">是</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">需實名</span><select class="admin-select" id="view-tt-detail-verified"><option value="false">否</option><option value="true">是</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">最低賣出（USDT）</span><input class="admin-input mono" id="view-tt-detail-min-sell" type="number" step="any" min="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">保證金（USDT）</span><input class="admin-input mono" id="view-tt-detail-margin" type="number" step="any" min="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">保證金比例</span><input class="admin-input mono" id="view-tt-detail-margin-ratio" type="number" step="any" min="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">風控狀態</span><select class="admin-select" id="view-tt-detail-risk"><option value="normal">正常</option><option value="warning">警示</option><option value="blocked">封鎖</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-tt-detail-status"><option value="active">啟用</option><option value="disabled">停用</option></select></label>
+<label class="admin-modal__field"><span class="admin-modal__label">排序</span><input class="admin-input mono" id="view-tt-detail-sort" type="number" step="1"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">備註</span><textarea class="admin-input" id="view-tt-detail-description" rows="2" placeholder="選填；例如模板適用對象與風控備註"></textarea></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">異動原因（審計，選填）</span><input class="admin-input" id="view-tt-detail-reason" type="text" placeholder="例：調整日限額"/></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-tt-detail-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">儲存</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- 教學連結 -->
+<div class="admin-modal" id="admin-modal-create-tutorial-link" role="dialog" aria-modal="true" aria-labelledby="amt-ctl-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-ctl-title">新增教學項目</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">與橫幅相同須填<strong>異動原因</strong>；連結可為 https 或站內路徑。</p>
+<form class="admin-modal__form" id="view-tl-create-form">
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">異動原因（審計）</span><input class="admin-input" id="view-tl-create-reason" type="text" required placeholder="例：上線充值教學"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">標題</span><input class="admin-input" id="view-tl-create-title" type="text" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">副標</span><input class="admin-input" id="view-tl-create-subtitle" type="text" placeholder="選填"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">連結網址</span><input class="admin-input mono" id="view-tl-create-link-url" type="text" required placeholder="https://…"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">排序</span><input class="admin-input mono" id="view-tl-create-sort" type="number" step="1" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-tl-create-status"><option value="active">啟用</option><option value="inactive">停用</option></select></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-tl-create-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">建立</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="admin-modal" id="admin-modal-tutorial-link-detail" role="dialog" aria-modal="true" aria-labelledby="amt-tld-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog admin-modal__dialog--wide">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-tld-title">編輯教學連結</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">儲存時須填寫異動原因。</p>
+<form class="admin-modal__form" id="view-tl-detail-form">
+<input type="hidden" id="view-tl-detail-id" value=""/>
+<div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
+<div class="admin-modal__grid2">
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">異動原因（審計）</span><input class="admin-input" id="view-tl-detail-reason" type="text" required placeholder="例：更新外連"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">標題</span><input class="admin-input" id="view-tl-detail-title" type="text" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">副標</span><input class="admin-input" id="view-tl-detail-subtitle" type="text"/></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">連結網址</span><input class="admin-input mono" id="view-tl-detail-link-url" type="text" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">排序</span><input class="admin-input mono" id="view-tl-detail-sort" type="number" step="1" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-tl-detail-status"><option value="active">啟用</option><option value="inactive">停用</option></select></label>
+</div>
+</div>
+<p class="admin-modal__message-slot" id="view-tl-detail-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">儲存</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- 圖片預覽 -->
+<div class="admin-modal" id="admin-modal-asset-preview" role="dialog" aria-modal="true" aria-labelledby="amt-ap-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-ap-title">圖片預覽</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">對齊 <code>assetPreviewModal</code>：預覽圖與新視窗開啟原圖連結。</p>
+<div class="admin-modal__asset-placeholder">圖片占位</div>
+</div>
+</div>
+
+<div class="admin-backdrop" id="admin-nav-backdrop" aria-hidden="true"></div>
+</div>
+
+<!-- 後台 API 位址：預設由 runtime-config.js 依「與本頁同源」自動帶入；僅在 API 與靜態頁不同網域時才需改該檔的 apiBaseUrl。 -->
+<script src="./runtime-config.js"></script>
+<script src="./shared/admin-console.js"></script>
+<script src="./shared/admin-api-fetch.js"></script>
+<script src="./shared/admin-modals.js"></script>
+<script src="./shared/admin-view-loaders.js"></script>
+<script src="./shared/admin-api-client.js"></script>
+<script>
+(function () {
+  var el = document.getElementById("admin-clock");
+  function tick() {
+    if (!el) return;
+    el.textContent = new Date().toLocaleString("zh-TW", { hour12: false });
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+(function () {
+  function initHcTabGroup(root) {
+    if (!root) return;
+    var tabBtns = root.querySelectorAll("[data-hc-tab]");
+    var panels = root.querySelectorAll("[data-hc-panel]");
+    if (!tabBtns.length || !panels.length) return;
+
+    function show(key) {
+      if (!key) return;
+      tabBtns.forEach(function (btn) {
+        var k = btn.getAttribute("data-hc-tab");
+        var on = k === key;
+        btn.classList.toggle("is-active", on);
+        btn.setAttribute("aria-selected", on ? "true" : "false");
+        btn.setAttribute("tabindex", on ? "0" : "-1");
+      });
+      panels.forEach(function (panel) {
+        var k = panel.getAttribute("data-hc-panel");
+        panel.hidden = k !== key;
+      });
+    }
+
+    tabBtns.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        show(btn.getAttribute("data-hc-tab"));
+      });
+    });
+
+    var tablist = root.querySelector('[role="tablist"]');
+    if (tablist) {
+      tablist.addEventListener("keydown", function (e) {
+        if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+        var i;
+        var active = -1;
+        for (i = 0; i < tabBtns.length; i++) {
+          if (tabBtns[i].getAttribute("aria-selected") === "true") {
+            active = i;
+            break;
+          }
+        }
+        if (active < 0) return;
+        e.preventDefault();
+        var next = e.key === "ArrowRight"
+          ? (active + 1) % tabBtns.length
+          : (active - 1 + tabBtns.length) % tabBtns.length;
+        var nextKey = tabBtns[next].getAttribute("data-hc-tab");
+        show(nextKey);
+        tabBtns[next].focus();
+      });
+    }
+  }
+
+  ["view-home-content", "view-tiers", "view-eur-swap-withdraw-config"].forEach(function (id) {
+    initHcTabGroup(document.getElementById(id));
+  });
+
+  function initAuTabGroup(root) {
+    if (!root) return;
+    var tabBtns = root.querySelectorAll("[data-au-tab]");
+    var panels = root.querySelectorAll("[data-au-panel]");
+    if (!tabBtns.length || !panels.length) return;
+
+    function show(key) {
+      if (!key) return;
+      tabBtns.forEach(function (btn) {
+        var k = btn.getAttribute("data-au-tab");
+        var on = k === key;
+        btn.classList.toggle("is-active", on);
+        btn.setAttribute("aria-selected", on ? "true" : "false");
+        btn.setAttribute("tabindex", on ? "0" : "-1");
+      });
+      panels.forEach(function (panel) {
+        var k = panel.getAttribute("data-au-panel");
+        panel.hidden = k !== key;
+      });
+    }
+
+    tabBtns.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        show(btn.getAttribute("data-au-tab"));
+      });
+    });
+
+    var tablist = root.querySelector('[role="tablist"]');
+    if (tablist) {
+      tablist.addEventListener("keydown", function (e) {
+        if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+        var i;
+        var active = -1;
+        for (i = 0; i < tabBtns.length; i++) {
+          if (tabBtns[i].getAttribute("aria-selected") === "true") {
+            active = i;
+            break;
+          }
+        }
+        if (active < 0) return;
+        e.preventDefault();
+        var next =
+          e.key === "ArrowRight"
+            ? (active + 1) % tabBtns.length
+            : (active - 1 + tabBtns.length) % tabBtns.length;
+        var nextKey = tabBtns[next].getAttribute("data-au-tab");
+        show(nextKey);
+        tabBtns[next].focus();
+      });
+    }
+  }
+
+  initAuTabGroup(document.getElementById("view-admin-users"));
+})();
+</script>
+</body>
+</html>

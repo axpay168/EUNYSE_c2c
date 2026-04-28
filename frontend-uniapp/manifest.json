@@ -1,0 +1,19 @@
+{
+  "name": "EURNYSE C2C",
+  "appid": "__UNI__EURNYSEC2C",
+  "description": "EURNYSE C2C H5 glass design pages",
+  "versionName": "0.1.0",
+  "versionCode": 1,
+  "transformPx": false,
+  "h5": {
+    "template": "template.h5.html",
+    "router": {
+      "mode": "hash",
+      "base": "h5/"
+    },
+    "title": "EURNYSE C2C",
+    "devServer": {
+      "https": false
+    }
+  }
+}
