@@ -105,7 +105,7 @@
         @click="hideModal"
       >新增銀行</a>
       <div id="bank-picker-list" class="mt-4 max-h-[min(52vh,360px)] space-y-2 overflow-y-auto">
-        <p v-if="!banks.length" class="py-8 text-center text-sm text-on-surface-variant">尚無已審核銀行帳戶，請先新增銀行並等待後台審核。</p>
+        <p v-if="!banks.length" class="py-8 text-center text-sm text-on-surface-variant">尚無已審核銀行帳戶，請先新增銀行並等待平台審核。</p>
         <button
           v-for="b in banks"
           :key="b.id"

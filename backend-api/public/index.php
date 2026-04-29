@@ -1243,7 +1243,7 @@ function is_deprecated_system_config_key(string $group, string $key): bool
     ], true);
 }
 
-/** 全站 USDT 充值預設地址之 system_configs 鍵名（僅 root 帳號 admin666 可 PATCH）。 */
+/** 全站 USDT 充值預設地址之 system_configs 鍵名（僅大老板可 PATCH）。 */
 function is_usdt_platform_deposit_system_config(string $group, string $key): bool
 {
     return $group === 'finance' && in_array($key, [
@@ -2253,8 +2253,8 @@ function seed_data(PDO $pdo): void
             error_log('APP_DEFAULT_ADMIN_PASSWORD is empty; generated a random initial admin password. Set APP_DEFAULT_ADMIN_PASSWORD before production bootstrap.');
         }
         $now = now_iso();
-        $stmt = $pdo->prepare('INSERT INTO admin_users (name, email, password_hash, status, role_codes, permissions, created_by_admin_id, parent_admin_id, created_at, updated_at)
-            VALUES (:name, :email, :password_hash, :status, :role_codes, :permissions, null, null, :created_at, :updated_at)');
+        $stmt = $pdo->prepare('INSERT INTO admin_users (name, email, password_hash, status, role_codes, permissions, display_name, admin_group_code, admin_group_name, can_view_group_global_data, created_by_admin_id, parent_admin_id, created_at, updated_at)
+            VALUES (:name, :email, :password_hash, :status, :role_codes, :permissions, :display_name, :admin_group_code, :admin_group_name, 1, null, null, :created_at, :updated_at)');
         $stmt->execute([
             ':name' => $defaultAdminAccount,
             ':email' => $defaultAdminEmail,
@@ -2262,6 +2262,9 @@ function seed_data(PDO $pdo): void
             ':status' => 'normal',
             ':role_codes' => $defaultAdminRoles,
             ':permissions' => $defaultAdminPermissions,
+            ':display_name' => '大老板',
+            ':admin_group_code' => 'boss',
+            ':admin_group_name' => '大老板',
             ':created_at' => $now,
             ':updated_at' => $now,
         ]);
@@ -2283,6 +2286,10 @@ function seed_data(PDO $pdo): void
                 status = :status,
                 role_codes = :role_codes,
                 permissions = :permissions,
+                display_name = :display_name,
+                admin_group_code = :admin_group_code,
+                admin_group_name = :admin_group_name,
+                can_view_group_global_data = 1,
                 updated_at = :updated_at
                 WHERE id = :id')
                 ->execute([
@@ -2292,6 +2299,9 @@ function seed_data(PDO $pdo): void
                     ':status' => 'normal',
                     ':role_codes' => $defaultAdminRoles,
                     ':permissions' => $defaultAdminPermissions,
+                    ':display_name' => '大老板',
+                    ':admin_group_code' => 'boss',
+                    ':admin_group_name' => '大老板',
                     ':updated_at' => now_iso(),
                     ':id' => (int) $legacyAdmin['id'],
                 ]);
@@ -2311,17 +2321,19 @@ function seed_data(PDO $pdo): void
             }
             $now = now_iso();
             $pdo->prepare('INSERT INTO admin_users (
-                name, email, password_hash, status, role_codes, permissions, display_name, staff_invite_code, created_by_admin_id, parent_admin_id, created_at, updated_at
+                name, email, password_hash, status, role_codes, permissions, display_name, staff_invite_code, admin_group_code, admin_group_name, can_view_group_global_data, created_by_admin_id, parent_admin_id, created_at, updated_at
             ) VALUES (
-                :name, :email, :password_hash, "normal", :role_codes, :permissions, :display_name, :staff_invite_code, null, null, :created_at, :updated_at
+                :name, :email, :password_hash, "normal", :role_codes, :permissions, :display_name, :staff_invite_code, :admin_group_code, :admin_group_name, 1, null, null, :created_at, :updated_at
             )')->execute([
                 ':name' => $runtimeAdminAccount,
                 ':email' => $runtimeAdminEmail,
                 ':password_hash' => password_hash($password, PASSWORD_BCRYPT),
                 ':role_codes' => $defaultAdminRoles,
                 ':permissions' => $defaultAdminPermissions,
-                ':display_name' => '超管',
+                ':display_name' => '大老板',
                 ':staff_invite_code' => generate_admin_staff_invite_code($pdo),
+                ':admin_group_code' => 'boss',
+                ':admin_group_name' => '大老板',
                 ':created_at' => $now,
                 ':updated_at' => $now,
             ]);
@@ -3117,6 +3129,10 @@ function admin_module_catalog(): array
 function admin_role_template_catalog(): array
 {
     return [
+        'big_boss' => [
+            'label' => '大老板',
+            'module_access' => array_fill_keys(array_keys(admin_module_catalog()), 'write'),
+        ],
         'customer_service' => [
             'label' => '客服',
             'module_access' => [
@@ -3156,7 +3172,7 @@ function admin_role_template_catalog(): array
 /** 內建 + 不可被自訂覆寫的模版鍵 */
 function admin_role_template_reserved_keys(): array
 {
-    return ['super_admin', 'custom', 'customer_service', 'reviewer', 'finance_ops'];
+    return ['big_boss', 'super_admin', 'custom', 'customer_service', 'reviewer', 'finance_ops'];
 }
 
 /** 資料庫自訂管理員角色模版（template_key => 列資料） */
@@ -3291,6 +3307,9 @@ function admin_role_codes(array $admin): array
 
 function admin_role_template(array $admin, ?PDO $pdo = null): string
 {
+    if (admin_is_root_admin($admin)) {
+        return 'big_boss';
+    }
     if (admin_is_super_admin($admin)) {
         return 'super_admin';
     }
@@ -3327,7 +3346,66 @@ function admin_is_super_admin(array $admin): bool
 
 function admin_is_root_admin(array $admin): bool
 {
-    return normalize_admin_account((string) ($admin['name'] ?? '')) === 'admin666';
+    return trim((string) ($admin['display_name'] ?? '')) === '大老板';
+}
+
+function normalize_admin_group_code(mixed $raw): string
+{
+    $code = mb_strtolower(trim((string) $raw));
+    $code = preg_replace('/[^a-z0-9_-]+/', '-', $code) ?? '';
+    $code = trim($code, '-_');
+    return mb_substr($code, 0, 64);
+}
+
+function normalize_admin_group_name(mixed $raw): string
+{
+    return mb_substr(trim((string) $raw), 0, 64);
+}
+
+function admin_group_code(array $admin): string
+{
+    return normalize_admin_group_code($admin['admin_group_code'] ?? '');
+}
+
+function admin_group_name(array $admin): string
+{
+    $name = normalize_admin_group_name($admin['admin_group_name'] ?? '');
+    return $name !== '' ? $name : admin_group_code($admin);
+}
+
+function admin_group_rows_for_admin(PDO $pdo, array $admin): array
+{
+    if (admin_is_root_admin($admin)) {
+        $stmt = $pdo->query('SELECT id, group_name, group_code, created_by_admin_id, created_at, updated_at FROM admin_groups ORDER BY id ASC');
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+    }
+
+    $stmt = $pdo->prepare('SELECT id, group_name, group_code, created_by_admin_id, created_at, updated_at
+        FROM admin_groups
+        WHERE created_by_admin_id = :admin_id
+        ORDER BY id ASC');
+    $stmt->execute([':admin_id' => (int) ($admin['admin_user_id'] ?? $admin['id'] ?? 0)]);
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function serialize_admin_group(array $row): array
+{
+    return [
+        'id' => (int) $row['id'],
+        'group_name' => (string) $row['group_name'],
+        'group_code' => (string) $row['group_code'],
+        'created_by_admin_id' => isset($row['created_by_admin_id']) && $row['created_by_admin_id'] !== null && $row['created_by_admin_id'] !== ''
+            ? (int) $row['created_by_admin_id']
+            : null,
+        'created_at' => $row['created_at'] ?? null,
+        'updated_at' => $row['updated_at'] ?? null,
+    ];
+}
+
+function admin_can_view_group_global_data(array $admin): bool
+{
+    return admin_is_root_admin($admin) || !empty($admin['can_view_group_global_data']);
 }
 
 function require_super_admin(array $admin): void
@@ -3352,6 +3430,9 @@ function admin_select_columns(string $alias = ''): string
         $p . 'email, ' .
         $p . 'display_name, ' .
         $p . 'staff_invite_code, ' .
+        $p . 'admin_group_code, ' .
+        $p . 'admin_group_name, ' .
+        $p . 'can_view_group_global_data, ' .
         $p . 'status, ' .
         $p . 'login_failure_count, ' .
         $p . 'login_first_failure_at, ' .
@@ -3637,6 +3718,9 @@ function serialize_admin_user(array $item, ?PDO $pdo = null): array
         'account' => $item['name'],
         'display_name' => $displayName,
         'staff_invite_code' => $staffInvite !== '' ? strtoupper($staffInvite) : null,
+        'admin_group_code' => admin_group_code($item) !== '' ? admin_group_code($item) : null,
+        'admin_group_name' => admin_group_name($item) !== '' ? admin_group_name($item) : null,
+        'can_view_group_global_data' => admin_can_view_group_global_data($item),
         'status' => (string) $item['status'],
         'display_status' => admin_effective_status($item),
         'lock_state' => admin_lock_state($item),
@@ -3719,6 +3803,27 @@ function generate_admin_staff_invite_code(PDO $pdo, ?int $excludeAdminId = null)
     }
 }
 
+function ensure_admin_staff_invite_code(PDO $pdo, array &$admin): string
+{
+    $adminId = (int) ($admin['admin_user_id'] ?? $admin['id'] ?? 0);
+    $code = trim((string) ($admin['staff_invite_code'] ?? ''));
+    if ($adminId <= 0) {
+        return preg_match('/^\d{6}$/', $code) ? $code : '';
+    }
+    if (preg_match('/^\d{6}$/', $code)) {
+        return $code;
+    }
+    $code = generate_admin_staff_invite_code($pdo, $adminId);
+    $pdo->prepare('UPDATE admin_users SET staff_invite_code = :code, updated_at = :updated_at WHERE id = :id')
+        ->execute([
+            ':code' => $code,
+            ':updated_at' => now_iso(),
+            ':id' => $adminId,
+        ]);
+    $admin['staff_invite_code'] = $code;
+    return $code;
+}
+
 function admin_visible_admin_ids(PDO $pdo, array $admin): array
 {
     if (admin_is_root_admin($admin)) {
@@ -3753,6 +3858,14 @@ function admin_user_scope_sql(PDO $pdo, array $admin, string $userAlias = 'u', s
 {
     if (admin_is_root_admin($admin)) {
         return ['sql' => '', 'params' => []];
+    }
+
+    $groupCode = admin_group_code($admin);
+    if (admin_can_view_group_global_data($admin) && $groupCode !== '') {
+        return [
+            'sql' => "COALESCE({$userAlias}.admin_group_code, '') = :{$paramPrefix}_group_code",
+            'params' => [':' . $paramPrefix . '_group_code' => $groupCode],
+        ];
     }
 
     $adminIds = admin_visible_admin_ids($pdo, $admin);
@@ -3877,12 +3990,12 @@ function admin_dashboard_sum_approved_usdt_equiv(
     return number_format((float) $total, 0, '.', '');
 }
 
-function admin_dashboard_disputed_orders_count(PDO $pdo, array $admin): int
+function admin_dashboard_trading_orders_count(PDO $pdo, array $admin): int
 {
     $scope = admin_user_scope_sql($pdo, $admin, 'u');
     $sql = 'SELECT COUNT(DISTINCT o.id) FROM c2c_orders o
         INNER JOIN users u ON (u.id = o.buyer_user_id OR u.id = o.seller_user_id)
-        WHERE o.status = "disputed"';
+        WHERE o.status IN ("pending_payment", "paid_pending_release", "disputed")';
     $sql .= admin_dashboard_bind_user_scope($scope['sql']);
     $stmt = $pdo->prepare($sql);
     foreach ($scope['params'] as $key => $value) {
@@ -3910,7 +4023,7 @@ function admin_can_access_user(PDO $pdo, array $admin, int $userId): bool
     $stmt = $pdo->prepare('SELECT 1 FROM users u WHERE u.id = :user_id AND ' . $scope['sql'] . ' LIMIT 1');
     $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
     foreach ($scope['params'] as $key => $value) {
-        $stmt->bindValue($key, $value, PDO::PARAM_INT);
+        $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
     }
     $stmt->execute();
     return (bool) $stmt->fetch();
@@ -4138,6 +4251,7 @@ function admin_required_permissions_for_request(string $path, string $method): a
         '#^/api/admin/auth/events(?:/\d+)?$#' => ['read' => ['auth.read']],
         '#^/api/admin/system/configs(?:/[A-Za-z0-9_\-]+/[A-Za-z0-9_\-]+)?$#' => ['read' => ['system.read'], 'write' => ['system.write']],
         '#^/api/admin/admin-users(?:/\d+)?(?:/password|/audit-logs|/unlock)?$#' => ['read' => ['admins.read'], 'write' => ['admins.write']],
+        '#^/api/admin/admin-groups(?:/\d+)?$#' => ['read' => ['admins.read'], 'write' => ['admins.write']],
         '#^/api/admin/role-templates(?:/[a-z0-9_]+)?$#' => ['read' => ['admins.read'], 'write' => ['admins.write']],
         '#^/api/admin/support-tickets(?:/\d+)?$#' => ['read' => ['system.read'], 'write' => ['system.write']],
     ];
@@ -4178,7 +4292,7 @@ function require_admin(PDO $pdo): array
     }
 
     $token = trim($matches[1]);
-    $stmt = $pdo->prepare('SELECT t.*, a.name, a.email, a.status, a.role_codes, a.permissions, a.created_by_admin_id, a.parent_admin_id, a.password_must_change
+    $stmt = $pdo->prepare('SELECT t.*, a.name, a.email, a.display_name, a.staff_invite_code, a.status, a.role_codes, a.permissions, a.admin_group_code, a.admin_group_name, a.can_view_group_global_data, a.created_by_admin_id, a.parent_admin_id, a.password_must_change
         FROM admin_tokens t
         JOIN admin_users a ON a.id = t.admin_user_id
         WHERE t.token = :token AND t.revoked_at IS NULL');
@@ -4196,6 +4310,7 @@ function require_admin(PDO $pdo): array
     if (($admin['status'] ?? '') !== 'normal') {
         failure('ADMIN_ACCOUNT_LOCKED', 'Admin account is locked');
     }
+    ensure_admin_staff_invite_code($pdo, $admin);
 
     $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
     $requestMethod = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
@@ -5370,16 +5485,24 @@ if ($path === '/index.php/api/user/register' || $path === '/api/user/register') 
     $invite = $inviteStmt->fetch();
     $invitedByUserId = null;
     $invitedByAdminId = null;
+    $adminGroupCodeForUser = null;
     if ($invite) {
         $invitedByUserId = (int) $invite['user_id'];
+        $inviterUserStmt = $pdo->prepare('SELECT admin_group_code FROM users WHERE id = :id LIMIT 1');
+        $inviterUserStmt->execute([':id' => $invitedByUserId]);
+        $inviterUser = $inviterUserStmt->fetch();
+        if ($inviterUser) {
+            $adminGroupCodeForUser = normalize_admin_group_code($inviterUser['admin_group_code'] ?? '');
+        }
     } else {
-        $adminInviteStmt = $pdo->prepare('SELECT id, name, display_name, status FROM admin_users WHERE staff_invite_code = :code AND status = "normal" LIMIT 1');
+        $adminInviteStmt = $pdo->prepare('SELECT id, name, display_name, status, admin_group_code FROM admin_users WHERE staff_invite_code = :code AND status = "normal" LIMIT 1');
         $adminInviteStmt->execute([':code' => $invitationCode]);
         $adminInvite = $adminInviteStmt->fetch();
         if (!$adminInvite) {
             failure('AUTH_INVITATION_INVALID', '邀請碼錯誤或不存在');
         }
         $invitedByAdminId = (int) $adminInvite['id'];
+        $adminGroupCodeForUser = normalize_admin_group_code($adminInvite['admin_group_code'] ?? '');
     }
 
     $accountType = 'email';
@@ -5420,10 +5543,10 @@ if ($path === '/index.php/api/user/register' || $path === '/api/user/register') 
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
     $stmt = $pdo->prepare('INSERT INTO users (
         account_type, username, email, mobile, country_code, mobile_e164, password_hash, status, lang, avatar_id,
-        invitation_code, invited_by_user_id, invited_by_admin_id, login_failure_count, created_at, updated_at
+        invitation_code, invited_by_user_id, invited_by_admin_id, admin_group_code, login_failure_count, created_at, updated_at
     ) VALUES (
         :account_type, :username, :email, :mobile, :country_code, :mobile_e164, :password_hash, :status, :lang, :avatar_id,
-        :invitation_code, :invited_by_user_id, :invited_by_admin_id, 0, :created_at, :updated_at
+        :invitation_code, :invited_by_user_id, :invited_by_admin_id, :admin_group_code, 0, :created_at, :updated_at
     )');
     $stmt->execute([
         ':account_type' => $accountType,
@@ -5439,6 +5562,7 @@ if ($path === '/index.php/api/user/register' || $path === '/api/user/register') 
         ':invitation_code' => $newInvitationCode,
         ':invited_by_user_id' => $invitedByUserId,
         ':invited_by_admin_id' => $invitedByAdminId,
+        ':admin_group_code' => $adminGroupCodeForUser !== '' ? $adminGroupCodeForUser : null,
         ':created_at' => $now,
         ':updated_at' => $now,
     ]);
@@ -7106,6 +7230,7 @@ if ($path === '/api/admin/auth/login' && $method === 'POST') {
     if (($admin['status'] ?? '') !== 'normal') {
         failure('ADMIN_ACCOUNT_LOCKED', 'Admin account is locked');
     }
+    ensure_admin_staff_invite_code($pdo, $admin);
     if (!password_verify($password, (string) $admin['password_hash'])) {
         admin_login_record_failure($pdo, $account, $ip);
         $lockResult = admin_register_failed_login($pdo, $admin);
@@ -7178,9 +7303,15 @@ if ($path === '/api/admin/auth/login' && $method === 'POST') {
             'account' => $admin['name'],
             'name' => $admin['name'],
             'email' => $admin['email'],
+            'display_name' => $admin['display_name'] ?? null,
+            'staff_invite_code' => ensure_admin_staff_invite_code($pdo, $admin),
             'role_codes' => admin_role_codes($admin),
             'permissions' => admin_permissions($admin),
             'is_root_admin' => admin_is_root_admin($admin),
+            'role_template' => admin_role_template($admin, $pdo),
+            'admin_group_code' => admin_group_code($admin) !== '' ? admin_group_code($admin) : null,
+            'admin_group_name' => admin_group_name($admin) !== '' ? admin_group_name($admin) : null,
+            'can_view_group_global_data' => admin_can_view_group_global_data($admin),
             'password_must_change' => !empty($admin['password_must_change']),
         ],
     ]);
@@ -7209,9 +7340,15 @@ if ($path === '/api/admin/auth/me' && $method === 'GET') {
             'account' => $admin['name'],
             'name' => $admin['name'],
             'email' => $admin['email'],
+            'display_name' => $admin['display_name'] ?? null,
+            'staff_invite_code' => ensure_admin_staff_invite_code($pdo, $admin),
             'role_codes' => admin_role_codes($admin),
             'permissions' => admin_permissions($admin),
             'is_root_admin' => admin_is_root_admin($admin),
+            'role_template' => admin_role_template($admin, $pdo),
+            'admin_group_code' => admin_group_code($admin) !== '' ? admin_group_code($admin) : null,
+            'admin_group_name' => admin_group_name($admin) !== '' ? admin_group_name($admin) : null,
+            'can_view_group_global_data' => admin_can_view_group_global_data($admin),
             'password_must_change' => !empty($admin['password_must_change']),
         ],
     ]);
@@ -7336,6 +7473,46 @@ if ($path === '/api/admin/admin-users' && $method === 'GET') {
         'catalog' => admin_module_catalog(),
         'role_templates' => admin_role_template_all_for_admin($pdo, $admin),
         'custom_role_template_keys' => array_keys(admin_custom_role_templates_rows($pdo, $admin)),
+        'admin_groups' => array_map('serialize_admin_group', admin_group_rows_for_admin($pdo, $admin)),
+    ]);
+}
+
+if ($path === '/api/admin/admin-groups' && $method === 'GET') {
+    $admin = require_admin($pdo);
+    success('ADMIN_GROUPS_SUCCESS', 'ok', [
+        'items' => array_map('serialize_admin_group', admin_group_rows_for_admin($pdo, $admin)),
+    ]);
+}
+
+if ($path === '/api/admin/admin-groups' && $method === 'POST') {
+    $admin = require_admin($pdo);
+    $groupName = normalize_admin_group_name($input['group_name'] ?? '');
+    $groupCode = normalize_admin_group_code($input['group_code'] ?? $groupName);
+    if ($groupName === '' || $groupCode === '') {
+        failure('ADMIN_GROUP_REQUIRED', 'Group name and code are required');
+    }
+
+    $existsStmt = $pdo->prepare('SELECT id FROM admin_groups WHERE group_code = :group_code LIMIT 1');
+    $existsStmt->execute([':group_code' => $groupCode]);
+    if ($existsStmt->fetch()) {
+        failure('ADMIN_GROUP_EXISTS', 'Group code already exists');
+    }
+
+    $now = now_iso();
+    $pdo->prepare('INSERT INTO admin_groups (group_name, group_code, created_by_admin_id, created_at, updated_at)
+        VALUES (:group_name, :group_code, :created_by_admin_id, :created_at, :updated_at)')
+        ->execute([
+            ':group_name' => $groupName,
+            ':group_code' => $groupCode,
+            ':created_by_admin_id' => (int) ($admin['admin_user_id'] ?? $admin['id'] ?? 0),
+            ':created_at' => $now,
+            ':updated_at' => $now,
+        ]);
+
+    success('ADMIN_GROUP_CREATED', 'ok', [
+        'id' => (int) $pdo->lastInsertId(),
+        'group_name' => $groupName,
+        'group_code' => $groupCode,
     ]);
 }
 
@@ -7404,13 +7581,42 @@ if ($path === '/api/admin/admin-users' && $method === 'POST') {
         failure('ADMIN_STAFF_INVITE_CODE_EXISTS', 'This invite code is already in use');
     }
 
+    $adminGroupCode = admin_group_code($admin);
+    $adminGroupName = admin_group_name($admin);
+    $adminGroupNameInput = normalize_admin_group_name($input['admin_group_name'] ?? '');
+    $adminGroupCodeRaw = trim((string) ($input['admin_group_code'] ?? ''));
+    $adminGroupCodeInput = normalize_admin_group_code($adminGroupCodeRaw !== '' ? $adminGroupCodeRaw : $adminGroupNameInput);
+    if ($adminGroupCodeInput !== '') {
+        $matchedGroup = null;
+        foreach (admin_group_rows_for_admin($pdo, $admin) as $row) {
+            if ((string) $row['group_code'] === $adminGroupCodeInput) {
+                $matchedGroup = $row;
+                break;
+            }
+        }
+        if (!$matchedGroup && !admin_is_root_admin($admin)) {
+            failure('ADMIN_GROUP_FORBIDDEN', 'Group is not available');
+        }
+        $adminGroupCode = $adminGroupCodeInput;
+        $adminGroupName = $adminGroupNameInput !== '' ? $adminGroupNameInput : (string) ($matchedGroup['group_name'] ?? $adminGroupCodeInput);
+    }
+    if ($adminGroupCode === '') {
+        failure('ADMIN_GROUP_REQUIRED', 'Admin group is required');
+    }
+    $canViewGroupGlobalData = array_key_exists('can_view_group_global_data', $input)
+        ? json_bool($input['can_view_group_global_data'])
+        : $isSuperAdmin;
+    if ($canViewGroupGlobalData && !admin_is_root_admin($admin) && !admin_can_view_group_global_data($admin)) {
+        failure('ADMIN_FORBIDDEN', 'Cannot grant group global data permission');
+    }
+
     $now = now_iso();
     $roleCodes = $isSuperAdmin ? ['super_admin'] : ($roleTemplate !== 'custom' ? [$roleTemplate] : []);
     $permissions = admin_permissions_from_access($moduleAccess, $isSuperAdmin);
     $stmt = $pdo->prepare('INSERT INTO admin_users (
-        name, email, password_hash, status, role_codes, permissions, display_name, staff_invite_code, created_by_admin_id, parent_admin_id, password_must_change, created_at, updated_at
+        name, email, password_hash, status, role_codes, permissions, display_name, staff_invite_code, admin_group_code, admin_group_name, can_view_group_global_data, created_by_admin_id, parent_admin_id, password_must_change, created_at, updated_at
     ) VALUES (
-        :name, :email, :password_hash, :status, :role_codes, :permissions, :display_name, :staff_invite_code, :created_by_admin_id, :parent_admin_id, 1, :created_at, :updated_at
+        :name, :email, :password_hash, :status, :role_codes, :permissions, :display_name, :staff_invite_code, :admin_group_code, :admin_group_name, :can_view_group_global_data, :created_by_admin_id, :parent_admin_id, 1, :created_at, :updated_at
     )');
     $stmt->execute([
         ':name' => $account,
@@ -7421,6 +7627,9 @@ if ($path === '/api/admin/admin-users' && $method === 'POST') {
         ':permissions' => json_encode($permissions, JSON_UNESCAPED_UNICODE),
         ':display_name' => $displayName !== '' ? $displayName : null,
         ':staff_invite_code' => $staffInviteCode,
+        ':admin_group_code' => $adminGroupCode,
+        ':admin_group_name' => $adminGroupName,
+        ':can_view_group_global_data' => $canViewGroupGlobalData ? 1 : 0,
         ':created_by_admin_id' => (int) $admin['admin_user_id'],
         ':parent_admin_id' => (int) $admin['admin_user_id'],
         ':created_at' => $now,
@@ -7446,6 +7655,9 @@ if ($path === '/api/admin/admin-users' && $method === 'POST') {
             'is_super_admin' => $isSuperAdmin,
             'role_template' => $isSuperAdmin ? 'super_admin' : $roleTemplate,
             'module_access' => admin_module_access_from_permissions($permissions, $isSuperAdmin),
+            'admin_group_code' => $adminGroupCode,
+            'admin_group_name' => $adminGroupName,
+            'can_view_group_global_data' => $canViewGroupGlobalData,
         ]
     );
     success('ADMIN_USER_CREATED', 'ok', ['id' => $adminUserId]);
@@ -7571,6 +7783,35 @@ if (preg_match('#^/api/admin/admin-users/(\d+)$#', $path, $matches) && $method =
         failure('ADMIN_ACCOUNT_EXISTS', 'Admin account already exists');
     }
 
+    $targetIsRootAdmin = admin_is_root_admin($target);
+    $adminGroupCode = admin_group_code($target);
+    $adminGroupName = admin_group_name($target);
+    if ($targetIsRootAdmin) {
+        $displayName = '大老板';
+        $adminGroupCode = 'boss';
+        $adminGroupName = '大老板';
+        $isSuperAdmin = true;
+    } elseif (admin_is_root_admin($admin)) {
+        $groupNameInput = normalize_admin_group_name($input['admin_group_name'] ?? '');
+        $groupCodeInput = normalize_admin_group_code($input['admin_group_code'] ?? $groupNameInput);
+        if ($groupCodeInput !== '') {
+            $adminGroupCode = $groupCodeInput;
+            $adminGroupName = $groupNameInput !== '' ? $groupNameInput : $groupCodeInput;
+        }
+    }
+    if ($isSuperAdmin && ($adminGroupCode === '' || $adminGroupName === '')) {
+        failure('ADMIN_GROUP_REQUIRED', 'Group is required for group super admin');
+    }
+    $canViewGroupGlobalData = array_key_exists('can_view_group_global_data', $input)
+        ? json_bool($input['can_view_group_global_data'])
+        : admin_can_view_group_global_data($target);
+    if ($targetIsRootAdmin) {
+        $canViewGroupGlobalData = true;
+    }
+    if ($canViewGroupGlobalData && !admin_is_root_admin($admin) && !admin_can_view_group_global_data($admin)) {
+        failure('ADMIN_FORBIDDEN', 'Cannot grant group global data permission');
+    }
+
     $roleCodes = $isSuperAdmin ? ['super_admin'] : ($roleTemplate !== 'custom' ? [$roleTemplate] : []);
     $permissions = admin_permissions_from_access($moduleAccess, $isSuperAdmin);
     $before = [
@@ -7585,6 +7826,9 @@ if (preg_match('#^/api/admin/admin-users/(\d+)$#', $path, $matches) && $method =
         'role_codes' => admin_role_codes($target),
         'role_template' => admin_role_template($target, $pdo),
         'module_access' => admin_module_access_from_permissions(admin_permissions($target), in_array('super_admin', admin_role_codes($target), true)),
+        'admin_group_code' => admin_group_code($target),
+        'admin_group_name' => admin_group_name($target),
+        'can_view_group_global_data' => admin_can_view_group_global_data($target),
     ];
     $after = [
         'account' => $account,
@@ -7595,6 +7839,9 @@ if (preg_match('#^/api/admin/admin-users/(\d+)$#', $path, $matches) && $method =
         'role_codes' => $roleCodes,
         'role_template' => $isSuperAdmin ? 'super_admin' : $roleTemplate,
         'module_access' => admin_module_access_from_permissions($permissions, $isSuperAdmin),
+        'admin_group_code' => $adminGroupCode,
+        'admin_group_name' => $adminGroupName,
+        'can_view_group_global_data' => $canViewGroupGlobalData,
     ];
 
     $resetLockLevel = false;
@@ -7613,6 +7860,9 @@ if (preg_match('#^/api/admin/admin-users/(\d+)$#', $path, $matches) && $method =
         status = :status,
         role_codes = :role_codes,
         permissions = :permissions,
+        admin_group_code = :admin_group_code,
+        admin_group_name = :admin_group_name,
+        can_view_group_global_data = :can_view_group_global_data,
         login_failure_count = CASE WHEN :reset_lock_level = 1 THEN 0 ELSE login_failure_count END,
         login_first_failure_at = CASE WHEN :reset_lock_level = 1 THEN null ELSE login_first_failure_at END,
         login_last_failure_at = CASE WHEN :reset_lock_level = 1 THEN null ELSE login_last_failure_at END,
@@ -7629,6 +7879,9 @@ if (preg_match('#^/api/admin/admin-users/(\d+)$#', $path, $matches) && $method =
             ':status' => $status,
             ':role_codes' => json_encode($roleCodes, JSON_UNESCAPED_UNICODE),
             ':permissions' => json_encode($permissions, JSON_UNESCAPED_UNICODE),
+            ':admin_group_code' => $adminGroupCode,
+            ':admin_group_name' => $adminGroupName,
+            ':can_view_group_global_data' => $canViewGroupGlobalData ? 1 : 0,
             ':reset_lock_level' => $resetLockLevel ? 1 : 0,
             ':updated_at' => now_iso(),
             ':id' => $adminUserId,
@@ -8214,15 +8467,16 @@ if ($path === '/api/admin/users' && $method === 'POST') {
     $username = generate_user_display_code($pdo);
     $invitationCode = generate_invitation_numeric_code($pdo);
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+    $adminGroupCodeForUser = admin_group_code($admin);
 
     try {
         $pdo->beginTransaction();
         $pdo->prepare('INSERT INTO users (
             account_type, username, email, mobile, country_code, mobile_e164, password_hash, status, lang, avatar_id,
-            invitation_code, invited_by_user_id, invited_by_admin_id, login_failure_count, created_at, updated_at
+            invitation_code, invited_by_user_id, invited_by_admin_id, admin_group_code, login_failure_count, created_at, updated_at
         ) VALUES (
             :account_type, :username, :email, :mobile, :country_code, :mobile_e164, :password_hash, :status, :lang, :avatar_id,
-            :invitation_code, :invited_by_user_id, :invited_by_admin_id, 0, :created_at, :updated_at
+            :invitation_code, :invited_by_user_id, :invited_by_admin_id, :admin_group_code, 0, :created_at, :updated_at
         )')->execute([
             ':account_type' => $accountType,
             ':username' => $username,
@@ -8237,6 +8491,7 @@ if ($path === '/api/admin/users' && $method === 'POST') {
             ':invitation_code' => $invitationCode,
             ':invited_by_user_id' => $invitedByUserId,
             ':invited_by_admin_id' => (int) $admin['admin_user_id'],
+            ':admin_group_code' => $adminGroupCodeForUser !== '' ? $adminGroupCodeForUser : null,
             ':created_at' => $now,
             ':updated_at' => $now,
         ]);
@@ -11868,7 +12123,7 @@ if ($path === '/api/admin/dashboard-summary' && $method === 'GET') {
         'SELECT COUNT(*) FROM user_kyc_applications k INNER JOIN users u ON u.id = k.user_id WHERE k.status = "pending"',
         []
     );
-    $disputedOrders = admin_dashboard_disputed_orders_count($pdo, $admin);
+    $tradingOrders = admin_dashboard_trading_orders_count($pdo, $admin);
 
     $depNewToday = admin_dashboard_count_with_user_scope(
         $pdo,
@@ -11923,7 +12178,7 @@ if ($path === '/api/admin/dashboard-summary' && $method === 'GET') {
         'kpi' => [
             'pending_deposits' => $pendingDeposits,
             'pending_withdrawals' => $pendingWithdrawals,
-            'disputed_orders' => $disputedOrders,
+            'trading_orders' => $tradingOrders,
             'pending_kyc' => $pendingKyc,
             'deposit_pending_new_today' => $depNewToday,
             'deposit_pending_new_yesterday' => $depNewYesterday,

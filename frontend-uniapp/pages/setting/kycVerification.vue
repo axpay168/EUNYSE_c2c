@@ -212,7 +212,7 @@ export default {
         id_doc_back_url: backUrl
       }).then(function () {
         self.statusError = false;
-        self.statusMessage = self.$t("phrases.資料已提交，請等待後台審核。");
+        self.statusMessage = "資料已提交，請等待平台審核。";
         return self.fetchLatestKyc();
       }).catch(function (error) {
         self.statusError = true;

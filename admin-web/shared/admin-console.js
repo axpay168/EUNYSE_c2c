@@ -248,18 +248,31 @@
   function updateTopbarFromProfile(admin) {
     var labelEl = document.getElementById("admin-user-chip-label");
     var avEl = document.getElementById("admin-user-chip-avatar");
+    var inviteEl = document.getElementById("admin-staff-invite-code");
+    var inviteChip = document.getElementById("admin-staff-invite-chip");
     var chip = labelEl && labelEl.closest ? labelEl.closest(".admin-user-chip") : null;
     if (!labelEl || !avEl) return;
     if (!admin) {
       labelEl.textContent = "未登入";
       avEl.textContent = "—";
+      if (inviteEl) inviteEl.textContent = "------";
+      if (inviteChip) inviteChip.setAttribute("title", "管理員邀請碼");
       if (chip) chip.removeAttribute("title");
       return;
     }
     var typed = adminStorageGet(ADMIN_LAST_ACCOUNT_KEY) || "";
     var brief = displayAdminBrief(admin, typed);
+    var staffInvite = String(admin.staff_invite_code || "").trim();
     labelEl.textContent = brief;
     avEl.textContent = initialsForAdminLabel(brief);
+    if (inviteEl) inviteEl.textContent = staffInvite || "------";
+    if (inviteChip) {
+      inviteChip.setAttribute(
+        "title",
+        staffInvite ? "管理員邀請碼：" + staffInvite + "（點擊複製）" : "管理員邀請碼"
+      );
+      inviteChip.disabled = !staffInvite;
+    }
     if (chip) chip.setAttribute("title", buildAdminChipTitle(admin, brief));
   }
 
@@ -647,6 +660,23 @@
     }
   }
 
+  function initAdminInviteChip() {
+    var chip = document.getElementById("admin-staff-invite-chip");
+    if (!chip || chip._adminInviteBound) return;
+    chip._adminInviteBound = true;
+    chip.addEventListener("click", function () {
+      var profile = readCachedAdminProfile() || {};
+      var code = String(profile.staff_invite_code || "").trim();
+      if (!code) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).catch(function () {});
+      }
+      if (typeof window.showAdminToast === "function") {
+        window.showAdminToast("管理員邀請碼已複製：" + code);
+      }
+    });
+  }
+
   function initLocalAuthGate() {
     var form = document.getElementById("admin-login-form");
     var account = document.getElementById("admin-login-account");
@@ -724,6 +754,7 @@
   function boot() {
     initLocalAuthGate();
     initAdminSettingsForms();
+    initAdminInviteChip();
     startDepositAlertMonitor();
 
     var logoutBtn = document.getElementById("admin-logout-btn");

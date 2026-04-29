@@ -94,6 +94,10 @@
 <span class="admin-topbar__crumb">後台 / <strong id="admin-crumb-active">儀表板</strong></span>
 </div>
 <div class="admin-topbar__right">
+<button type="button" class="admin-invite-chip" id="admin-staff-invite-chip" title="管理員邀請碼">
+<span class="admin-invite-chip__label">邀請碼</span>
+<span class="admin-invite-chip__code mono" id="admin-staff-invite-code">------</span>
+</button>
 <span class="admin-pill admin-pill--staging">營運</span>
 <span id="admin-clock" class="mono"></span>
 <div class="admin-user-chip" title="">
@@ -124,9 +128,9 @@
 <div class="admin-kpi__delta" id="dash-kpi-pending-withdrawals-note" aria-live="polite">載入中…</div>
 </div>
 <div class="admin-card admin-kpi">
-<div class="admin-kpi__label">糾紛 / 申訴中訂單</div>
-<div class="admin-kpi__value" id="dash-kpi-disputed-orders">—</div>
-<div class="admin-kpi__delta" id="dash-kpi-disputed-orders-note">即時彙總</div>
+<div class="admin-kpi__label">交易訂單</div>
+<div class="admin-kpi__value" id="dash-kpi-trading-orders">—</div>
+<div class="admin-kpi__delta" id="dash-kpi-trading-orders-note">正在交易</div>
 </div>
 <div class="admin-card admin-kpi">
 <div class="admin-kpi__label">KYC 待審</div>
@@ -139,7 +143,6 @@
 <div class="admin-dash-totals-head">
 <h2 class="admin-card__title">總充值 / 總提現</h2>
 <div class="admin-submodule-bar admin-submodule-bar--compact" role="group" aria-label="統計區間">
-<div class="admin-submodule-bar__caption">（當日 / 本週 / 本月）</div>
 <div class="admin-submodule-bar__row">
 <div class="admin-segment" role="tablist" aria-label="統計區間">
 <button type="button" class="admin-segment__btn is-active" role="tab" aria-selected="true" data-dash-range="day" id="dash-tab-day">當日</button>
@@ -308,7 +311,7 @@
 
 <!-- deposit-addresses — 對齊 depositAddressesTable（TRC/ETH/BEP 矩陣） -->
 <section id="view-deposit-addresses" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-da">
-<div class="admin-page-head"><h1 id="head-da">充值地址管理</h1><p>依用戶列出 TRC / ETH / BEP 充值地址（含新註冊、尚未寫入地址者）。未設定之鏈別列表顯示 <code>--</code>；若地址與下方「平台預設」常數相同，列表僅顯示「預設」。編輯時空白欄位可帶入常數供參考，儲存後寫入 <code>deposit_addresses</code>（<strong>不會</strong>被全站預設配置覆寫）。<strong>App 邏輯：</strong> 一律優先使用該用戶在 <code>deposit_addresses</code> 的啟用地址；僅當該鏈無配置時才回退 <code>system_configs</code> 的 <code>finance.usdt_platform_deposit_*</code>。<strong>全站預設地址</strong>僅限登入帳號 <code>admin666</code> 於「系統配置」修改（其他管理員無法 PATCH）；修改全站預設不會改動任何用戶已儲存的充值地址。</p></div>
+<div class="admin-page-head"><h1 id="head-da">充值地址管理</h1><p>依用戶列出 TRC / ETH / BEP 充值地址（含新註冊、尚未寫入地址者）。未設定之鏈別列表顯示 <code>--</code>；若地址與下方「平台預設」常數相同，列表僅顯示「預設」。編輯時空白欄位可帶入常數供參考，儲存後寫入 <code>deposit_addresses</code>（<strong>不會</strong>被全站預設配置覆寫）。<strong>App 邏輯：</strong> 一律優先使用該用戶在 <code>deposit_addresses</code> 的啟用地址；僅當該鏈無配置時才回退 <code>system_configs</code> 的 <code>finance.usdt_platform_deposit_*</code>。<strong>全站預設地址</strong>僅限大老板於「系統配置」修改（其他管理員無法 PATCH）；修改全站預設不會改動任何用戶已儲存的充值地址。</p></div>
 <div class="admin-filters">
 <div class="admin-field"><label>搜尋</label><input id="view-da-keyword" class="admin-input" type="search" placeholder="用戶 ID／郵箱／手機／地址"/></div>
 <span data-admin-filter-actions="reset#view-da-reset|query#view-da-query|refresh#view-da-refresh"></span>
@@ -681,13 +684,14 @@
 <div class="admin-field"><label>狀態</label><select class="admin-select" id="view-admin-users-status"><option value="">全部狀態</option><option value="normal">正常</option><option value="disabled">禁用</option></select></div>
 <span data-admin-filter-actions="reset#view-admin-users-reset|search#view-admin-users-search|refresh#view-admin-users-refresh"></span>
 <div class="admin-filters__push" aria-hidden="true"><span class="admin-muted" id="view-admin-users-count"></span></div>
+<button type="button" class="admin-btn admin-btn--accent" data-admin-modal-open="admin-modal-create-admin-group">新增分組</button>
 <button type="button" class="admin-btn admin-btn--primary" data-admin-modal-open="admin-modal-create-admin-user">新增管理員</button>
 </div>
 <div class="admin-card admin-card--flush">
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th>ID</th><th>帳號</th><th>名稱備註</th><th>專屬邀請碼</th><th>角色模板</th><th>狀態</th><th>底層權限</th><th>模組權限</th><th>創建時間</th><th>操作</th></tr></thead>
+<thead><tr><th>ID</th><th>帳號</th><th>名稱備註</th><th>組別</th><th>專屬邀請碼</th><th>角色模板</th><th>狀態</th><th>底層權限</th><th>模組權限</th><th>創建時間</th><th>操作</th></tr></thead>
 <tbody id="view-admin-users-tbody">
-<tr><td colspan="10" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="11" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 <div class="admin-toolbar">
 <button type="button" class="admin-btn admin-btn--ghost" id="view-admin-users-prev" disabled>上一頁</button>
@@ -1172,6 +1176,26 @@
 </div>
 </div>
 
+<div class="admin-modal" id="admin-modal-create-admin-group" role="dialog" aria-modal="true" aria-labelledby="amt-cag-title" hidden data-admin-modal>
+<div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
+<div class="admin-modal__dialog">
+<div class="admin-modal__head">
+<h2 class="admin-modal__title" id="amt-cag-title">新增分組</h2>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
+</div>
+<p class="admin-modal__callout">建立管理員分組後，可在「新增管理員」時選擇分組。大老板可查看所有分組；其他管理員只管理自己建立的分組。</p>
+<form class="admin-modal__form" id="view-admin-create-group-form">
+<label class="admin-modal__field"><span class="admin-modal__label">組別名稱</span><input class="admin-input" id="view-admin-group-create-name" maxlength="191" placeholder="例：大A組" required/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">組別代碼</span><input class="admin-input mono" id="view-admin-group-create-code" maxlength="64" placeholder="留空時依組別名稱產生"/></label>
+<p class="admin-modal__message-slot" id="view-admin-group-create-msg" role="status"></p>
+<div class="admin-modal__form-actions">
+<button type="submit" class="admin-btn admin-btn--primary">建立分組</button>
+<button type="button" class="admin-btn admin-btn--ghost" data-admin-modal-close>取消</button>
+</div>
+</form>
+</div>
+</div>
+
 <div class="admin-modal" id="admin-modal-create-admin-user" role="dialog" aria-modal="true" aria-labelledby="amt-cau-title" hidden data-admin-modal>
 <div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
 <div class="admin-modal__dialog admin-modal__dialog--wide">
@@ -1179,7 +1203,7 @@
 <h2 class="admin-modal__title" id="amt-cau-title">新增管理員</h2>
 <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
 </div>
-<p class="admin-modal__callout">建立後台帳號；需具備超級管理員權限。</p>
+<p class="admin-modal__callout">建立後台帳號；大老板可建立組超級管理員並指定組別。</p>
 <form class="admin-modal__form" id="view-admin-create-user-form">
 <input type="hidden" name="_csrf" value=""/>
 <div class="admin-modal__grid2">
@@ -1189,7 +1213,9 @@
 <label class="admin-modal__field"><span class="admin-modal__label">專屬邀請碼</span><input class="admin-input mono" id="view-admin-create-invite" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="留空自動產生 6 位數字"/></label>
 <label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-admin-create-status"><option value="normal">正常</option><option value="disabled">禁用</option></select></label>
 <label class="admin-modal__field"><span class="admin-modal__label">角色模板</span><select class="admin-select" id="view-admin-create-role-template"></select></label>
-<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label"><input type="checkbox" id="view-admin-create-super"/> 設為超級管理員</span></label>
+<label class="admin-modal__field"><span class="admin-modal__label">選擇分組</span><select class="admin-select" id="view-admin-create-group-select"></select></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label"><input type="checkbox" id="view-admin-create-super"/> 設為組超級管理員（小老板）</span></label>
+<label class="admin-modal__field admin-modal__field--full admin-scope-toggle"><span class="admin-modal__label"><input type="checkbox" id="view-admin-create-group-global"/> 可查看全組會員/會員數據</span><span class="admin-modal__hint">勾選後可看同組全局數據；未勾選時只看自己管理鏈路下的資料。</span></label>
 </div>
 <div id="view-admin-create-custom-wrap" class="admin-modal__field admin-modal__field--full" hidden>
 <span class="admin-modal__label">模組權限（自訂）</span>
@@ -1244,8 +1270,16 @@
 <label class="admin-modal__field"><span class="admin-modal__label">專屬邀請碼</span><input class="admin-input mono" id="view-admin-edit-invite" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="留空自動產生 6 位數字"/></label>
 <label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-admin-edit-status"><option value="normal">正常</option><option value="disabled">禁用</option></select></label>
 <label class="admin-modal__field"><span class="admin-modal__label">角色模板</span><select class="admin-select" id="view-admin-edit-role-template"></select></label>
-<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label"><input type="checkbox" id="view-admin-edit-super"/> 超級管理員</span></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label"><input type="checkbox" id="view-admin-edit-super"/> 組超級管理員（小老板）</span></label>
 </div>
+<fieldset class="admin-scope-group" id="view-admin-edit-scope-group">
+<legend>管理員可見範圍</legend>
+<div class="admin-modal__grid2">
+<label class="admin-modal__field"><span class="admin-modal__label">組別名稱</span><input class="admin-input" id="view-admin-edit-group-name" maxlength="191"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">組別代碼</span><input class="admin-input mono" id="view-admin-edit-group-code" maxlength="64"/></label>
+<label class="admin-modal__field admin-modal__field--full admin-scope-toggle"><span class="admin-modal__label"><input type="checkbox" id="view-admin-edit-group-global"/> 可查看全組會員/會員數據</span><span class="admin-modal__hint">未勾選時只看自己與下級鏈路；不能看同級或其他組。</span></label>
+</div>
+</fieldset>
 <p class="admin-modal__message-slot" id="view-admin-edit-msg" role="status"></p>
 <div class="admin-modal__form-actions">
 <button type="submit" class="admin-btn admin-btn--primary">儲存</button>

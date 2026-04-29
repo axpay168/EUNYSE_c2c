@@ -166,7 +166,7 @@ export default {
         primaryAction: "查看資金紀錄",
         primaryHref: "#/pages/setting/fundRecord",
         canCancel: ["pending_payment", "paid_pending_release", "disputed"].indexOf(status) !== -1,
-        tip: status === "cancelled" ? "訂單已取消，已觸發對應資產退回。" : "請依平台流程完成付款或等待後台審核放行。",
+        tip: status === "cancelled" ? "訂單已取消，已觸發對應資產退回。" : "請依平台流程完成付款或等待審核放行。",
         steps: [
           { title: "建立訂單", desc: item.created_at || "-", done: true },
           { title: isBuy ? "資金凍結" : "USDT 凍結", desc: status === "cancelled" ? "已退回" : "等待處理", done: status !== "pending_payment" || isBuy },

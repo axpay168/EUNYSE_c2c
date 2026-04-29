@@ -182,7 +182,7 @@ export default {
     };
   },
   computed: {
-    /** 各鏈參考手續費（介面用；實際以後台為準） */
+    /** 各鏈參考手續費（介面用；實際以系統結算為準） */
     fee: function () {
       var m = { TRC20: 1, ERC20: 5, BEP20: 0.8 };
       return m[this.network] != null ? m[this.network] : 1;

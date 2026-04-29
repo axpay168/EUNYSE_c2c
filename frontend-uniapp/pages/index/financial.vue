@@ -76,7 +76,7 @@
                 <span class="nc2c-chip">剩餘額度 {{ formatAmount(product.remaining_quota_amount, 2) }} {{ product.asset_code }}</span>
               </div>
               <div class="nc2c-product__foot">
-                <p class="nc2c-product__hint">{{ product.detail_note || '收益與結算規則以後台配置為準。' }}</p>
+                <p class="nc2c-product__hint">{{ product.detail_note || '收益與結算規則以產品設定為準。' }}</p>
                 <button type="button" class="nc2c-btn-detail" @click.stop="openDetail(product)">產品詳情</button>
               </div>
             </div>
@@ -161,7 +161,7 @@
               <div class="nc2c-timeline__row"><div class="nc2c-timeline__label">到期日</div><div class="nc2c-timeline__value">{{ currentProduct ? currentProduct.term_days + ' 天後' : '—' }}</div></div>
             </div>
             <div class="nc2c-detail-highlight" id="nc2c-detail-highlight">{{ currentProduct ? currentProduct.term_days + 'D · 參考 APR ' + formatPercent(currentProduct.apr_rate) : '—' }}</div>
-            <div id="nc2c-overview-notes"><p class="nc2c-detail-note">{{ currentProduct && currentProduct.detail_note ? currentProduct.detail_note : '實際收益與結算依後台產品配置與審核結果為準。' }}</p></div>
+            <div id="nc2c-overview-notes"><p class="nc2c-detail-note">{{ currentProduct && currentProduct.detail_note ? currentProduct.detail_note : '實際收益與結算依產品規則與審核結果為準。' }}</p></div>
           </div>
 
           <div class="nc2c-detail-panel" id="nc2c-panel-rules" :class="{ 'nc2c-panel-hidden': detailTab !== 'rules' }">

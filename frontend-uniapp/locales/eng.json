@@ -575,6 +575,7 @@
     "提交失敗，請稍後再試": "Submission failed. Please try again later",
     "submitInProgress": "Submitting...",
     "此分類暫無紀錄": "No records in this category",
+    "目前沒有符合條件的訂單。": "No matching orders.",
     "目前沒有符合條件的流水資料，切換分類或返回資產頁後再試。": "There are no matching transaction records. Switch category or return to Assets and try again.",
     "查看全部": "View all",
     "充值申請": "Deposit request",

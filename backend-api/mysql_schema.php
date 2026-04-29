@@ -20,6 +20,7 @@ function mysql_schema_queries(): array
             invitation_code VARCHAR(191) NOT NULL UNIQUE,
             invited_by_user_id BIGINT UNSIGNED NULL,
             invited_by_admin_id BIGINT UNSIGNED NULL,
+            admin_group_code VARCHAR(64) NULL,
             login_failure_count INT NOT NULL DEFAULT 0,
             last_login_at VARCHAR(64) NULL,
             last_login_ip VARCHAR(64) NULL,
@@ -311,6 +312,9 @@ function mysql_schema_queries(): array
             permissions LONGTEXT NOT NULL,
             display_name VARCHAR(191) NULL,
             staff_invite_code VARCHAR(191) NULL,
+            admin_group_code VARCHAR(64) NULL,
+            admin_group_name VARCHAR(191) NULL,
+            can_view_group_global_data TINYINT(1) NOT NULL DEFAULT 0,
             created_by_admin_id BIGINT UNSIGNED NULL,
             parent_admin_id BIGINT UNSIGNED NULL,
             password_must_change TINYINT(1) NOT NULL DEFAULT 1,
@@ -322,6 +326,15 @@ function mysql_schema_queries(): array
             template_key VARCHAR(64) NOT NULL PRIMARY KEY,
             label VARCHAR(191) NOT NULL,
             module_access_json LONGTEXT NOT NULL,
+            created_by_admin_id BIGINT UNSIGNED NULL,
+            created_at VARCHAR(64) NOT NULL,
+            updated_at VARCHAR(64) NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+
+        'CREATE TABLE IF NOT EXISTS admin_groups (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            group_name VARCHAR(191) NOT NULL,
+            group_code VARCHAR(64) NOT NULL UNIQUE,
             created_by_admin_id BIGINT UNSIGNED NULL,
             created_at VARCHAR(64) NOT NULL,
             updated_at VARCHAR(64) NOT NULL
@@ -461,6 +474,9 @@ function mysql_schema_missing_columns(): array
             'login_permanent_locked_at' => 'VARCHAR(64) NULL',
             'display_name' => 'VARCHAR(191) NULL',
             'staff_invite_code' => 'VARCHAR(191) NULL',
+            'admin_group_code' => 'VARCHAR(64) NULL',
+            'admin_group_name' => 'VARCHAR(191) NULL',
+            'can_view_group_global_data' => 'TINYINT(1) NOT NULL DEFAULT 0',
             'created_by_admin_id' => 'BIGINT UNSIGNED NULL',
             'parent_admin_id' => 'BIGINT UNSIGNED NULL',
             'password_must_change' => 'TINYINT(1) NOT NULL DEFAULT 1',
@@ -468,8 +484,12 @@ function mysql_schema_missing_columns(): array
         'admin_role_templates' => [
             'created_by_admin_id' => 'BIGINT UNSIGNED NULL',
         ],
+        'admin_groups' => [
+            'created_by_admin_id' => 'BIGINT UNSIGNED NULL',
+        ],
         'users' => [
             'invited_by_admin_id' => 'BIGINT UNSIGNED NULL',
+            'admin_group_code' => 'VARCHAR(64) NULL',
             'avatar_id' => 'VARCHAR(64) NULL',
         ],
         'deposit_addresses' => [

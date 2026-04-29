@@ -82,7 +82,7 @@
           <button type="button" class="usdt-confirm mt-1 flex h-[52px] w-full items-center justify-center rounded-full font-headline text-base font-bold tracking-wide" :disabled="submitting" @click="handleConfirm">{{ submitting ? ('◌ ' + submitStageText) : '確認' }}</button>
           <p v-if="submitting" class="px-1 text-center text-xs text-on-surface-variant">{{ submitStageText }}</p>
 
-          <p class="px-1 text-center text-xs leading-relaxed text-on-surface-variant">選擇網絡、複製充值地址、輸入轉賬金額、上傳憑證，最後點擊確認即可提交。若系統要求「充值備註」，請填寫交易哈希或轉賬說明以便自動對賬；未上傳有效憑證時後台可能駁回或延遲審核。</p>
+          <p class="px-1 text-center text-xs leading-relaxed text-on-surface-variant">選擇網絡、複製充值地址、輸入轉賬金額、上傳憑證，最後點擊確認即可提交。若系統要求「充值備註」，請填寫交易哈希或轉賬說明以便自動對賬；未上傳有效憑證時可能被駁回或延遲審核。</p>
         </div>
       </section>
 

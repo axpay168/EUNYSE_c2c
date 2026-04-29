@@ -169,7 +169,7 @@ import { filterUsdtPayoutItems, usdtPayoutRowTitle, payoutMethodStatusLabel } fr
  * EURNYSE - 提領地址綁定 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/withdraw-address-binding.html 為唯一基準逐字遷移
  * 外部腳本：../shared/marble-bg.js、../shared/back-nav.js（資產／鏈改為底部抽層選擇，不再使用 eurnyse-select.js）
- * 地址提交：POST /api/user/payout-methods → 後台審核後生效
+ * 地址提交：POST /api/user/payout-methods → 平台審核後生效
  * 已綁定地址：GET /api/user/payout-methods → 完整鏈上地址展示（不截斷）
  */
 var BODY_CLASSES = [
@@ -335,7 +335,7 @@ export default {
           self.addr = "";
           self.memo = "";
           self.addrLabel = "";
-          alert("已提交，待後台審核通過後可用於提領。");
+          alert("已提交，待平台審核通過後可用於提領。");
           return self.loadBoundAddresses();
         })
         .catch(function (error) {

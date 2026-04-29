@@ -24,7 +24,7 @@
 
       <LoadingInlineSpinner v-if="loading" aria-label="訂單載入" />
       <p v-else-if="errorMessage" class="rounded-2xl bg-error/5 px-4 py-3 text-center text-sm text-error">{{ errorMessage }}</p>
-      <p v-else-if="!visibleOrders.length" class="rounded-2xl bg-surface-bright px-4 py-8 text-center text-sm text-on-surface-variant">目前沒有符合條件的訂單。</p>
+      <p v-else-if="!visibleOrders.length" class="rounded-2xl bg-surface-bright px-4 py-8 text-center text-sm text-on-surface-variant">{{ $t('phrases.目前沒有符合條件的訂單。') }}</p>
       <a
         v-for="order in visibleOrders"
         :key="order.realId || order.orderNo"

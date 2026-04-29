@@ -411,6 +411,40 @@
   color: var(--ac-text-2);
 }
 
+.admin-invite-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 168px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(62, 143, 216, 0.38);
+  background: rgba(13, 35, 51, 0.72);
+  color: var(--ac-text);
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.admin-invite-chip:hover {
+  border-color: rgba(138, 208, 251, 0.72);
+  background: rgba(18, 49, 72, 0.86);
+}
+
+.admin-invite-chip__label {
+  color: var(--ac-text-3);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-invite-chip__code {
+  color: #eaf7ff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .admin-pill {
   display: inline-flex;
   align-items: center;
@@ -2197,6 +2231,34 @@
   max-height: none;
 }
 
+/* 新增管理員表單預設不展開自訂矩陣；避免隱藏矩陣觸發通用彈窗裁切，讓建立按鈕可見。 */
+#admin-modal-create-admin-user .admin-modal__dialog {
+  display: block;
+  overflow: auto;
+}
+
+#admin-modal-create-admin-user .admin-modal__form {
+  flex: none;
+  overflow: visible;
+}
+
+#view-admin-create-custom-wrap[hidden] {
+  display: none !important;
+}
+
+#admin-modal-create-admin-user .admin-modal__scroll-body {
+  flex: none;
+  max-height: min(34vh, 360px);
+}
+
+#admin-modal-create-admin-user .admin-modal__form-actions {
+  justify-content: flex-end;
+  margin-top: 0;
+  padding: 4px 0 2px;
+  border: 0;
+  background: transparent;
+}
+
 .admin-modal__head-actions {
   display: flex;
   align-items: center;
@@ -2351,6 +2413,27 @@
 
 .admin-modal__field--full {
   grid-column: 1 / -1;
+}
+
+.admin-scope-group {
+  border: 1px solid rgba(62, 143, 216, 0.32);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(62, 143, 216, 0.06);
+}
+
+.admin-scope-group > legend {
+  padding: 0 8px;
+  color: var(--ac-text);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.admin-scope-toggle {
+  border: 1px solid rgba(47, 120, 201, 0.28);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(74, 159, 227, 0.09);
 }
 
 .admin-modal__label {

@@ -2551,7 +2551,7 @@
         }
         setKpiVal("dash-kpi-pending-deposits", kpi.pending_deposits);
         setKpiVal("dash-kpi-pending-withdrawals", kpi.pending_withdrawals);
-        setKpiVal("dash-kpi-disputed-orders", kpi.disputed_orders);
+        setKpiVal("dash-kpi-trading-orders", kpi.trading_orders != null ? kpi.trading_orders : kpi.disputed_orders);
         setKpiVal("dash-kpi-pending-kyc", kpi.pending_kyc);
         var nd = document.getElementById("dash-kpi-pending-deposits-note");
         if (nd) {
@@ -2583,13 +2583,12 @@
             "統計區間：" +
             range.start +
             " — " +
-            range.end +
-            "（台北時間；總額為已審「通過」之單據，依建立時間篩選；EUR 依系統 finance.usdt_to_eur_rate 反算折合 USDT）";
+            range.end;
         }
       })
       .catch(function (e) {
         if (e && e.adminSessionHandled) return;
-        ["dash-kpi-pending-deposits", "dash-kpi-pending-withdrawals", "dash-kpi-disputed-orders", "dash-kpi-pending-kyc"].forEach(
+        ["dash-kpi-pending-deposits", "dash-kpi-pending-withdrawals", "dash-kpi-trading-orders", "dash-kpi-pending-kyc"].forEach(
           function (id) {
             var el = document.getElementById(id);
             if (el) el.textContent = "—";
@@ -6194,7 +6193,7 @@
                 label: "編輯"
               })
             )
-          : '<span class="admin-muted" title="全站 USDT 預設充值地址僅限根帳號 admin666 修改（系統配置 API）">僅 admin666</span>';
+          : '<span class="admin-muted" title="全站 USDT 預設充值地址僅限大老板修改（系統配置 API）">僅大老板</span>';
         return (
           "<tr><td>" +
           esc(it.group || "—") +
@@ -6286,6 +6285,7 @@
   var _adminCatalogCache = null;
   /** 自「模組權限」複製模版至「新增管理員」時暫存的 module_access（僅與 role_template=custom 併用） */
   var _adminCreateUserModuleAccessDraft = null;
+  var _adminGroupCache = [];
   var _adminUserRowsById = {};
   var _adminUsersPage = 1;
   var _adminUsersPageSize = ADMIN_PAGE_SIZE_DEFAULT;
@@ -6312,7 +6312,8 @@
   };
 
   var ROLE_TEMPLATE_ZH = {
-    super_admin: "超級管理員",
+    big_boss: "大老板",
+    super_admin: "組超級管理員",
     finance_ops: "財務",
     reviewer: "審核",
     customer_service: "客服",
@@ -6320,7 +6321,7 @@
   };
 
   var ROLE_CODE_ZH = {
-    super_admin: "超級管理員",
+    super_admin: "組超級管理員",
     finance_ops: "財務",
     reviewer: "審核",
     customer_service: "客服"
@@ -6346,8 +6347,9 @@
     return ROLE_TEMPLATE_ZH[c] || c;
   }
 
-  function roleCodesSummaryZh(codes, isSuperAdmin) {
-    if (isSuperAdmin) return "全部";
+  function roleCodesSummaryZh(codes, isSuperAdmin, roleTemplate) {
+    if (roleTemplate === "big_boss") return "大老板";
+    if (isSuperAdmin) return "組全局";
     if (!Array.isArray(codes) || !codes.length) return "—";
     return codes
       .map(function (x) {
@@ -6373,7 +6375,21 @@
   function currentAdminIsRoot() {
     var p = currentAdminProfile() || {};
     if (p.is_root_admin === true) return true;
-    return String(p.account || p.name || "").trim().toLowerCase() === "admin666";
+    if (p.role_template === "big_boss") return true;
+    return String(p.display_name || "").trim() === "大老板";
+  }
+
+  function currentAdminCanGrantGroupGlobal() {
+    var p = currentAdminProfile() || {};
+    return currentAdminIsRoot() || p.can_view_group_global_data === true;
+  }
+
+  function adminGroupLabelZh(u) {
+    var name = String((u && u.admin_group_name) || "").trim();
+    var code = String((u && u.admin_group_code) || "").trim();
+    if (!name && !code) return "—";
+    if (name && code && name !== code) return name + "（" + code + "）";
+    return name || code;
   }
 
   function currentAdminModuleGrant(mk) {
@@ -6845,7 +6861,7 @@
   }
 
   function renderAdminUserRow(it) {
-    var base = roleCodesSummaryZh(it.role_codes, it.is_super_admin);
+    var base = roleCodesSummaryZh(it.role_codes, it.is_super_admin, it.role_template);
     return (
       '<tr data-admin-id="' +
       esc(it.id) +
@@ -6855,6 +6871,8 @@
       esc(it.account || "—") +
       "</td><td>" +
       esc(it.display_name || "—") +
+      "</td><td>" +
+      esc(adminGroupLabelZh(it)) +
       '</td><td class="mono">' +
       esc(it.staff_invite_code || "—") +
       "</td><td>" +
@@ -6896,7 +6914,7 @@
                   esc(it.id) +
                   '"',
                 label: "檢視權限",
-                title: "超級管理員：後端對全部模組等同讀寫；此處為唯讀對照表。"
+                title: "組超級管理員：後端對授權範圍內全部模組等同讀寫；此處為唯讀對照表。"
               })
             : adminBtn({
                 variant: "accent",
@@ -6967,7 +6985,7 @@
       encodeURIComponent(String(_adminUsersPageSize));
     if (kw && kw.value.trim()) q += "&keyword=" + encodeURIComponent(kw.value.trim());
     if (st && st.value) q += "&status=" + encodeURIComponent(st.value);
-    setTbodyLoading("view-admin-users-tbody", 10);
+    setTbodyLoading("view-admin-users-tbody", 11);
     var countEl = document.getElementById("view-admin-users-count");
     return api()
       .requestJson(q, { fallbackMessage: "載入後台管理員失敗" })
@@ -6986,7 +7004,7 @@
           if (!items.length) {
             tb.innerHTML =
               tableEmptyRow(
-                10,
+                11,
                 "此頁尚無管理員資料",
                 "可能尚無符合篩選的帳號，或需超管權限才能載入列表。"
               );
@@ -6996,13 +7014,15 @@
         }
         updateAdminUsersPagerUi(data, items);
         fillAdminRoleTemplateSelects(data && data.role_templates);
+        fillAdminGroupSelects(data && data.admin_groups);
         renderAdminRoleTemplatesTable(data && data.role_templates);
       })
       .catch(function (e) {
         if (e && e.adminSessionHandled) return;
         _adminCatalogCache = null;
+        _adminGroupCache = [];
         _adminUserRowsById = {};
-        setTbodyError("view-admin-users-tbody", e.message, 10);
+        setTbodyError("view-admin-users-tbody", e.message, 11);
         if (countEl) countEl.textContent = "載入失敗";
         var info = document.getElementById("view-admin-users-page-info");
         if (info) info.textContent = "";
@@ -7011,20 +7031,21 @@
         if (prev) prev.disabled = true;
         if (next) next.disabled = true;
         fillAdminRoleTemplateSelects(null);
+        fillAdminGroupSelects(null);
         renderAdminRoleTemplatesTable(null);
       });
   }
 
   /** 同步「新增 / 編輯」角色模板下拉；templates 為 null 時使用內建 fallback（與後端預設模板鍵一致）。 */
   function fillAdminRoleTemplateSelects(templates) {
-    var keys = templates && typeof templates === "object" ? Object.keys(templates) : [];
+    var keys = templates && typeof templates === "object" ? Object.keys(templates).filter(function (k) { return k !== "big_boss"; }) : [];
     var fallback =
       '<option value="finance_ops">財務</option><option value="reviewer">審核</option><option value="customer_service">客服</option>';
     var core =
       keys.length > 0
         ? keys
             .map(function (k) {
-              var lab = (templates[k] && templates[k].label) || k;
+              var lab = ROLE_TEMPLATE_ZH[k] || (templates[k] && templates[k].label) || k;
               return '<option value="' + esc(k) + '">' + esc(lab) + "</option>";
             })
             .join("")
@@ -7038,8 +7059,38 @@
     }
     var editSel = document.getElementById("view-admin-edit-role-template");
     if (editSel) {
-      editSel.innerHTML = '<option value="super_admin">超級管理員</option>' + core;
+      editSel.innerHTML = '<option value="super_admin">組超級管理員</option>' + core;
     }
+  }
+
+  function adminGroupOptionLabel(group) {
+    var name = String((group && group.group_name) || "").trim();
+    var code = String((group && group.group_code) || "").trim();
+    if (name && code && name !== code) return name + "（" + code + "）";
+    return name || code || "未命名分組";
+  }
+
+  function fillAdminGroupSelects(groups) {
+    _adminGroupCache = Array.isArray(groups) ? groups.slice() : [];
+    var createSel = document.getElementById("view-admin-create-group-select");
+    if (!createSel) return;
+    var html = '<option value="">不指定分組（沿用建立者目前組別）</option>';
+    html += _adminGroupCache
+      .map(function (group) {
+        var code = String(group.group_code || "").trim();
+        if (!code) return "";
+        return (
+          '<option value="' +
+          esc(code) +
+          '" data-group-name="' +
+          esc(group.group_name || code) +
+          '">' +
+          esc(adminGroupOptionLabel(group)) +
+          "</option>"
+        );
+      })
+      .join("");
+    createSel.innerHTML = html;
   }
 
   function bindAdminUsersPage() {
@@ -7095,6 +7146,75 @@
     }
   }
 
+  function setAdminScopeControls(mode, values) {
+    var isCreate = mode === "create";
+    var root = currentAdminIsRoot();
+    var canGrantGlobal = currentAdminCanGrantGroupGlobal();
+    var globalEl = document.getElementById(isCreate ? "view-admin-create-group-global" : "view-admin-edit-group-global");
+    values = values || {};
+    if (!isCreate) {
+      var scope = document.getElementById("view-admin-edit-scope-group");
+      var nameEl = document.getElementById("view-admin-edit-group-name");
+      var codeEl = document.getElementById("view-admin-edit-group-code");
+      if (scope) scope.hidden = false;
+      if (nameEl) {
+        nameEl.value = values.admin_group_name || "";
+        nameEl.readOnly = !root;
+      }
+      if (codeEl) {
+        codeEl.value = values.admin_group_code || "";
+        codeEl.readOnly = !root;
+      }
+    }
+    if (globalEl) {
+      globalEl.checked = !!values.can_view_group_global_data;
+      globalEl.disabled = !canGrantGlobal;
+      globalEl.title = canGrantGlobal ? "" : "只有大老板或具備全組資料權限的組超級管理員可勾選";
+    }
+  }
+
+  function initCreateAdminGroupForm() {
+    var form = document.getElementById("view-admin-create-group-form");
+    if (!form || form._adminBound) return;
+    form._adminBound = true;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var nameEl = document.getElementById("view-admin-group-create-name");
+      var codeEl = document.getElementById("view-admin-group-create-code");
+      var msg = document.getElementById("view-admin-group-create-msg");
+      var body = {
+        group_name: nameEl ? nameEl.value.trim() : "",
+        group_code: codeEl ? codeEl.value.trim() : ""
+      };
+      if (!body.group_name) {
+        if (msg) msg.textContent = "請填寫組別名稱。";
+        return;
+      }
+      if (msg) msg.textContent = "送出中…";
+      api()
+        .requestJson("/api/admin/admin-groups", {
+          method: "POST",
+          body: body,
+          fallbackMessage: "新增分組失敗"
+        })
+        .then(function () {
+          if (msg) msg.textContent = "已建立分組。";
+          form.reset();
+          return loadViewAdminUsers();
+        })
+        .then(function () {
+          if (window.AdminModals && window.AdminModals.close) {
+            var modal = document.getElementById("admin-modal-create-admin-group");
+            if (modal) window.AdminModals.close(modal);
+          }
+        })
+        .catch(function (err) {
+          if (err && err.adminSessionHandled) return;
+          if (msg) msg.textContent = err.message || "新增分組失敗";
+        });
+    });
+  }
+
   function initCreateAdminUserForm() {
     var form = document.getElementById("view-admin-create-user-form");
     if (!form || form._adminBound) return;
@@ -7107,6 +7227,12 @@
           var opener = e.target.closest('[data-admin-modal-open="admin-modal-create-admin-user"]');
           if (!opener) return;
           _adminCreateUserModuleAccessDraft = null;
+          var p = currentAdminProfile() || {};
+          setAdminScopeControls("create", {
+            admin_group_code: currentAdminIsRoot() ? "" : p.admin_group_code,
+            admin_group_name: currentAdminIsRoot() ? "" : p.admin_group_name,
+            can_view_group_global_data: false
+          });
         },
         true
       );
@@ -7115,8 +7241,14 @@
     if (createSuper && !currentAdminIsRoot()) {
       createSuper.checked = false;
       createSuper.disabled = true;
-      createSuper.title = "只有 admin666 可新增超級管理員";
+      createSuper.title = "只有大老板可新增組超級管理員";
     }
+    var profileForCreate = currentAdminProfile() || {};
+    setAdminScopeControls("create", {
+      admin_group_code: currentAdminIsRoot() ? "" : profileForCreate.admin_group_code,
+      admin_group_name: currentAdminIsRoot() ? "" : profileForCreate.admin_group_name,
+      can_view_group_global_data: false
+    });
     var roleTplEl = document.getElementById("view-admin-create-role-template");
     if (roleTplEl && !roleTplEl._adminCreateCustomBound) {
       roleTplEl._adminCreateCustomBound = true;
@@ -7136,9 +7268,17 @@
       var status = document.getElementById("view-admin-create-status");
       var superEl = document.getElementById("view-admin-create-super");
       var roleTpl = document.getElementById("view-admin-create-role-template");
+      var groupSel = document.getElementById("view-admin-create-group-select");
+      var groupGlobal = document.getElementById("view-admin-create-group-global");
       var msg = document.getElementById("view-admin-create-msg");
       var isSuper = currentAdminIsRoot() && superEl && superEl.checked;
       var roleVal = roleTpl ? roleTpl.value : "finance_ops";
+      var selectedGroupOption = groupSel && groupSel.selectedIndex >= 0 ? groupSel.options[groupSel.selectedIndex] : null;
+      var selectedGroupCode = groupSel ? String(groupSel.value || "").trim() : "";
+      var selectedGroupName =
+        selectedGroupOption && selectedGroupOption.getAttribute("data-group-name")
+          ? selectedGroupOption.getAttribute("data-group-name")
+          : "";
       var draft =
         _adminCreateUserModuleAccessDraft && typeof _adminCreateUserModuleAccessDraft === "object"
           ? _adminCreateUserModuleAccessDraft
@@ -7164,7 +7304,10 @@
         status: status ? status.value : "normal",
         is_super_admin: isSuper,
         role_template: roleVal,
-        module_access: module_access
+        module_access: module_access,
+        admin_group_name: selectedGroupName,
+        admin_group_code: selectedGroupCode,
+        can_view_group_global_data: groupGlobal && !groupGlobal.disabled ? groupGlobal.checked : false
       };
       if (!body.account || !body.password) {
         if (msg) msg.textContent = "請填寫帳號與密碼。";
@@ -7184,11 +7327,17 @@
           if (superEl) superEl.checked = false;
           if (createSuper && !currentAdminIsRoot()) {
             createSuper.disabled = true;
-            createSuper.title = "只有 admin666 可新增超級管理員";
+            createSuper.title = "只有大老板可新增組超級管理員";
           } else if (createSuper) {
             createSuper.disabled = false;
             createSuper.title = "";
           }
+          var p = currentAdminProfile() || {};
+          setAdminScopeControls("create", {
+            admin_group_code: currentAdminIsRoot() ? "" : p.admin_group_code,
+            admin_group_name: currentAdminIsRoot() ? "" : p.admin_group_name,
+            can_view_group_global_data: false
+          });
           syncCreateAdminCustomModulePanel();
           loadViewAdminUsers();
           if (window.AdminModals && window.AdminModals.close) {
@@ -7237,6 +7386,9 @@
                 "<div><dt>建立者</dt><dd>" +
                 esc(adminCreatorLabelZh(u)) +
                 "</dd></div>" +
+                "<div><dt>組別</dt><dd>" +
+                esc(adminGroupLabelZh(u)) +
+                "</dd></div>" +
                 "<div><dt>狀態</dt><dd>" +
                 esc(adminStatusLabelZh(u.status)) +
                 "</dd></div>" +
@@ -7244,12 +7396,15 @@
                 esc(roleTemplateLabelZh(u.role_template)) +
                 "</dd></div>" +
                 "<div><dt>底層權限</dt><dd>" +
-                esc(roleCodesSummaryZh(u.role_codes, u.is_super_admin)) +
+                esc(roleCodesSummaryZh(u.role_codes, u.is_super_admin, u.role_template)) +
                 "</dd></div>" +
                 "<div><dt>模組權限</dt><dd>" +
                 esc(moduleAccessSummaryZh(u.module_access)) +
                 "</dd></div>" +
-                "<div><dt>超管</dt><dd>" +
+                "<div><dt>組全局資料</dt><dd>" +
+                (u.can_view_group_global_data ? "可查看" : "僅下級鏈路") +
+                "</dd></div>" +
+                "<div><dt>組超管</dt><dd>" +
                 (u.is_super_admin ? "是" : "否") +
                 "</dd></div></dl>";
             })
@@ -7273,8 +7428,9 @@
               if (editSuper) {
                 editSuper.checked = !!u.is_super_admin;
                 editSuper.disabled = !currentAdminIsRoot();
-                editSuper.title = currentAdminIsRoot() ? "" : "只有 admin666 可調整超級管理員";
+                editSuper.title = currentAdminIsRoot() ? "" : "只有大老板可調整組超級管理員";
               }
+              setAdminScopeControls("edit", u);
               var rt = document.getElementById("view-admin-edit-role-template");
               if (rt) {
                 var tpl = u.role_template || "finance_ops";
@@ -7343,7 +7499,7 @@
           if (note) {
             note.hidden = false;
             note.textContent =
-              "此帳號為超級管理員：後端繞過模組矩陣檢查，對全部模組等同「修改」。下列為與目錄對照之唯讀預覽（無法於此儲存變更）。";
+              "此帳號為組超級管理員：後端在其授權範圍內對全部模組等同「修改」。下列為與目錄對照之唯讀預覽（無法於此儲存變更）。";
           }
           var moduleKeysSuper = Object.keys(catalog).sort();
           var rowsSuper = moduleKeysSuper
@@ -7415,7 +7571,7 @@
       if (createSuper && !currentAdminIsRoot()) {
         createSuper.checked = false;
         createSuper.disabled = true;
-        createSuper.title = "只有 admin666 可新增超級管理員";
+        createSuper.title = "只有大老板可新增組超級管理員";
       } else if (createSuper) {
         createSuper.checked = false;
         createSuper.disabled = false;
@@ -7500,14 +7656,22 @@
       e.preventDefault();
       var id = document.getElementById("view-admin-edit-id").value;
       var editSuper = document.getElementById("view-admin-edit-super");
+      var editGroupName = document.getElementById("view-admin-edit-group-name");
+      var editGroupCode = document.getElementById("view-admin-edit-group-code");
+      var editGroupGlobal = document.getElementById("view-admin-edit-group-global");
       var body = {
         account: document.getElementById("view-admin-edit-account").value.trim(),
         display_name: document.getElementById("view-admin-edit-display").value.trim(),
         staff_invite_code: document.getElementById("view-admin-edit-invite").value.trim() || null,
         status: document.getElementById("view-admin-edit-status").value,
         is_super_admin: currentAdminIsRoot() && editSuper && editSuper.checked,
-        role_template: document.getElementById("view-admin-edit-role-template").value
+        role_template: document.getElementById("view-admin-edit-role-template").value,
+        admin_group_name: editGroupName ? editGroupName.value.trim() : "",
+        admin_group_code: editGroupCode ? editGroupCode.value.trim() : ""
       };
+      if (editGroupGlobal && !editGroupGlobal.disabled) {
+        body.can_view_group_global_data = editGroupGlobal.checked;
+      }
       var msg = document.getElementById("view-admin-edit-msg");
       if (msg) msg.textContent = "儲存中…";
       api()
@@ -7731,6 +7895,7 @@
     "admin-users": function () {
       bindAdminUsersPage();
       initRoleTemplateManagement();
+      initCreateAdminGroupForm();
       initCreateAdminUserForm();
       initAdminUserDetailHooks();
       initEditAdminUserForm();

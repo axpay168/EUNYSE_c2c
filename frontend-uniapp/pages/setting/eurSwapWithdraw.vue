@@ -72,7 +72,7 @@
             <div class="rounded-[18px] border border-outline-variant/35 bg-gradient-to-b from-white to-surface-container-low/90 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
               <textarea class="min-h-[28px] w-full resize-none rounded-[14px] border-0 bg-transparent px-3 py-1.5 font-mono text-[13px] leading-snug text-on-surface placeholder:text-on-surface-variant/65 focus:outline-none focus:ring-0" id="swap-usdt-addr" rows="1" spellcheck="false" autocomplete="off" placeholder="TRC20 USDT 地址（以 T 開頭）" v-model="usdtAddr"></textarea>
             </div>
-            <p class="mt-2 text-xs text-on-surface-variant">提領路徑顯示為 <span class="font-semibold text-on-surface">EUR 換 USDT 提領</span>。目前先建立 EUR 提現審核單，實際換匯與放款由後台審核處理。</p>
+            <p class="mt-2 text-xs text-on-surface-variant">提領路徑顯示為 <span class="font-semibold text-on-surface">EUR 換 USDT 提領</span>。目前先建立 EUR 提現審核單，實際換匯與放款依平台審核流程處理。</p>
           </div>
 
           <button type="button" class="swap-submit flex h-[52px] w-full items-center justify-center rounded-full font-headline text-base font-bold tracking-wide" id="swap-submit" :disabled="submitting" @click="submit">{{ submitting ? '提交中...' : '提交換匯提領' }}</button>
@@ -116,7 +116,7 @@
           </button>
         </div>
         <div class="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-2">
-          <p v-if="!addressOptions.length" class="py-8 text-center text-sm text-on-surface-variant">尚無已審核 USDT 地址，請先新增地址並等待後台審核。</p>
+          <p v-if="!addressOptions.length" class="py-8 text-center text-sm text-on-surface-variant">尚無已審核 USDT 地址，請先新增地址並等待平台審核。</p>
           <button
             v-for="(item, idx) in addressOptions"
             :key="idx"

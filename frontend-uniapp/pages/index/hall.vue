@@ -54,7 +54,7 @@
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70 text-[20px]">search</span>
             <input class="w-full bg-surface-container-low border border-transparent focus:bg-surface-container-lowest focus:border-outline-variant/30 rounded-lg py-2 pl-10 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant/50 transition-all outline-none focus:ring-0" placeholder="金額（USDT）" type="text" inputmode="decimal" v-model="amountFilter" />
           </div>
-          <button type="button" class="bg-surface-container-low hover:bg-surface-container-highest text-on-surface p-2 rounded-lg transition-colors flex items-center justify-center border border-transparent hover:border-outline-variant/15" title="重新載入掛單" aria-label="重新載入掛單" @click="fetchListings">
+          <button type="button" class="bg-surface-container-low hover:bg-surface-container-highest text-on-surface p-2 rounded-lg transition-colors flex items-center justify-center border border-transparent hover:border-outline-variant/15" title="Refresh suppliers" aria-label="Refresh suppliers" @click="fetchListings">
             <span class="material-symbols-outlined text-[20px]">sync</span>
           </button>
         </div>
@@ -65,7 +65,7 @@
         <p v-else-if="listingsError" class="text-sm text-red-600 px-1">{{ listingsError }}</p>
         <div id="lobby-offers-sell" class="flex flex-col gap-6" v-show="mode === 'sell' && !listingsError">
           <p v-if="!listingsLoading && !sellTabListings.length" class="text-sm text-on-surface-variant px-1 py-6 text-center rounded-xl bg-surface-container-lowest/80 border border-outline-variant/10">
-            尚無「賣出」掛單（與後台方向 <code class="text-xs">sell</code> 一致）。新增並為啟用後，請按上方重新載入。
+            No suppliers
           </p>
           <article
             v-for="listing in sellTabListings"
@@ -111,7 +111,7 @@
 
         <div id="lobby-offers-buy" class="flex flex-col gap-6" v-show="mode === 'buy' && !listingsError">
           <p v-if="!listingsLoading && !buyTabListings.length" class="text-sm text-on-surface-variant px-1 py-6 text-center rounded-xl bg-surface-container-lowest/80 border border-outline-variant/10">
-            尚無「買入」掛單（與後台方向 <code class="text-xs">buy</code> 一致）。新增並為啟用後，請按上方重新載入。
+            No suppliers
           </p>
           <article
             v-for="listing in buyTabListings"
@@ -191,7 +191,7 @@ import { hallCertifiedBadge } from '@/assets/images'
  * EURNYSE - 交易大廳 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/lody.html 為唯一基準逐字遷移
  * 原稿 IIFE：sell/buy 雙列切換 + aria-selected + class toggle，改以 Vue data.mode + :class 等價呈現
- * 掛單列表：GET /api/user/listings（需登入）；與後台方向一致：「賣出」分頁 = side sell，「買入」分頁 = side buy
+ * 供應商列表：GET /api/user/listings（需登入）；「賣出」分頁 = side sell，「買入」分頁 = side buy
  */
 var BODY_CLASSES = [
   "nc2c-page",
@@ -223,7 +223,7 @@ export default {
     };
   },
   computed: {
-    /** 與後台「方向」一致：sell → 賣出分頁 */
+    /** sell → 賣出分頁 */
     sellTabListings: function () {
       return this.filteredListings
         .filter(function (l) {
@@ -234,7 +234,7 @@ export default {
           return (b.id || 0) - (a.id || 0);
         });
     },
-    /** 與後台「方向」一致：buy → 買入分頁 */
+    /** buy → 買入分頁 */
     buyTabListings: function () {
       return this.filteredListings
         .filter(function (l) {
@@ -400,12 +400,12 @@ export default {
       var v = listing && listing[key];
       return v === true || v === 1 || v === "1";
     },
-    /** 僅後台勾選「認證章／認證星」時顯示星形，且固定一顆；未勾選則不顯示（不以成交率推斷多顆星）。 */
+    /** 僅啟用「認證章／認證星」時顯示星形，且固定一顆；未勾選則不顯示（不以成交率推斷多顆星）。 */
     listingHallStarSlots: function (listing) {
       if (this.listingBadgeOn(listing, "badge_stars")) return [1];
       return [];
     },
-    /** VIP／PRO 可由後台同時勾選；未勾選時才依成交率推斷單一標籤。 */
+    /** VIP／PRO 可同時啟用；未勾選時才依成交率推斷單一標籤。 */
     listingShowVip: function (listing) {
       if (this.listingBadgeOn(listing, "badge_vip")) return true;
       if (this.listingBadgeOn(listing, "badge_pro")) return false;

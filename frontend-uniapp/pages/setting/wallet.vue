@@ -53,7 +53,7 @@
             </div>
             <div class="mt-3 grid grid-cols-2 gap-2">
               <a class="wallet-asset-action flex h-11 items-center justify-center rounded-xl border border-primary/25 bg-primary-container/50 text-base font-bold text-primary-dim transition-colors hover:bg-primary-container" href="#/pages/setting/mixrecharge">充值</a>
-              <a class="flex h-11 items-center justify-center rounded-xl border border-outline-variant/30 bg-white text-base font-bold text-on-surface transition-colors hover:bg-surface-container-low" href="#/pages/setting/withdrawUsdt">提領</a>
+              <a class="wallet-asset-action wallet-asset-action--secondary flex h-11 items-center justify-center rounded-xl text-base font-bold transition-all" href="#/pages/setting/withdrawUsdt">提領</a>
             </div>
           </div>
           <div class="rounded-2xl bg-surface-bright px-4 py-4">
@@ -63,8 +63,8 @@
             </div>
             <div class="mt-3 grid grid-cols-3 gap-2">
               <a class="wallet-asset-action flex h-11 items-center justify-center rounded-xl border border-primary/25 bg-primary-container/50 text-sm sm:text-base font-bold text-primary-dim transition-colors hover:bg-primary-container px-1" href="#/pages/setting/eurDeposit">充值</a>
-              <a class="flex h-11 items-center justify-center rounded-xl border border-outline-variant/30 bg-white text-sm sm:text-base font-bold text-on-surface transition-colors hover:bg-surface-container-low px-1" href="#/pages/setting/withdraw">提領</a>
-              <a class="flex h-11 items-center justify-center rounded-xl border border-primary/30 bg-primary/5 text-sm sm:text-base font-bold text-primary-dim transition-colors hover:bg-primary/10 px-1" href="#/pages/setting/eurSwapWithdraw" title="EUR→USDT">換匯</a>
+              <a class="wallet-asset-action wallet-asset-action--secondary flex h-11 items-center justify-center rounded-xl text-sm sm:text-base font-bold transition-all px-1" href="#/pages/setting/withdraw">提領</a>
+              <a class="wallet-asset-action wallet-asset-action--outline flex h-11 items-center justify-center rounded-xl text-sm sm:text-base font-bold transition-all px-1" href="#/pages/setting/eurSwapWithdraw" title="EUR→USDT">換匯</a>
             </div>
           </div>
         </div>
@@ -201,4 +201,41 @@ export default {
 <style>
 @import url("../../static/previews/shared/marble-bg.css");
 @import url("../../static/previews/nc2c/css/preview-entry.css");
+
+.wallet-asset-action {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 8px 18px rgba(46, 100, 134, 0.08);
+}
+
+.wallet-asset-action--secondary {
+  border: 1px solid rgba(46, 100, 134, 0.34);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(232, 246, 252, 0.96));
+  color: #16374d;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 0 rgba(46, 100, 134, 0.08),
+    0 10px 20px rgba(46, 100, 134, 0.12);
+}
+
+.wallet-asset-action--secondary:hover {
+  border-color: rgba(46, 100, 134, 0.5);
+  background: linear-gradient(180deg, #ffffff, #dff4fb);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 12px 24px rgba(46, 100, 134, 0.16);
+}
+
+.wallet-asset-action--outline {
+  border: 1px solid rgba(46, 100, 134, 0.42);
+  background: linear-gradient(180deg, rgba(248, 253, 255, 0.96), rgba(234, 247, 252, 0.92));
+  color: #1f5d81;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 18px rgba(46, 100, 134, 0.1);
+}
+
+.wallet-asset-action--outline:hover {
+  border-color: rgba(46, 100, 134, 0.58);
+  background: linear-gradient(180deg, #ffffff, rgba(218, 241, 250, 0.95));
+  color: #164a68;
+}
 </style>
