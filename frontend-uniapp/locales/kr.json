@@ -179,6 +179,7 @@
     "orderSellAboveMax": "금액이 이 목록의 최대 금액을 초과합니다.",
     "orderSellCreated": "매도 주문이 생성되었습니다. USDT는 예약되어 있습니다.",
     "orderSellCreateFailed": "판매 주문을 생성할 수 없습니다. 나중에 다시 시도해 주세요.",
+    "hallNoPendingListings": "대기 중인 주문 없음",
     "新報價": "새로운 견적",
     "資產": "자산",
     "充值": "입금",

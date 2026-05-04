@@ -65,7 +65,7 @@
         <p v-else-if="listingsError" class="text-sm text-red-600 px-1">{{ listingsError }}</p>
         <div id="lobby-offers-sell" class="flex flex-col gap-6" v-show="mode === 'sell' && !listingsError">
           <p v-if="!listingsLoading && !sellTabListings.length" class="text-sm text-on-surface-variant px-1 py-6 text-center rounded-xl bg-surface-container-lowest/80 border border-outline-variant/10">
-            No suppliers
+            {{ $t('phrases.hallNoPendingListings') }}
           </p>
           <article
             v-for="listing in sellTabListings"
@@ -111,7 +111,7 @@
 
         <div id="lobby-offers-buy" class="flex flex-col gap-6" v-show="mode === 'buy' && !listingsError">
           <p v-if="!listingsLoading && !buyTabListings.length" class="text-sm text-on-surface-variant px-1 py-6 text-center rounded-xl bg-surface-container-lowest/80 border border-outline-variant/10">
-            No suppliers
+            {{ $t('phrases.hallNoPendingListings') }}
           </p>
           <article
             v-for="listing in buyTabListings"

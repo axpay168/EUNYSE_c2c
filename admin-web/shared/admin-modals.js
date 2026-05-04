@@ -120,6 +120,7 @@
     ADMIN_UNAUTHORIZED: "請先登入後台。",
     ADMIN_TOKEN_INVALID: "後台登入狀態已失效，請重新登入。",
     ADMIN_TOKEN_EXPIRED: "後台登入狀態已過期，請重新登入。",
+    ADMIN_PASSWORD_CHANGE_REQUIRED: "此後台帳號首次登入需先修改密碼，完成後才能載入使用者資料。",
     ADMIN_FORBIDDEN: "目前帳號沒有此操作權限。"
   };
 
@@ -329,11 +330,15 @@
 
   function renderAdminUsersPager() {
     var info = document.getElementById("admin-users-page-info");
+    var display = document.getElementById("admin-users-page-display");
     var prev = document.getElementById("admin-users-prev");
     var next = document.getElementById("admin-users-next");
     var totalPages = Math.max(1, Math.ceil((adminUsersTotal || 0) / (adminUsersPageSize || ADMIN_USERS_PAGE_SIZE_DEFAULT)));
     if (info) {
       info.textContent = "第 " + adminUsersPage + " / " + totalPages + " 頁 · 每頁 " + adminUsersPageSize + " 筆";
+    }
+    if (display) {
+      display.textContent = "第 " + adminUsersPage + " / " + totalPages + " 頁";
     }
     if (prev) prev.disabled = adminUsersPage <= 1;
     if (next) next.disabled = adminUsersPage >= totalPages || adminUsersTotal === 0;

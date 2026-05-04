@@ -204,6 +204,7 @@
 <div class="admin-table-pager__actions">
 <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" id="admin-users-prev" disabled>上一頁</button>
 <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" id="admin-users-page-size">每頁筆數</button>
+<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" id="admin-users-page-display" disabled>第 1 / 1 頁</button>
 <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" id="admin-users-next" disabled>下一頁</button>
 </div>
 </div>
@@ -311,9 +312,9 @@
 
 <!-- deposit-addresses — 對齊 depositAddressesTable（TRC/ETH/BEP 矩陣） -->
 <section id="view-deposit-addresses" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-da">
-<div class="admin-page-head"><h1 id="head-da">充值地址管理</h1><p>依用戶列出 TRC / ETH / BEP 充值地址（含新註冊、尚未寫入地址者）。未設定之鏈別列表顯示 <code>--</code>；若地址與下方「平台預設」常數相同，列表僅顯示「預設」。編輯時空白欄位可帶入常數供參考，儲存後寫入 <code>deposit_addresses</code>（<strong>不會</strong>被全站預設配置覆寫）。<strong>App 邏輯：</strong> 一律優先使用該用戶在 <code>deposit_addresses</code> 的啟用地址；僅當該鏈無配置時才回退 <code>system_configs</code> 的 <code>finance.usdt_platform_deposit_*</code>。<strong>全站預設地址</strong>僅限大老板於「系統配置」修改（其他管理員無法 PATCH）；修改全站預設不會改動任何用戶已儲存的充值地址。</p></div>
+<div class="admin-page-head"><h1 id="head-da">充值地址管理</h1><p>依用戶列出 TRC / ETH / BEP 充值地址（含新註冊、尚未寫入地址者）。列表欄位與 App 一致：無個別地址時<strong>先套用下方「平台預設」</strong>；若有效地址與平台預設相同則只顯示「預設」；平台亦無設定時顯示 <code>--</code>。編輯時空白欄位可帶入常數供參考，儲存後寫入 <code>deposit_addresses</code>（<strong>不會</strong>被全站預設配置覆寫）。<strong>App 邏輯：</strong> 一律優先使用該用戶在 <code>deposit_addresses</code> 的啟用地址；僅當該鏈無配置時才回退 <code>system_configs</code> 的 <code>finance.usdt_platform_deposit_*</code>。<strong>全站預設地址</strong>僅限大老板於「系統配置」修改（其他管理員無法 PATCH）；修改全站預設不會改動任何用戶已儲存的充值地址。</p></div>
 <div class="admin-filters">
-<div class="admin-field"><label>搜尋</label><input id="view-da-keyword" class="admin-input" type="search" placeholder="用戶 ID／郵箱／手機／地址"/></div>
+<div class="admin-field"><label>搜尋</label><input id="view-da-keyword" class="admin-input" type="search" placeholder="ID／郵箱／手機／地址"/></div>
 <span data-admin-filter-actions="reset#view-da-reset|query#view-da-query|refresh#view-da-refresh"></span>
 <div class="admin-filters__push" aria-hidden="true"></div>
 <button type="button" class="admin-btn admin-btn--primary" data-admin-da-open-create>新增地址</button>
@@ -684,7 +685,7 @@
 <div class="admin-field"><label>狀態</label><select class="admin-select" id="view-admin-users-status"><option value="">全部狀態</option><option value="normal">正常</option><option value="disabled">禁用</option></select></div>
 <span data-admin-filter-actions="reset#view-admin-users-reset|search#view-admin-users-search|refresh#view-admin-users-refresh"></span>
 <div class="admin-filters__push" aria-hidden="true"><span class="admin-muted" id="view-admin-users-count"></span></div>
-<button type="button" class="admin-btn admin-btn--accent" data-admin-modal-open="admin-modal-create-admin-group">新增分組</button>
+<button type="button" class="admin-btn admin-btn--accent" data-root-only="true" data-admin-modal-open="admin-modal-create-admin-group">新增分組</button>
 <button type="button" class="admin-btn admin-btn--primary" data-admin-modal-open="admin-modal-create-admin-user">新增管理員</button>
 </div>
 <div class="admin-card admin-card--flush">
@@ -696,6 +697,7 @@
 <div class="admin-toolbar">
 <button type="button" class="admin-btn admin-btn--ghost" id="view-admin-users-prev" disabled>上一頁</button>
 <button type="button" class="admin-btn admin-btn--ghost" id="view-admin-users-page-size">每頁筆數</button>
+<button type="button" class="admin-btn admin-btn--ghost" id="view-admin-users-page-display" disabled>第 1 / 1 頁</button>
 <span class="admin-muted" id="view-admin-users-page-info"></span>
 <button type="button" class="admin-btn admin-btn--ghost" id="view-admin-users-next" disabled>下一頁</button>
 </div>
@@ -1213,7 +1215,7 @@
 <label class="admin-modal__field"><span class="admin-modal__label">專屬邀請碼</span><input class="admin-input mono" id="view-admin-create-invite" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="留空自動產生 6 位數字"/></label>
 <label class="admin-modal__field"><span class="admin-modal__label">狀態</span><select class="admin-select" id="view-admin-create-status"><option value="normal">正常</option><option value="disabled">禁用</option></select></label>
 <label class="admin-modal__field"><span class="admin-modal__label">角色模板</span><select class="admin-select" id="view-admin-create-role-template"></select></label>
-<label class="admin-modal__field"><span class="admin-modal__label">選擇分組</span><select class="admin-select" id="view-admin-create-group-select"></select></label>
+<label class="admin-modal__field" id="view-admin-create-group-field"><span class="admin-modal__label">選擇分組</span><select class="admin-select" id="view-admin-create-group-select"></select></label>
 <label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label"><input type="checkbox" id="view-admin-create-super"/> 設為組超級管理員（小老板）</span></label>
 <label class="admin-modal__field admin-modal__field--full admin-scope-toggle"><span class="admin-modal__label"><input type="checkbox" id="view-admin-create-group-global"/> 可查看全組會員/會員數據</span><span class="admin-modal__hint">勾選後可看同組全局數據；未勾選時只看自己管理鏈路下的資料。</span></label>
 </div>
@@ -1453,7 +1455,7 @@
 <form class="admin-modal__form" id="view-da-create-form">
 <div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
 <div class="admin-modal__grid2">
-<label class="admin-modal__field"><span class="admin-modal__label">用戶 ID</span><input class="admin-input mono" id="view-da-create-user-id" type="number" min="1" step="1" required placeholder="數字 UID"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">ID</span><input class="admin-input mono" id="view-da-create-user-id" type="number" min="1" step="1" required placeholder="與會員列表「ID」欄相同（數字）"/></label>
 <label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">TRC20 地址</span><input class="admin-input mono" id="view-da-create-trc20" type="text" placeholder="選填"/></label>
 <label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">ERC20 地址</span><input class="admin-input mono" id="view-da-create-erc20" type="text" placeholder="選填"/></label>
 <label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">BEP20 地址</span><input class="admin-input mono" id="view-da-create-bep20" type="text" placeholder="選填"/></label>
@@ -1480,7 +1482,7 @@
 <input type="hidden" id="view-da-detail-user-id" value=""/>
 <div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
 <div class="admin-modal__grid2">
-<label class="admin-modal__field"><span class="admin-modal__label">用戶 ID</span><input class="admin-input mono" id="view-da-detail-user-id-display" type="text" readonly tabindex="-1"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">ID</span><input class="admin-input mono" id="view-da-detail-user-id-display" type="text" readonly tabindex="-1"/></label>
 <label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">TRC20 地址</span><input class="admin-input mono" id="view-da-detail-trc20" type="text" placeholder="選填"/></label>
 <label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">ERC20 地址</span><input class="admin-input mono" id="view-da-detail-erc20" type="text" placeholder="選填"/></label>
 <label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">BEP20 地址</span><input class="admin-input mono" id="view-da-detail-bep20" type="text" placeholder="選填"/></label>

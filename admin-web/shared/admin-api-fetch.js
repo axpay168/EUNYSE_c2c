@@ -28,6 +28,7 @@
     ADMIN_TOKEN_INVALID: "後台登入狀態已失效，請重新登入。",
     ADMIN_TOKEN_EXPIRED: "後台登入狀態已過期，請重新登入。",
     ADMIN_FORBIDDEN: "目前帳號沒有此操作權限。",
+    ADMIN_PASSWORD_CHANGE_REQUIRED: "此後台帳號首次登入需先修改密碼，完成後才能使用此功能。",
     ADMIN_TRADE_FEED_RANDOM_SOURCE_EMPTY:
       "未取得金額 ≥ 100 USDT 的鏈上轉帳（已嘗試近 24 小時內資料），請稍後再試。"
   };

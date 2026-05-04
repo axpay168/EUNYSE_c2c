@@ -91,24 +91,9 @@
           </svg>
         </button>
 
-        <div class="divider">快捷進入</div>
-
-        <button type="button" class="bio-btn" id="biometricButton" aria-label="Face ID / 指紋驗證" @click="handleBiometric">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <path d="M8 3H6a3 3 0 0 0-3 3v2"/>
-            <path d="M16 3h2a3 3 0 0 1 3 3v2"/>
-            <path d="M8 21H6a3 3 0 0 1-3-3v-2"/>
-            <path d="M16 21h2a3 3 0 0 0 3-3v-2"/>
-            <path d="M12 7a4 4 0 0 1 4 4"/>
-            <path d="M8 11a4 4 0 0 1 8 0v1.5"/>
-            <path d="M12 10.5v5.5"/>
-            <path d="M9.5 15.5A3 3 0 0 0 12 17a3 3 0 0 0 2.5-1.5"/>
-          </svg>
-        </button>
-
         <div class="secondary-actions">
           <a class="ghost-btn" href="#/pages/common/register">註冊帳戶</a>
-          <a class="ghost-btn" href="#/pages/index/serviceCenter">聯繫客服</a>
+          <a class="ghost-btn" href="javascript:void(0)" @click="openChatwoot($event)">聯繫客服</a>
         </div>
       </form>
 
@@ -144,10 +129,7 @@ var STORAGE_KEYS = {
   rememberAccount: "eurnyse.remember.account",
   rememberSecret: "eurnyse.remember.secret",
   lastMode: "eurnyse.last.mode",
-  lastAccount: "eurnyse.last.account",
-  biometricEnabled: "eurnyse.biometric.enabled",
-  biometricMode: "eurnyse.biometric.mode",
-  biometricAccount: "eurnyse.biometric.account"
+  lastAccount: "eurnyse.last.account"
 };
 
 function encodeSecret(value) {
@@ -156,10 +138,6 @@ function encodeSecret(value) {
 
 function decodeSecret(value) {
   try { return decodeURIComponent(escape(atob(value))); } catch (e) { return value || ""; }
-}
-
-function supportsBiometric() {
-  return typeof PublicKeyCredential !== "undefined" || /Android|iPhone|iPad|Mac/i.test(navigator.userAgent);
 }
 
 var LOGIN_ERROR_TEXTS = {
@@ -327,13 +305,6 @@ export default {
         localStorage.setItem(STORAGE_KEYS.lastAccount, account);
       }
     },
-    getBoundBiometric: function () {
-      return {
-        enabled: localStorage.getItem(STORAGE_KEYS.biometricEnabled) === "1",
-        mode: localStorage.getItem(STORAGE_KEYS.biometricMode) || "phone",
-        account: localStorage.getItem(STORAGE_KEYS.biometricAccount) || ""
-      };
-    },
     hydrateRemembered: function () {
       var currentAreaCode = localStorage.getItem("selected_area_code") || "+84";
       this.countryCode = currentAreaCode;
@@ -372,6 +343,12 @@ export default {
     },
     togglePassword: function () {
       this.passwordHidden = !this.passwordHidden;
+    },
+    openChatwoot: function (event) {
+      if (event && event.preventDefault) event.preventDefault();
+      if (window.EurnyseOpenChatwoot && typeof window.EurnyseOpenChatwoot === "function") {
+        window.EurnyseOpenChatwoot();
+      }
     },
     handleLogin: function () {
       this.clearStatus();
@@ -439,38 +416,6 @@ export default {
       }).catch(function (error) {
         self.showError(localizedLoginError(error));
       });
-    },
-    handleBiometric: function () {
-      this.clearStatus();
-      var bound = this.getBoundBiometric();
-
-      if (!supportsBiometric()) {
-        this.showError("目前裝置不支援生物識別登入");
-        return;
-      }
-
-      if (!bound.enabled || !bound.account) {
-        var goSetting = window.confirm("您尚未綁定密鑰登入，是否前往安全中心設定？");
-        if (goSetting) {
-          window.location.hash = "#/pages/setting/securityCenter";
-        }
-        return;
-      }
-
-      sessionStorage.setItem("preview_login_payload", JSON.stringify(
-        bound.mode === "phone"
-          ? { mode: "biometric", phone: bound.account }
-          : { mode: "biometric", account: bound.account }
-      ));
-
-      var self = this;
-      this.showSuccess("正在啟動 Face ID / 指紋驗證...");
-      setTimeout(function () {
-        self.showSuccess("驗證成功，正在登入...");
-        setTimeout(function () {
-          window.location.hash = "#/pages/index/index";
-        }, 420);
-      }, 320);
     }
   }
 };

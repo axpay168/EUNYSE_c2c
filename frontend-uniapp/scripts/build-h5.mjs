@@ -50,6 +50,52 @@ if (result.status !== 0) {
   process.exit(result.status || 1)
 }
 
+/** uni-app 產出的 index.html 未必合併 manifest 的 template.h5.html；將 Vue bundle script 插入模板後再寫回 */
+function mergeH5IndexFromTemplate() {
+  const templatePath = path.join(projectRoot, 'template.h5.html')
+  const indexPath = path.join(distDir, 'index.html')
+  if (!fs.existsSync(templatePath) || !fs.existsSync(indexPath)) return
+  let tpl = fs.readFileSync(templatePath, 'utf8')
+  tpl = tpl.replace(/<%= BASE_URL %>/g, '/h5/')
+  tpl = tpl.replace(/<%= htmlWebpackPlugin\.options\.title %>/g, 'EURNYSE C2C')
+  const built = fs.readFileSync(indexPath, 'utf8')
+  const seenSrc = new Set()
+  const scripts = []
+  const re = /<script[^>]*\ssrc="([^"]+)"[^>]*>\s*<\/script>/gi
+  let m
+  while ((m = re.exec(built)) !== null) {
+    const src = m[1]
+    if (seenSrc.has(src)) continue
+    seenSrc.add(src)
+    scripts.push(`    <script src="${src}"></script>`)
+  }
+  const divMarker = '<div id="app"></div>'
+  const divIdx = tpl.indexOf(divMarker)
+  const chatIdx = tpl.indexOf('<!-- Chatwoot')
+  if (divIdx === -1 || chatIdx === -1 || scripts.length === 0) {
+    console.warn('[build:h5] mergeH5IndexFromTemplate: 模板或 bundle script 解析略過')
+    return
+  }
+  const tplHeadThroughChat = tpl.slice(0, chatIdx)
+  const scriptsDeduped = scripts.filter(function (line) {
+    const srcMatch = line.match(/src="([^"]+)"/)
+    if (!srcMatch) return true
+    const src = srcMatch[1]
+    if (tplHeadThroughChat.includes('src="' + src + '"')) return false
+    return true
+  })
+  const headThroughApp =
+    tpl.slice(0, divIdx + divMarker.length) +
+    '\n' +
+    scriptsDeduped.join('\n') +
+    '\n'
+  const fromChatwoot = tpl.slice(chatIdx)
+  fs.writeFileSync(indexPath, headThroughApp + fromChatwoot, 'utf8')
+  console.log('[build:h5] merged template.h5.html + webpack bundles → dist/build/h5/index.html')
+}
+
+mergeH5IndexFromTemplate()
+
 fs.mkdirSync(distBuildDir, { recursive: true })
 fs.copyFileSync(path.join(projectRoot, 'runtime-config.js'), path.join(distDir, 'runtime-config.js'))
 fs.writeFileSync(

@@ -12,5 +12,404 @@
     </noscript>
     <script src="<%= BASE_URL %>runtime-config.js"></script>
     <div id="app"></div>
+    <!-- Chatwoot 線上客服（僅 H5；使用官方 SDK，外層只補拖拽/關閉控制） -->
+    <script>
+      (function (d, t) {
+        if (window.__eurnyseChatwootBootstrapped) return;
+        window.__eurnyseChatwootBootstrapped = true;
+
+        var BASE_URL = "https://chat.mxscr.vip";
+        var CHATWOOT_TOKEN = "nUi2ucprkAwp2g5nKEzUv7TW";
+
+        var customBubble = null;
+        var closeButton = null;
+        var chatWindowCloseButton = null;
+        var windowCloseSyncTimer = null;
+        var activePointerId = null;
+        var startX = 0;
+        var startY = 0;
+        var originX = 0;
+        var originY = 0;
+        var isPointerDown = false;
+        var didDrag = false;
+
+        function installChatwootStyles() {
+          if (d.getElementById("eurnyse-chatwoot-control-styles")) return;
+          var style = d.createElement("style");
+          style.id = "eurnyse-chatwoot-control-styles";
+          style.textContent =
+            "#cw-bubble-holder,.woot--bubble-holder{display:none!important}" +
+            "#eurnyse-chat-bubble{position:fixed;right:20px;bottom:88px;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#2f9cff 0%,#176ad8 100%);box-shadow:0 12px 28px rgba(23,106,216,.35),0 4px 12px rgba(15,23,42,.24);z-index:2147483600;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;display:flex;align-items:center;justify-content:center;transition:box-shadow .18s ease,transform .18s ease}" +
+            "#eurnyse-chat-bubble.eurnyse-chat-bubble--dragging{cursor:grabbing;transition:none;transform:scale(1.03)}" +
+            "#eurnyse-chat-bubble[hidden]{display:none!important}" +
+            "#eurnyse-chat-close{position:absolute;right:-2px;top:-4px;width:22px;height:22px;border:0;border-radius:999px;background:#ef4444;color:#fff;font-size:16px;font-weight:800;line-height:22px;text-align:center;box-shadow:0 4px 12px rgba(15,23,42,.25);cursor:pointer;z-index:1;padding:0;pointer-events:auto}" +
+            "#eurnyse-chat-window-close{position:fixed;width:34px;height:34px;border:0;border-radius:999px;background:#ef4444;color:#fff;font-size:24px;font-weight:800;line-height:34px;text-align:center;box-shadow:0 6px 16px rgba(15,23,42,.25);cursor:pointer;z-index:2147483601;padding:0;pointer-events:auto}" +
+            "#eurnyse-chat-window-close[hidden]{display:none!important}" +
+            "#eurnyse-chat-icon{position:relative;width:34px;height:26px;border-radius:18px;background:#fff;pointer-events:none}" +
+            "#eurnyse-chat-icon:after{content:'';position:absolute;right:5px;bottom:-5px;width:11px;height:11px;background:#fff;clip-path:polygon(0 0,100% 0,100% 100%)}" +
+            "#eurnyse-chat-icon:before{content:'';position:absolute;left:8px;top:10px;width:5px;height:5px;border-radius:50%;background:#176ad8;box-shadow:8px 0 0 #176ad8,16px 0 0 #176ad8}";
+          d.head.appendChild(style);
+        }
+
+        function clamp(value, min, max) {
+          return Math.min(Math.max(value, min), max);
+        }
+
+        function normalizeChatwootLocale(value) {
+          var lang = String(value || "").trim().toLowerCase().replace("_", "-");
+          var primary = lang.split("-")[0];
+          var localeMap = {
+            bg: "bg",
+            ca: "ca",
+            cs: "cs",
+            da: "da",
+            de: "de",
+            el: "el",
+            en: "en",
+            es: "es",
+            et: "et",
+            eu: "eu",
+            fi: "fi",
+            fr: "fr",
+            ga: "ga",
+            gl: "gl",
+            hr: "hr",
+            hu: "hu",
+            is: "is",
+            it: "it",
+            lt: "lt",
+            lv: "lv",
+            ms: "ms",
+            mt: "mt",
+            nl: "nl",
+            no: "no",
+            pl: "pl",
+            pt: "pt",
+            ro: "ro",
+            sk: "sk",
+            sl: "sl",
+            sq: "sq",
+            sr: "sr",
+            sv: "sv",
+            tr: "tr",
+            uk: "uk",
+            ur: "ur"
+          };
+          if (!lang) return "";
+          if (lang.indexOf("zh") === 0 || lang.indexOf("cn") === 0) return "zh_CN";
+          if (lang.indexOf("malay") === 0) return "ms";
+          if (localeMap[primary]) return localeMap[primary];
+          return "";
+        }
+
+        function resolveChatwootLocale() {
+          var candidates = [];
+          try {
+            candidates.push(window.localStorage && window.localStorage.getItem("lang"));
+            candidates.push(window.localStorage && window.localStorage.getItem("locale"));
+          } catch (e) {}
+          candidates.push(d.documentElement && d.documentElement.lang);
+          candidates.push(window.navigator && (window.navigator.language || window.navigator.userLanguage));
+          for (var i = 0; i < candidates.length; i++) {
+            var locale = normalizeChatwootLocale(candidates[i]);
+            if (locale) return locale;
+          }
+          return "en";
+        }
+
+        function applyChatwootLocale() {
+          window.chatwootSettings = window.chatwootSettings || {};
+          window.chatwootSettings.locale = resolveChatwootLocale();
+        }
+
+        function ensureCustomBubble() {
+          installChatwootStyles();
+          customBubble = d.getElementById("eurnyse-chat-bubble");
+          if (customBubble) {
+            closeButton = d.getElementById("eurnyse-chat-close");
+            return customBubble;
+          }
+
+          customBubble = d.createElement("div");
+          customBubble.id = "eurnyse-chat-bubble";
+          customBubble.setAttribute("role", "button");
+          customBubble.setAttribute("aria-label", "開啟客服聊天");
+          customBubble.setAttribute("hidden", "");
+          customBubble.style.display = "none";
+
+          closeButton = d.createElement("button");
+          closeButton.id = "eurnyse-chat-close";
+          closeButton.type = "button";
+          closeButton.setAttribute("aria-label", "關閉客服浮窗");
+          closeButton.textContent = "×";
+          closeButton.addEventListener("pointerdown", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+          });
+          closeButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            window.EurnyseHideChatBubble();
+          });
+
+          var icon = d.createElement("div");
+          icon.id = "eurnyse-chat-icon";
+          icon.setAttribute("aria-hidden", "true");
+
+          customBubble.appendChild(closeButton);
+          customBubble.appendChild(icon);
+          customBubble.addEventListener("pointerdown", onBubblePointerDown);
+          customBubble.addEventListener("pointermove", onBubblePointerMove);
+          customBubble.addEventListener("pointerup", onBubblePointerUp);
+          customBubble.addEventListener("pointercancel", onBubblePointerCancel);
+          customBubble.style.display = "none";
+          customBubble.setAttribute("hidden", "");
+          d.body.appendChild(customBubble);
+          return customBubble;
+        }
+
+        function ensureChatWindowCloseButton() {
+          chatWindowCloseButton = d.getElementById("eurnyse-chat-window-close");
+          if (chatWindowCloseButton) return chatWindowCloseButton;
+          chatWindowCloseButton = d.createElement("button");
+          chatWindowCloseButton.id = "eurnyse-chat-window-close";
+          chatWindowCloseButton.type = "button";
+          chatWindowCloseButton.setAttribute("aria-label", "收回客服聊天窗口");
+          chatWindowCloseButton.textContent = "×";
+          chatWindowCloseButton.setAttribute("hidden", "");
+          chatWindowCloseButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            closeChatwootWindow();
+          });
+          d.body.appendChild(chatWindowCloseButton);
+          return chatWindowCloseButton;
+        }
+
+        function getChatwootWindowHolder() {
+          return d.querySelector(".woot-widget-holder");
+        }
+
+        function isChatwootWindowOpen(holder) {
+          if (!holder) return false;
+          var cs = window.getComputedStyle(holder);
+          return (
+            cs.display !== "none" &&
+            cs.visibility !== "hidden" &&
+            !holder.classList.contains("woot--hide")
+          );
+        }
+
+        function syncChatWindowCloseButton() {
+          var btn = ensureChatWindowCloseButton();
+          var holder = getChatwootWindowHolder();
+          if (!isChatwootWindowOpen(holder)) {
+            btn.setAttribute("hidden", "");
+            return;
+          }
+          var rect = holder.getBoundingClientRect();
+          var nextTop = Math.max(12, rect.top + 18);
+          var nextLeft = Math.min(window.innerWidth - 46, Math.max(12, rect.right - 52));
+          btn.style.top = nextTop + "px";
+          btn.style.left = nextLeft + "px";
+          btn.removeAttribute("hidden");
+        }
+
+        function startChatWindowCloseSync() {
+          ensureChatWindowCloseButton();
+          if (windowCloseSyncTimer) return;
+          windowCloseSyncTimer = window.setInterval(syncChatWindowCloseButton, 300);
+        }
+
+        function onBubblePointerDown(event) {
+          if (!customBubble || event.target === closeButton || (event.button !== undefined && event.button !== 0)) return;
+          var rect = customBubble.getBoundingClientRect();
+          activePointerId = event.pointerId;
+          isPointerDown = true;
+          didDrag = false;
+          startX = event.clientX;
+          startY = event.clientY;
+          originX = rect.left;
+          originY = rect.top;
+          customBubble.classList.add("eurnyse-chat-bubble--dragging");
+          if (customBubble.setPointerCapture && activePointerId !== null) {
+            try {
+              customBubble.setPointerCapture(activePointerId);
+            } catch (e) {}
+          }
+          event.preventDefault();
+        }
+
+        function onBubblePointerMove(event) {
+          if (!isPointerDown || !customBubble) return;
+          var dx = event.clientX - startX;
+          var dy = event.clientY - startY;
+          if (!didDrag && Math.sqrt(dx * dx + dy * dy) <= 6) return;
+          didDrag = true;
+          var maxX = Math.max(12, window.innerWidth - customBubble.offsetWidth - 12);
+          var maxY = Math.max(12, window.innerHeight - customBubble.offsetHeight - 12);
+          var nextX = Math.min(Math.max(8, originX + dx), maxX);
+          var nextY = Math.min(Math.max(8, originY + dy), maxY);
+          customBubble.style.left = nextX + "px";
+          customBubble.style.top = nextY + "px";
+          customBubble.style.right = "auto";
+          customBubble.style.bottom = "auto";
+          event.preventDefault();
+        }
+
+        function snapCustomBubble() {
+          if (!customBubble) return;
+          var rect = customBubble.getBoundingClientRect();
+          var safeTop = 12;
+          var safeBottom = Math.max(safeTop, window.innerHeight - customBubble.offsetHeight - 12);
+          var nextTop = clamp(rect.top, safeTop, safeBottom);
+          customBubble.style.top = nextTop + "px";
+          customBubble.style.bottom = "auto";
+          if (rect.left + rect.width / 2 < window.innerWidth / 2) {
+            customBubble.style.left = "12px";
+            customBubble.style.right = "auto";
+          } else {
+            customBubble.style.left = "auto";
+            customBubble.style.right = "12px";
+          }
+        }
+
+        function endPointerCapture() {
+          if (!customBubble) return;
+          customBubble.classList.remove("eurnyse-chat-bubble--dragging");
+          if (customBubble.releasePointerCapture && activePointerId !== null) {
+            try {
+              customBubble.releasePointerCapture(activePointerId);
+            } catch (e) {}
+          }
+          activePointerId = null;
+          isPointerDown = false;
+        }
+
+        function onBubblePointerUp(event) {
+          if (!isPointerDown || !customBubble) return;
+          var shouldOpen = !didDrag;
+          endPointerCapture();
+          if (shouldOpen) {
+            openChatwootWindow();
+          } else {
+            snapCustomBubble();
+          }
+          event.preventDefault();
+          window.setTimeout(function () {
+            didDrag = false;
+          }, 0);
+        }
+
+        function onBubblePointerCancel() {
+          if (!isPointerDown) return;
+          endPointerCapture();
+          if (didDrag) snapCustomBubble();
+          didDrag = false;
+        }
+
+        function showCustomBubble() {
+          var bubble = ensureCustomBubble();
+          bubble.removeAttribute("hidden");
+          bubble.style.display = "flex";
+          return bubble;
+        }
+
+        function hideCustomBubble() {
+          var bubble = ensureCustomBubble();
+          bubble.style.display = "none";
+          bubble.setAttribute("hidden", "");
+        }
+
+        function runWhenChatwootReady(fn) {
+          var called = false;
+          function callOnce() {
+            if (called) return;
+            if (!window.$chatwoot || typeof window.$chatwoot.toggle !== "function") return;
+            called = true;
+            fn();
+          }
+          if (window.$chatwoot && typeof window.$chatwoot.toggle === "function") {
+            callOnce();
+            return;
+          }
+          window.addEventListener("chatwoot:ready", callOnce, { once: true });
+          var attempts = 0;
+          var timer = window.setInterval(function () {
+            attempts += 1;
+            if (window.$chatwoot && typeof window.$chatwoot.toggle === "function") {
+              window.clearInterval(timer);
+              callOnce();
+            } else if (attempts > 100) {
+              window.clearInterval(timer);
+            }
+          }, 120);
+        }
+
+        function openChatwootWindow() {
+          runWhenChatwootReady(function () {
+            try {
+              window.$chatwoot.toggle({ toggleValue: true });
+              window.setTimeout(syncChatWindowCloseButton, 120);
+            } catch (error) {
+              window.console && window.console.warn && window.console.warn("[EURNYSE] Chatwoot open skipped:", error);
+            }
+          });
+        }
+
+        function closeChatwootWindow() {
+          runWhenChatwootReady(function () {
+            try {
+              window.$chatwoot.toggle({ toggleValue: false });
+            } catch (error) {
+              window.console && window.console.warn && window.console.warn("[EURNYSE] Chatwoot close skipped:", error);
+            }
+            showCustomBubble();
+            window.setTimeout(syncChatWindowCloseButton, 120);
+          });
+        }
+
+        window.EurnyseShowChatBubble = function () {
+          showCustomBubble();
+        };
+
+        window.EurnyseHideChatBubble = function () {
+          hideCustomBubble();
+        };
+
+        window.EurnyseOpenChatwoot = function () {
+          showCustomBubble();
+          openChatwootWindow();
+        };
+
+        function startChatwoot() {
+          ensureCustomBubble();
+          startChatWindowCloseSync();
+          applyChatwootLocale();
+          if (d.querySelector('script[data-eurnyse-chatwoot-sdk="1"]')) {
+            runWhenChatwootReady(function () {});
+            return;
+          }
+          var g = d.createElement(t);
+          var s = d.getElementsByTagName(t)[0];
+          g.src = BASE_URL + "/packs/js/sdk.js";
+          g.defer = true;
+          g.async = true;
+          g.setAttribute("data-eurnyse-chatwoot-sdk", "1");
+          s.parentNode.insertBefore(g, s);
+          g.onload = function () {
+            if (window.chatwootSDK && typeof window.chatwootSDK.run === "function") {
+              applyChatwootLocale();
+              window.chatwootSDK.run({
+                websiteToken: CHATWOOT_TOKEN,
+                baseUrl: BASE_URL
+              });
+            }
+          };
+        }
+
+        startChatwoot();
+      })(document, "script");
+    </script>
   </body>
 </html>

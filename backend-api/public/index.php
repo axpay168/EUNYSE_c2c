@@ -1259,9 +1259,35 @@ function normalize_home_banner_status(mixed $value): string
     return $status === 'inactive' ? 'inactive' : 'active';
 }
 
-function home_banner_list(PDO $pdo): array
+function group_config_key(string $key, ?string $adminGroupCode): string
 {
-    $items = get_system_config_json($pdo, 'home', 'banners', []);
+    $groupCode = normalize_admin_group_code($adminGroupCode ?? '');
+    return $groupCode !== '' ? $key . '__' . $groupCode : $key;
+}
+
+function get_group_system_config(PDO $pdo, string $group, string $key, ?string $adminGroupCode, ?string $default = null): ?string
+{
+    return get_system_config($pdo, $group, group_config_key($key, $adminGroupCode), $default);
+}
+
+function get_group_system_config_json(PDO $pdo, string $group, string $key, ?string $adminGroupCode, array $default = []): array
+{
+    $raw = get_group_system_config($pdo, $group, $key, $adminGroupCode, '');
+    if ($raw === null || trim($raw) === '') {
+        return $default;
+    }
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : $default;
+}
+
+function set_group_system_config(PDO $pdo, string $group, string $key, ?string $adminGroupCode, mixed $value): void
+{
+    set_system_config($pdo, $group, group_config_key($key, $adminGroupCode), $value);
+}
+
+function home_banner_list(PDO $pdo, ?string $adminGroupCode = null): array
+{
+    $items = get_group_system_config_json($pdo, 'home', 'banners', $adminGroupCode, []);
     $normalized = [];
     foreach ($items as $item) {
         if (!is_array($item)) {
@@ -1296,9 +1322,9 @@ function home_banner_list(PDO $pdo): array
     return array_values($normalized);
 }
 
-function save_home_banner_list(PDO $pdo, array $items): void
+function save_home_banner_list(PDO $pdo, array $items, ?string $adminGroupCode = null): void
 {
-    set_system_config($pdo, 'home', 'banners', array_values($items));
+    set_group_system_config($pdo, 'home', 'banners', $adminGroupCode, array_values($items));
 }
 
 function normalize_home_tutorial_link_status(mixed $value): string
@@ -1308,9 +1334,9 @@ function normalize_home_tutorial_link_status(mixed $value): string
     return $status === 'inactive' ? 'inactive' : 'active';
 }
 
-function home_tutorial_link_list(PDO $pdo): array
+function home_tutorial_link_list(PDO $pdo, ?string $adminGroupCode = null): array
 {
-    $items = get_system_config_json($pdo, 'home', 'tutorial_links', []);
+    $items = get_group_system_config_json($pdo, 'home', 'tutorial_links', $adminGroupCode, []);
     $normalized = [];
     foreach ($items as $item) {
         if (!is_array($item)) {
@@ -1343,9 +1369,9 @@ function home_tutorial_link_list(PDO $pdo): array
     return array_values($normalized);
 }
 
-function save_home_tutorial_link_list(PDO $pdo, array $items): void
+function save_home_tutorial_link_list(PDO $pdo, array $items, ?string $adminGroupCode = null): void
 {
-    set_system_config($pdo, 'home', 'tutorial_links', array_values($items));
+    set_group_system_config($pdo, 'home', 'tutorial_links', $adminGroupCode, array_values($items));
 }
 
 function normalize_deposit_asset_code(mixed $value): string
@@ -1719,12 +1745,31 @@ function db_table_has_column(PDO $pdo, string $table, string $column): bool
     return (int) $stmt->fetchColumn() > 0;
 }
 
+function db_table_has_index(PDO $pdo, string $table, string $index): bool
+{
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table_name AND INDEX_NAME = :index_name');
+    $stmt->execute([
+        ':table_name' => $table,
+        ':index_name' => $index,
+    ]);
+    return (int) $stmt->fetchColumn() > 0;
+}
+
 function db_add_column_if_missing(PDO $pdo, string $table, string $column, string $definition): void
 {
     if (db_table_has_column($pdo, $table, $column)) {
         return;
     }
     $pdo->exec(sprintf('ALTER TABLE %s ADD COLUMN %s %s', $table, $column, $definition));
+}
+
+function db_add_index_if_missing(PDO $pdo, string $table, string $index, string $definition): void
+{
+    if (db_table_has_index($pdo, $table, $index)) {
+        return;
+    }
+    $pdo->exec(sprintf('ALTER TABLE %s ADD INDEX %s %s', $table, $index, $definition));
 }
 
 function mysql_bootstrap_database(): PDO
@@ -1795,6 +1840,12 @@ function ensure_schema_mysql(PDO $pdo): void
     foreach (mysql_schema_missing_columns() as $table => $columns) {
         foreach ($columns as $column => $definition) {
             db_add_column_if_missing($pdo, $table, $column, $definition);
+        }
+    }
+
+    foreach (mysql_schema_missing_indexes() as $table => $indexes) {
+        foreach ($indexes as $index => $definition) {
+            db_add_index_if_missing($pdo, $table, $index, $definition);
         }
     }
 }
@@ -2244,7 +2295,7 @@ function seed_data(PDO $pdo): void
     $defaultAdminPassword = env_string('APP_DEFAULT_ADMIN_PASSWORD', '');
     $defaultAdminEmail = admin_account_email($defaultAdminAccount);
     $defaultAdminPermissions = json_encode(admin_permissions_from_access([], true), JSON_UNESCAPED_UNICODE);
-    $defaultAdminRoles = json_encode(['super_admin'], JSON_UNESCAPED_UNICODE);
+    $defaultAdminRoles = json_encode(['big_boss', 'super_admin'], JSON_UNESCAPED_UNICODE);
     $adminCount = (int) $pdo->query('SELECT COUNT(*) FROM admin_users')->fetchColumn();
     $enableDefaultAdmin = env_bool('APP_ENABLE_DEFAULT_ADMIN', false);
     if ($adminCount === 0 && $enableDefaultAdmin) {
@@ -3346,6 +3397,9 @@ function admin_is_super_admin(array $admin): bool
 
 function admin_is_root_admin(array $admin): bool
 {
+    if (in_array('big_boss', admin_role_codes($admin), true)) {
+        return true;
+    }
     return trim((string) ($admin['display_name'] ?? '')) === '大老板';
 }
 
@@ -3406,6 +3460,105 @@ function serialize_admin_group(array $row): array
 function admin_can_view_group_global_data(array $admin): bool
 {
     return admin_is_root_admin($admin) || !empty($admin['can_view_group_global_data']);
+}
+
+function user_admin_group_code(array $user): string
+{
+    return normalize_admin_group_code($user['admin_group_code'] ?? '');
+}
+
+function group_label_from_code(?string $groupCode, ?string $groupName = null): ?array
+{
+    $code = normalize_admin_group_code($groupCode ?? '');
+    $name = normalize_admin_group_name($groupName ?? '');
+    if ($code === '' && $name === '') {
+        return null;
+    }
+    return [
+        'code' => $code !== '' ? $code : null,
+        'name' => $name !== '' ? $name : ($code !== '' ? $code : null),
+    ];
+}
+
+function current_admin_group_required(array $admin): string
+{
+    $groupCode = admin_group_code($admin);
+    if ($groupCode === '') {
+        failure('ADMIN_GROUP_REQUIRED', 'Admin group is required');
+    }
+    return $groupCode;
+}
+
+function admin_group_filter_sql(array $admin, string $column, string $paramName = 'scope_group_code'): array
+{
+    if (admin_is_root_admin($admin)) {
+        return ['sql' => '', 'params' => []];
+    }
+    $groupCode = current_admin_group_required($admin);
+    return [
+        'sql' => "COALESCE({$column}, '') = :{$paramName}",
+        'params' => [':' . $paramName => $groupCode],
+    ];
+}
+
+function admin_can_access_group(array $admin, ?string $groupCode): bool
+{
+    if (admin_is_root_admin($admin)) {
+        return true;
+    }
+    $targetGroup = normalize_admin_group_code($groupCode ?? '');
+    return $targetGroup !== '' && $targetGroup === admin_group_code($admin);
+}
+
+function require_admin_can_access_group(array $admin, ?string $groupCode): void
+{
+    if (admin_can_access_group($admin, $groupCode)) {
+        return;
+    }
+    failure('ADMIN_NOT_FOUND', 'Resource not found');
+}
+
+function user_group_code_by_id(PDO $pdo, int $userId): string
+{
+    if ($userId <= 0) {
+        return '';
+    }
+    $stmt = $pdo->prepare('SELECT admin_group_code FROM users WHERE id = :id LIMIT 1');
+    $stmt->execute([':id' => $userId]);
+    $row = $stmt->fetch();
+    return $row ? normalize_admin_group_code($row['admin_group_code'] ?? '') : '';
+}
+
+function group_code_for_owned_resource(PDO $pdo, array $admin, int $ownerUserId): string
+{
+    if ($ownerUserId > 0) {
+        $groupCode = user_group_code_by_id($pdo, $ownerUserId);
+        if ($groupCode === '') {
+            failure('ADMIN_GROUP_REQUIRED', 'Owner user has no admin group');
+        }
+        require_admin_can_access_group($admin, $groupCode);
+        return $groupCode;
+    }
+
+    return current_admin_group_required($admin);
+}
+
+function admin_request_group_code(PDO $pdo, array $admin, array $source = []): string
+{
+    if (!admin_is_root_admin($admin)) {
+        return current_admin_group_required($admin);
+    }
+    $raw = $source['admin_group_code'] ?? ($_GET['admin_group_code'] ?? '');
+    $groupCode = normalize_admin_group_code($raw);
+    if ($groupCode === '') {
+        return current_admin_group_required($admin);
+    }
+    $stmt = $pdo->prepare('SELECT group_code FROM admin_groups WHERE group_code = :group_code LIMIT 1');
+    $stmt->execute([':group_code' => $groupCode]);
+    if (!$stmt->fetch()) {
+        failure('ADMIN_GROUP_NOT_FOUND', 'Admin group not found');
+    }
+    return $groupCode;
 }
 
 function require_super_admin(array $admin): void
@@ -3831,17 +3984,25 @@ function admin_visible_admin_ids(PDO $pdo, array $admin): array
         return array_map(static fn (array $row): int => (int) $row['id'], $rows);
     }
 
+    $groupCode = current_admin_group_required($admin);
+    if (admin_is_super_admin($admin) || admin_can_view_group_global_data($admin)) {
+        $stmt = $pdo->prepare('SELECT id FROM admin_users WHERE COALESCE(admin_group_code, "") = :group_code ORDER BY id ASC');
+        $stmt->execute([':group_code' => $groupCode]);
+        return array_map(static fn (array $row): int => (int) $row['id'], $stmt->fetchAll());
+    }
+
     $rootId = (int) ($admin['admin_user_id'] ?? $admin['id'] ?? 0);
     if ($rootId <= 0) {
         return [];
     }
 
     $stmt = $pdo->prepare('WITH RECURSIVE admin_tree AS (
-        SELECT id FROM admin_users WHERE id = :root
+        SELECT id FROM admin_users WHERE id = :root AND COALESCE(admin_group_code, "") = :group_code
         UNION ALL
         SELECT a.id FROM admin_users a INNER JOIN admin_tree t ON a.parent_admin_id = t.id
+        WHERE COALESCE(a.admin_group_code, "") = :group_code
     ) SELECT id FROM admin_tree ORDER BY id ASC');
-    $stmt->execute([':root' => $rootId]);
+    $stmt->execute([':root' => $rootId, ':group_code' => $groupCode]);
 
     return array_map(static fn (array $row): int => (int) $row['id'], $stmt->fetchAll());
 }
@@ -3860,8 +4021,8 @@ function admin_user_scope_sql(PDO $pdo, array $admin, string $userAlias = 'u', s
         return ['sql' => '', 'params' => []];
     }
 
-    $groupCode = admin_group_code($admin);
-    if (admin_can_view_group_global_data($admin) && $groupCode !== '') {
+    $groupCode = current_admin_group_required($admin);
+    if (admin_can_view_group_global_data($admin)) {
         return [
             'sql' => "COALESCE({$userAlias}.admin_group_code, '') = :{$paramPrefix}_group_code",
             'params' => [':' . $paramPrefix . '_group_code' => $groupCode],
@@ -3883,14 +4044,14 @@ function admin_user_scope_sql(PDO $pdo, array $admin, string $userAlias = 'u', s
     $seedSql = implode(', ', $seed);
 
     return [
-        'sql' => "{$userAlias}.id IN (
+        'sql' => "COALESCE({$userAlias}.admin_group_code, '') = :{$paramPrefix}_group_code AND {$userAlias}.id IN (
             WITH RECURSIVE visible_users AS (
                 SELECT id FROM users WHERE invited_by_admin_id IN ({$seedSql})
                 UNION ALL
                 SELECT child.id FROM users child INNER JOIN visible_users vu ON child.invited_by_user_id = vu.id
             ) SELECT id FROM visible_users
         )",
-        'params' => $params,
+        'params' => array_merge($params, [':' . $paramPrefix . '_group_code' => $groupCode]),
     ];
 }
 
@@ -4336,7 +4497,7 @@ function require_user(PDO $pdo): array
     }
 
     $token = trim($matches[1]);
-    $stmt = $pdo->prepare('SELECT t.*, u.username, u.email, u.mobile, u.country_code, u.mobile_e164, u.status, u.lang, u.avatar_id, u.invitation_code
+    $stmt = $pdo->prepare('SELECT t.*, u.username, u.email, u.mobile, u.country_code, u.mobile_e164, u.status, u.lang, u.avatar_id, u.invitation_code, u.admin_group_code
         FROM user_tokens t
         JOIN users u ON u.id = t.user_id
         WHERE t.token = :token AND t.revoked_at IS NULL
@@ -4814,13 +4975,19 @@ function restore_c2c_listing_inventory(PDO $pdo, array $order): void
     ]);
 }
 
-function financial_product_catalog(PDO $pdo): array
+function financial_product_catalog(PDO $pdo, ?string $adminGroupCode = null): array
 {
-    $stmt = $pdo->query('SELECT *
+    $groupCode = normalize_admin_group_code($adminGroupCode ?? '');
+    if ($groupCode === '') {
+        return [];
+    }
+
+    $stmt = $pdo->prepare('SELECT *
         FROM financial_products
-        WHERE status = "active"
+        WHERE status = "active" AND COALESCE(admin_group_code, "") = :admin_group_code
         ORDER BY sort_order ASC, id ASC');
-    return $stmt ? $stmt->fetchAll() : [];
+    $stmt->execute([':admin_group_code' => $groupCode]);
+    return $stmt->fetchAll();
 }
 
 function user_financial_subscribed_amount(PDO $pdo, int $userId, string $productCode): float
@@ -4857,6 +5024,8 @@ function serialize_financial_product(PDO $pdo, int $userId, array $product): arr
     return [
         'id' => (int) $product['id'],
         'product_code' => (string) $product['product_code'],
+        'admin_group_code' => normalize_admin_group_code($product['admin_group_code'] ?? '') ?: null,
+        'admin_group' => group_label_from_code($product['admin_group_code'] ?? null),
         'asset_code' => (string) $product['asset_code'],
         'wallet_code' => (string) $product['wallet_code'],
         'display_name' => trim((string) ($product['display_name'] ?? '')) ?: null,
@@ -6242,8 +6411,9 @@ if (($path === '/index.php/api/user/invite-team' || $path === '/api/user/invite-
 
 if (($path === '/index.php/api/user/home-snapshot' || $path === '/api/user/home-snapshot') && $method === 'GET') {
     $user = require_user($pdo);
-    $activeBanners = array_values(array_filter(home_banner_list($pdo), static fn(array $item): bool => ($item['status'] ?? '') === 'active'));
-    $activeTutorialLinks = array_values(array_filter(home_tutorial_link_list($pdo), static function (array $item): bool {
+    $userGroupCode = user_admin_group_code($user);
+    $activeBanners = array_values(array_filter(home_banner_list($pdo, $userGroupCode), static fn(array $item): bool => ($item['status'] ?? '') === 'active'));
+    $activeTutorialLinks = array_values(array_filter(home_tutorial_link_list($pdo, $userGroupCode), static function (array $item): bool {
         return ($item['status'] ?? '') === 'active';
     }));
     $tutorialLinksForClient = array_map(static function (array $item): array {
@@ -6258,10 +6428,10 @@ if (($path === '/index.php/api/user/home-snapshot' || $path === '/api/user/home-
 
     $feedStmt = $pdo->prepare('SELECT id, action_type, title, actor_name, asset_code, amount, occurred_at
         FROM trade_feed_events
-        WHERE status = "active"
+        WHERE status = "active" AND COALESCE(admin_group_code, "") = :admin_group_code
         ORDER BY sort_order ASC, id DESC
         LIMIT 20');
-    $feedStmt->execute();
+    $feedStmt->execute([':admin_group_code' => $userGroupCode]);
     $tradeFeed = array_map(function (array $item) use ($user): array {
         $item['id'] = (int) $item['id'];
         $item['action_type'] = normalize_trade_feed_action_type($item['action_type'] ?? '');
@@ -6273,10 +6443,10 @@ if (($path === '/index.php/api/user/home-snapshot' || $path === '/api/user/home-
             available_amount, payment_method_summary, completion_rate,
             badge_vip, badge_pro, badge_stars
         FROM c2c_listings
-        WHERE status = "active"
+        WHERE status = "active" AND COALESCE(admin_group_code, "") = :admin_group_code
         ORDER BY id DESC
         LIMIT 20');
-    $listingStmt->execute();
+    $listingStmt->execute([':admin_group_code' => $userGroupCode]);
     $listings = array_map(static function (array $item): array {
         $item['id'] = (int) $item['id'];
         $item['owner_user_id'] = (int) $item['owner_user_id'];
@@ -6285,7 +6455,7 @@ if (($path === '/index.php/api/user/home-snapshot' || $path === '/api/user/home-
     }, $listingStmt->fetchAll());
 
     success('AUTH_HOME_SNAPSHOT_SUCCESS', 'ok', [
-        'noticeText' => get_system_config($pdo, 'trade', 'hall_notice', ''),
+        'noticeText' => get_group_system_config($pdo, 'trade', 'hall_notice', $userGroupCode, ''),
         'banners' => $activeBanners,
         'tutorialLinks' => $tutorialLinksForClient,
         'tradeFeed' => $tradeFeed,
@@ -6387,7 +6557,10 @@ if (($path === '/index.php/api/user/financial-products' || $path === '/api/user/
     process_due_financial_returns($pdo);
     $user = require_user($pdo);
     $userId = (int) $user['user_id'];
-    $items = array_map(static fn(array $product): array => serialize_financial_product($pdo, $userId, $product), financial_product_catalog($pdo));
+    $items = array_map(
+        static fn(array $product): array => serialize_financial_product($pdo, $userId, $product),
+        financial_product_catalog($pdo, user_admin_group_code($user))
+    );
     success('AUTH_FINANCIAL_PRODUCTS_SUCCESS', 'ok', ['items' => $items]);
 }
 
@@ -6420,8 +6593,15 @@ if (($path === '/index.php/api/user/financial-subscriptions' || $path === '/api/
         failure('AUTH_INVALID_PARAMS', 'Invalid financial subscription params');
     }
 
-    $productStmt = $pdo->prepare('SELECT * FROM financial_products WHERE product_code = :product_code AND status = "active" LIMIT 1');
-    $productStmt->execute([':product_code' => $productCode]);
+    $productStmt = $pdo->prepare('SELECT * FROM financial_products
+        WHERE product_code = :product_code
+          AND status = "active"
+          AND COALESCE(admin_group_code, "") = :admin_group_code
+        LIMIT 1');
+    $productStmt->execute([
+        ':product_code' => $productCode,
+        ':admin_group_code' => user_admin_group_code($user),
+    ]);
     $product = $productStmt->fetch();
     if (!$product) {
         failure('AUTH_INVALID_PARAMS', 'Financial product not found');
@@ -6533,6 +6713,7 @@ if (($path === '/index.php/api/user/financial-subscriptions' || $path === '/api/
 
 if (($path === '/index.php/api/user/app-config' || $path === '/api/user/app-config') && $method === 'GET') {
     $user = require_user($pdo);
+    $userGroupCode = user_admin_group_code($user);
     $requestedNetworkCode = strtoupper(trim((string) ($_GET['deposit_network'] ?? '')));
     if ($requestedNetworkCode !== '' && !preg_match('/^[A-Z0-9_-]{2,24}$/', $requestedNetworkCode)) {
         $requestedNetworkCode = '';
@@ -6616,10 +6797,10 @@ if (($path === '/index.php/api/user/app-config' || $path === '/api/user/app-conf
             ],
         ],
         'trade' => [
-            'hall_notice' => get_system_config($pdo, 'trade', 'hall_notice', ''),
+            'hall_notice' => get_group_system_config($pdo, 'trade', 'hall_notice', $userGroupCode, ''),
         ],
         'home' => [
-            'banners' => array_values(array_filter(home_banner_list($pdo), static fn (array $item): bool => $item['status'] === 'active')),
+            'banners' => array_values(array_filter(home_banner_list($pdo, $userGroupCode), static fn (array $item): bool => $item['status'] === 'active')),
         ],
         'site' => site_config_payload($pdo),
         'market' => [
@@ -6636,9 +6817,10 @@ if (($path === '/index.php/api/user/trade-feed-events' || $path === '/api/user/t
     $offset = ($page - 1) * $pageSize;
     $stmt = $pdo->prepare('SELECT id, action_type, title, actor_name, asset_code, amount, occurred_at
         FROM trade_feed_events
-        WHERE status = "active"
+        WHERE status = "active" AND COALESCE(admin_group_code, "") = :admin_group_code
         ORDER BY sort_order ASC, id DESC
         LIMIT :limit OFFSET :offset');
+    $stmt->bindValue(':admin_group_code', user_admin_group_code($user), PDO::PARAM_STR);
     $stmt->bindValue(':limit', $pageSize + 1, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
@@ -6726,10 +6908,11 @@ function attach_listing_badge_fields(array $row): array
 }
 
 if (($path === '/index.php/api/user/listings' || $path === '/api/user/listings') && $method === 'GET') {
-    require_user($pdo);
+    $user = require_user($pdo);
+    $userGroupCode = user_admin_group_code($user);
     $side = trim((string) ($_GET['side'] ?? ''));
-    $where = 'WHERE l.status = "active"';
-    $params = [];
+    $where = 'WHERE l.status = "active" AND COALESCE(l.admin_group_code, "") = :admin_group_code';
+    $params = [':admin_group_code' => $userGroupCode];
     if ($side !== '') {
         $where .= ' AND l.side = :side';
         $params[':side'] = $side;
@@ -6767,14 +6950,14 @@ if (($path === '/index.php/api/user/listings' || $path === '/api/user/listings')
 }
 
 if ((preg_match('#^/index.php/api/user/listings/(\d+)$#', $path, $matches) || preg_match('#^/api/user/listings/(\d+)$#', $path, $matches)) && $method === 'GET') {
-    require_user($pdo);
+    $user = require_user($pdo);
     $listingId = (int) $matches[1];
     $stmt = $pdo->prepare('SELECT id, owner_user_id, nickname, side, asset_code, fiat_code, price, min_amount, max_amount, available_amount, payment_method_summary, completion_rate,
             badge_vip, badge_pro, badge_stars
         FROM c2c_listings
-        WHERE id = :id AND status = "active"
+        WHERE id = :id AND status = "active" AND COALESCE(admin_group_code, "") = :admin_group_code
         LIMIT 1');
-    $stmt->execute([':id' => $listingId]);
+    $stmt->execute([':id' => $listingId, ':admin_group_code' => user_admin_group_code($user)]);
     $listing = $stmt->fetch();
     if (!$listing) {
         failure('AUTH_INVALID_PARAMS', 'Listing not found');
@@ -6793,8 +6976,12 @@ if (($path === '/index.php/api/user/orders' || $path === '/api/user/orders') && 
     if ($listingId <= 0 || !is_numeric($amount) || (float) $amount <= 0) {
         failure('AUTH_INVALID_PARAMS', 'Invalid order params');
     }
-    $stmt = $pdo->prepare('SELECT * FROM c2c_listings WHERE id = :id AND status = "active" LIMIT 1');
-    $stmt->execute([':id' => $listingId]);
+    $stmt = $pdo->prepare('SELECT * FROM c2c_listings
+        WHERE id = :id
+          AND status = "active"
+          AND COALESCE(admin_group_code, "") = :admin_group_code
+        LIMIT 1');
+    $stmt->execute([':id' => $listingId, ':admin_group_code' => user_admin_group_code($user)]);
     $listing = $stmt->fetch();
     if (!$listing) {
         failure('AUTH_INVALID_PARAMS', 'Listing not found');
@@ -6871,14 +7058,15 @@ if (($path === '/index.php/api/user/orders' || $path === '/api/user/orders') && 
         }
 
         $pdo->prepare('INSERT INTO c2c_orders (
-            order_no, listing_id, side, buyer_user_id, seller_user_id, amount, price, total_amount, asset_code, fiat_code,
+            order_no, listing_id, admin_group_code, side, buyer_user_id, seller_user_id, amount, price, total_amount, asset_code, fiat_code,
             payment_method_summary, status, completed_at, cancel_reason, dispute_reason, created_at, updated_at
         ) VALUES (
-            :order_no, :listing_id, :side, :buyer_user_id, :seller_user_id, :amount, :price, :total_amount, :asset_code, :fiat_code,
+            :order_no, :listing_id, :admin_group_code, :side, :buyer_user_id, :seller_user_id, :amount, :price, :total_amount, :asset_code, :fiat_code,
             :payment_method_summary, :status, null, null, null, :created_at, :updated_at
         )')->execute([
             ':order_no' => 'OD' . strtoupper(substr(random_token(14), 0, 10)),
             ':listing_id' => $listingId,
+            ':admin_group_code' => normalize_admin_group_code($listing['admin_group_code'] ?? ''),
             ':side' => $orderSide,
             ':buyer_user_id' => $buyerUserId,
             ':seller_user_id' => $sellerUserId,
@@ -7021,9 +7209,13 @@ if (($path === '/index.php/api/user/orders' || $path === '/api/user/orders') && 
         FROM c2c_orders o
         LEFT JOIN users buyer ON buyer.id = o.buyer_user_id
         LEFT JOIN users seller ON seller.id = o.seller_user_id
-        WHERE o.buyer_user_id = :user_id OR o.seller_user_id = :user_id
+        WHERE (o.buyer_user_id = :user_id OR o.seller_user_id = :user_id)
+          AND COALESCE(o.admin_group_code, "") = :admin_group_code
         ORDER BY o.id DESC');
-    $stmt->execute([':user_id' => (int) $user['user_id']]);
+    $stmt->execute([
+        ':user_id' => (int) $user['user_id'],
+        ':admin_group_code' => user_admin_group_code($user),
+    ]);
     $items = array_map(static function (array $item) use ($user): array {
         $item['id'] = (int) $item['id'];
         $item['buyer_user_id'] = (int) $item['buyer_user_id'];
@@ -7051,11 +7243,14 @@ if ((preg_match('#^/index.php/api/user/orders/(\d+)$#', $path, $matches) || preg
         FROM c2c_orders o
         LEFT JOIN users buyer ON buyer.id = o.buyer_user_id
         LEFT JOIN users seller ON seller.id = o.seller_user_id
-        WHERE o.id = :id AND (o.buyer_user_id = :user_id OR o.seller_user_id = :user_id)
+        WHERE o.id = :id
+          AND (o.buyer_user_id = :user_id OR o.seller_user_id = :user_id)
+          AND COALESCE(o.admin_group_code, "") = :admin_group_code
         LIMIT 1');
     $stmt->execute([
         ':id' => $orderId,
         ':user_id' => (int) $user['user_id'],
+        ':admin_group_code' => user_admin_group_code($user),
     ]);
     $order = $stmt->fetch();
     if (!$order) {
@@ -7101,10 +7296,15 @@ if ((preg_match('#^/index.php/api/user/orders/(\d+)/cancel$#', $path, $matches) 
     if ($reason === '') {
         $reason = 'user_cancelled';
     }
-    $stmt = $pdo->prepare('SELECT * FROM c2c_orders WHERE id = :id AND (buyer_user_id = :user_id OR seller_user_id = :user_id) LIMIT 1');
+    $stmt = $pdo->prepare('SELECT * FROM c2c_orders
+        WHERE id = :id
+          AND (buyer_user_id = :user_id OR seller_user_id = :user_id)
+          AND COALESCE(admin_group_code, "") = :admin_group_code
+        LIMIT 1');
     $stmt->execute([
         ':id' => $orderId,
         ':user_id' => (int) $user['user_id'],
+        ':admin_group_code' => user_admin_group_code($user),
     ]);
     $order = $stmt->fetch();
     if (!$order) {
@@ -7145,10 +7345,15 @@ if ((preg_match('#^/index.php/api/user/orders/(\d+)/dispute$#', $path, $matches)
     if ($reason === '') {
         failure('AUTH_INVALID_PARAMS', 'Dispute reason is required');
     }
-    $stmt = $pdo->prepare('SELECT * FROM c2c_orders WHERE id = :id AND (buyer_user_id = :user_id OR seller_user_id = :user_id) LIMIT 1');
+    $stmt = $pdo->prepare('SELECT * FROM c2c_orders
+        WHERE id = :id
+          AND (buyer_user_id = :user_id OR seller_user_id = :user_id)
+          AND COALESCE(admin_group_code, "") = :admin_group_code
+        LIMIT 1');
     $stmt->execute([
         ':id' => $orderId,
         ':user_id' => (int) $user['user_id'],
+        ':admin_group_code' => user_admin_group_code($user),
     ]);
     $order = $stmt->fetch();
     if (!$order) {
@@ -7181,10 +7386,15 @@ if ((preg_match('#^/index.php/api/user/orders/(\d+)/evidences$#', $path, $matche
     if ($content === '' && $attachmentUrl === '') {
         failure('AUTH_INVALID_PARAMS', 'Evidence content is required');
     }
-    $stmt = $pdo->prepare('SELECT id FROM c2c_orders WHERE id = :id AND (buyer_user_id = :user_id OR seller_user_id = :user_id) LIMIT 1');
+    $stmt = $pdo->prepare('SELECT id FROM c2c_orders
+        WHERE id = :id
+          AND (buyer_user_id = :user_id OR seller_user_id = :user_id)
+          AND COALESCE(admin_group_code, "") = :admin_group_code
+        LIMIT 1');
     $stmt->execute([
         ':id' => $orderId,
         ':user_id' => (int) $user['user_id'],
+        ':admin_group_code' => user_admin_group_code($user),
     ]);
     if (!$stmt->fetch()) {
         failure('AUTH_INVALID_PARAMS', 'Order not found');
@@ -7486,6 +7696,7 @@ if ($path === '/api/admin/admin-groups' && $method === 'GET') {
 
 if ($path === '/api/admin/admin-groups' && $method === 'POST') {
     $admin = require_admin($pdo);
+    require_root_admin($admin);
     $groupName = normalize_admin_group_name($input['group_name'] ?? '');
     $groupCode = normalize_admin_group_code($input['group_code'] ?? $groupName);
     if ($groupName === '' || $groupCode === '') {
@@ -7599,6 +7810,9 @@ if ($path === '/api/admin/admin-users' && $method === 'POST') {
         }
         $adminGroupCode = $adminGroupCodeInput;
         $adminGroupName = $adminGroupNameInput !== '' ? $adminGroupNameInput : (string) ($matchedGroup['group_name'] ?? $adminGroupCodeInput);
+    }
+    if (admin_is_root_admin($admin) && $adminGroupCodeInput === '') {
+        failure('ADMIN_GROUP_REQUIRED', 'Root admin must select an admin group');
     }
     if ($adminGroupCode === '') {
         failure('ADMIN_GROUP_REQUIRED', 'Admin group is required');
@@ -7795,8 +8009,14 @@ if (preg_match('#^/api/admin/admin-users/(\d+)$#', $path, $matches) && $method =
         $groupNameInput = normalize_admin_group_name($input['admin_group_name'] ?? '');
         $groupCodeInput = normalize_admin_group_code($input['admin_group_code'] ?? $groupNameInput);
         if ($groupCodeInput !== '') {
+            $groupStmt = $pdo->prepare('SELECT group_name, group_code FROM admin_groups WHERE group_code = :group_code LIMIT 1');
+            $groupStmt->execute([':group_code' => $groupCodeInput]);
+            $matchedGroup = $groupStmt->fetch();
+            if (!$matchedGroup) {
+                failure('ADMIN_GROUP_NOT_FOUND', 'Admin group not found');
+            }
             $adminGroupCode = $groupCodeInput;
-            $adminGroupName = $groupNameInput !== '' ? $groupNameInput : $groupCodeInput;
+            $adminGroupName = $groupNameInput !== '' ? $groupNameInput : (string) $matchedGroup['group_name'];
         }
     }
     if ($isSuperAdmin && ($adminGroupCode === '' || $adminGroupName === '')) {
@@ -9451,6 +9671,7 @@ if (preg_match('#^/api/admin/invitations/(\d+)/disable$#', $path, $matches) && $
     if ($reason === '') {
         failure('ADMIN_REASON_REQUIRED', 'Reason is required');
     }
+    $groupCode = admin_request_group_code($pdo, $admin, $input);
 
     $stmt = $pdo->prepare('SELECT * FROM invitation_codes WHERE id = :id LIMIT 1');
     $stmt->execute([':id' => $invitationId]);
@@ -9559,7 +9780,7 @@ if (preg_match('#^/api/admin/users/(\d+)/invitations$#', $path, $matches) && $me
 }
 
 if ($path === '/api/admin/verifications' && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
     $page = max(1, (int) ($_GET['page'] ?? 1));
     $pageSize = min(100, max(1, (int) ($_GET['page_size'] ?? 20)));
     $target = trim((string) ($_GET['target'] ?? ''));
@@ -9589,6 +9810,31 @@ if ($path === '/api/admin/verifications' && $method === 'GET') {
     if ($sentIp !== '') {
         $where[] = 'sent_ip LIKE :sent_ip';
         $params[':sent_ip'] = '%' . $sentIp . '%';
+    }
+    if (!admin_is_root_admin($admin)) {
+        $scope = admin_user_scope_sql($pdo, $admin, 'u', 'verification_user_scope');
+        if ($scope['sql'] === '1 = 0') {
+            success('ADMIN_VERIFICATIONS_LIST_SUCCESS', 'ok', [
+                'items' => [],
+                'pagination' => [
+                    'page' => $page,
+                    'page_size' => $pageSize,
+                    'total' => 0,
+                ],
+            ]);
+        }
+        if ($scope['sql'] !== '') {
+            $where[] = 'EXISTS (
+                SELECT 1 FROM users u
+                WHERE ' . $scope['sql'] . '
+                  AND (
+                    LOWER(COALESCE(u.email, "")) = LOWER(verification_codes.target)
+                    OR COALESCE(u.mobile_e164, "") = verification_codes.target
+                    OR COALESCE(u.mobile, "") = verification_codes.target
+                  )
+            )';
+            $params = array_merge($params, $scope['params']);
+        }
     }
     $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
@@ -9628,7 +9874,7 @@ if ($path === '/api/admin/verifications' && $method === 'GET') {
 }
 
 if (preg_match('#^/api/admin/verifications/(\d+)$#', $path, $matches) && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
     $verificationId = (int) $matches[1];
     $stmt = $pdo->prepare('SELECT id, channel, target, event, code, status, attempt_count, sent_ip, sent_at, expires_at, consumed_at, created_at, updated_at
         FROM verification_codes
@@ -9638,6 +9884,22 @@ if (preg_match('#^/api/admin/verifications/(\d+)$#', $path, $matches) && $method
     $verification = $stmt->fetch();
     if (!$verification) {
         failure('ADMIN_VERIFICATION_NOT_FOUND', 'Verification not found');
+    }
+    if (!admin_is_root_admin($admin)) {
+        $stmt = $pdo->prepare('SELECT id FROM users
+            WHERE LOWER(COALESCE(email, "")) = LOWER(:target_email)
+               OR COALESCE(mobile_e164, "") = :target_mobile_e164
+               OR COALESCE(mobile, "") = :target_mobile
+            LIMIT 1');
+        $stmt->execute([
+            ':target_email' => (string) $verification['target'],
+            ':target_mobile_e164' => (string) $verification['target'],
+            ':target_mobile' => (string) $verification['target'],
+        ]);
+        $matchedUser = $stmt->fetch();
+        if (!$matchedUser || !admin_can_access_user($pdo, $admin, (int) $matchedUser['id'])) {
+            failure('ADMIN_VERIFICATION_NOT_FOUND', 'Verification not found');
+        }
     }
     $verification['id'] = (int) $verification['id'];
     $verification['attempt_count'] = (int) $verification['attempt_count'];
@@ -10413,11 +10675,10 @@ if ($path === '/api/admin/orders' && $method === 'GET') {
         $where[] = '(o.order_no LIKE :keyword OR buyer.username LIKE :keyword OR seller.username LIKE :keyword)';
         $params[':keyword'] = '%' . $keyword . '%';
     }
-    $buyerScope = admin_user_scope_sql($pdo, $admin, 'buyer', 'scope_buyer');
-    $sellerScope = admin_user_scope_sql($pdo, $admin, 'seller', 'scope_seller');
-    if ($buyerScope['sql'] !== '' && $sellerScope['sql'] !== '') {
-        $where[] = '((' . $buyerScope['sql'] . ') OR (' . $sellerScope['sql'] . '))';
-        $params = array_merge($params, $buyerScope['params'], $sellerScope['params']);
+    $orderGroupScope = admin_group_filter_sql($admin, 'o.admin_group_code', 'order_group');
+    if ($orderGroupScope['sql'] !== '') {
+        $where[] = $orderGroupScope['sql'];
+        $params = array_merge($params, $orderGroupScope['params']);
     }
     $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
@@ -10433,7 +10694,7 @@ if ($path === '/api/admin/orders' && $method === 'GET') {
     $total = (int) $countStmt->fetchColumn();
 
     $offset = ($page - 1) * $pageSize;
-    $stmt = $pdo->prepare("SELECT o.id, o.order_no, o.side, o.amount, o.price, o.total_amount, o.asset_code, o.fiat_code, o.status, o.created_at,
+    $stmt = $pdo->prepare("SELECT o.id, o.order_no, o.admin_group_code, o.side, o.amount, o.price, o.total_amount, o.asset_code, o.fiat_code, o.status, o.created_at,
             o.buyer_user_id, buyer.username AS buyer_username, buyer.email AS buyer_email, buyer.mobile_e164 AS buyer_mobile_e164, buyer.invitation_code AS buyer_invitation_code, buyer.invited_by_admin_id AS buyer_invited_by_admin_id,
             o.seller_user_id, seller.username AS seller_username, seller.email AS seller_email, seller.mobile_e164 AS seller_mobile_e164, seller.invitation_code AS seller_invitation_code, seller.invited_by_admin_id AS seller_invited_by_admin_id
         FROM c2c_orders o
@@ -10452,6 +10713,7 @@ if ($path === '/api/admin/orders' && $method === 'GET') {
         $item['id'] = (int) $item['id'];
         $item['buyer_user_id'] = (int) $item['buyer_user_id'];
         $item['seller_user_id'] = (int) $item['seller_user_id'];
+        $item['admin_group'] = group_label_from_code($item['admin_group_code'] ?? null);
         $item['buyer_source'] = admin_user_source_label($item['buyer_invited_by_admin_id'] ?? null, (int) $item['buyer_user_id']);
         $item['seller_source'] = admin_user_source_label($item['seller_invited_by_admin_id'] ?? null, (int) $item['seller_user_id']);
         $merchantUserId = ((string) ($item['side'] ?? '') === 'buy') ? (int) $item['seller_user_id'] : (int) $item['buyer_user_id'];
@@ -10486,12 +10748,7 @@ if (preg_match('#^/api/admin/orders/(\d+)$#', $path, $matches) && $method === 'G
     if (!$order) {
         failure('ADMIN_ORDER_NOT_FOUND', 'Order not found');
     }
-    if (
-        !admin_can_access_user($pdo, $admin, (int) $order['buyer_user_id']) &&
-        !admin_can_access_user($pdo, $admin, (int) $order['seller_user_id'])
-    ) {
-        failure('ADMIN_FORBIDDEN', 'Permission denied');
-    }
+    require_admin_can_access_group($admin, $order['admin_group_code'] ?? null);
     $order['id'] = (int) $order['id'];
     $order['buyer_user_id'] = (int) $order['buyer_user_id'];
     $order['seller_user_id'] = (int) $order['seller_user_id'];
@@ -10534,12 +10791,7 @@ if (preg_match('#^/api/admin/orders/(\d+)/status$#', $path, $matches) && $method
     if (!$order) {
         failure('ADMIN_ORDER_NOT_FOUND', 'Order not found');
     }
-    if (
-        !admin_can_access_user($pdo, $admin, (int) $order['buyer_user_id']) &&
-        !admin_can_access_user($pdo, $admin, (int) $order['seller_user_id'])
-    ) {
-        failure('ADMIN_FORBIDDEN', 'Permission denied');
-    }
+    require_admin_can_access_group($admin, $order['admin_group_code'] ?? null);
     if ((string) $order['side'] === 'sell' && $status === 'pending_payment') {
         failure('ADMIN_ORDER_STATUS_INVALID', 'Sell orders do not use pending payment status');
     }
@@ -10593,12 +10845,7 @@ if (preg_match('#^/api/admin/orders/(\d+)/release$#', $path, $matches) && $metho
     if (!$order) {
         failure('ADMIN_ORDER_NOT_FOUND', 'Order not found');
     }
-    if (
-        !admin_can_access_user($pdo, $admin, (int) $order['buyer_user_id']) &&
-        !admin_can_access_user($pdo, $admin, (int) $order['seller_user_id'])
-    ) {
-        failure('ADMIN_FORBIDDEN', 'Permission denied');
-    }
+    require_admin_can_access_group($admin, $order['admin_group_code'] ?? null);
     $now = now_iso();
     if ((string) $order['status'] === 'completed') {
         failure('ADMIN_ORDER_ALREADY_COMPLETED', 'Order is already completed');
@@ -10637,7 +10884,7 @@ if (preg_match('#^/api/admin/orders/(\d+)/dispute$#', $path, $matches) && $metho
     $admin = require_admin($pdo);
     $orderId = (int) $matches[1];
     $reason = trim((string) ($input['reason'] ?? ''));
-    if ($reason === '' && $action !== 'approve') {
+    if ($reason === '') {
         failure('ADMIN_REASON_REQUIRED', 'Reason is required');
     }
     $stmt = $pdo->prepare('SELECT * FROM c2c_orders WHERE id = :id LIMIT 1');
@@ -10646,12 +10893,7 @@ if (preg_match('#^/api/admin/orders/(\d+)/dispute$#', $path, $matches) && $metho
     if (!$order) {
         failure('ADMIN_ORDER_NOT_FOUND', 'Order not found');
     }
-    if (
-        !admin_can_access_user($pdo, $admin, (int) $order['buyer_user_id']) &&
-        !admin_can_access_user($pdo, $admin, (int) $order['seller_user_id'])
-    ) {
-        failure('ADMIN_FORBIDDEN', 'Permission denied');
-    }
+    require_admin_can_access_group($admin, $order['admin_group_code'] ?? null);
     $pdo->prepare('UPDATE c2c_orders SET status = "disputed", dispute_reason = :dispute_reason, updated_at = :updated_at WHERE id = :id')
         ->execute([
             ':dispute_reason' => $reason,
@@ -10679,11 +10921,13 @@ if (preg_match('#^/api/admin/orders/(\d+)/evidences$#', $path, $matches) && $met
     if ($content === '' && $attachmentUrl === '') {
         failure('ADMIN_REASON_REQUIRED', 'Evidence content is required');
     }
-    $stmt = $pdo->prepare('SELECT id FROM c2c_orders WHERE id = :id LIMIT 1');
+    $stmt = $pdo->prepare('SELECT id, admin_group_code FROM c2c_orders WHERE id = :id LIMIT 1');
     $stmt->execute([':id' => $orderId]);
-    if (!$stmt->fetch()) {
+    $order = $stmt->fetch();
+    if (!$order) {
         failure('ADMIN_ORDER_NOT_FOUND', 'Order not found');
     }
+    require_admin_can_access_group($admin, $order['admin_group_code'] ?? null);
     $pdo->prepare('INSERT INTO order_evidences (order_id, actor_type, actor_id, evidence_type, content, attachment_url, created_at)
         VALUES (:order_id, "admin", :actor_id, :evidence_type, :content, :attachment_url, :created_at)')
         ->execute([
@@ -10698,7 +10942,7 @@ if (preg_match('#^/api/admin/orders/(\d+)/evidences$#', $path, $matches) && $met
 }
 
 if ($path === '/api/admin/financial-products' && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
     $keyword = trim((string) ($_GET['keyword'] ?? ''));
     $status = trim((string) ($_GET['status'] ?? ''));
     $where = [];
@@ -10711,6 +10955,11 @@ if ($path === '/api/admin/financial-products' && $method === 'GET') {
         $where[] = 'status = :status';
         $params[':status'] = normalize_financial_product_status($status);
     }
+    $groupScope = admin_group_filter_sql($admin, 'admin_group_code', 'product_group');
+    if ($groupScope['sql'] !== '') {
+        $where[] = $groupScope['sql'];
+        $params = array_merge($params, $groupScope['params']);
+    }
     $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
     $stmt = $pdo->prepare("SELECT * FROM financial_products {$whereSql} ORDER BY sort_order ASC, id ASC");
     $stmt->execute($params);
@@ -10721,13 +10970,14 @@ if ($path === '/api/admin/financial-products' && $method === 'GET') {
 }
 
 if (preg_match('#^/api/admin/financial-products/(\d+)$#', $path, $matches) && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
     $stmt = $pdo->prepare('SELECT * FROM financial_products WHERE id = :id LIMIT 1');
     $stmt->execute([':id' => (int) $matches[1]]);
     $product = $stmt->fetch();
     if (!$product) {
         failure('AUTH_INVALID_PARAMS', 'Financial product not found');
     }
+    require_admin_can_access_group($admin, $product['admin_group_code'] ?? null);
     success('ADMIN_FINANCIAL_PRODUCT_SUCCESS', 'ok', ['item' => serialize_financial_product($pdo, 0, $product)]);
 }
 
@@ -10739,17 +10989,19 @@ if ($path === '/api/admin/financial-products' && $method === 'POST') {
     if ($exists->fetch()) {
         failure('AUTH_INVALID_PARAMS', 'Financial product code already exists');
     }
+    $productGroupCode = current_admin_group_required($admin);
     $now = now_iso();
     $pdo->prepare('INSERT INTO financial_products (
-        product_code, asset_code, wallet_code, display_name, subtitle, detail_note, apr_rate, term_days,
+        product_code, admin_group_code, asset_code, wallet_code, display_name, subtitle, detail_note, apr_rate, term_days,
         min_subscribe_amount, personal_limit_amount, total_quota_amount, sold_quota_amount, auto_renew_default,
         default_return_mode, default_return_delay_days, status, sort_order, created_at, updated_at
     ) VALUES (
-        :product_code, :asset_code, :wallet_code, :display_name, :subtitle, :detail_note, :apr_rate, :term_days,
+        :product_code, :admin_group_code, :asset_code, :wallet_code, :display_name, :subtitle, :detail_note, :apr_rate, :term_days,
         :min_subscribe_amount, :personal_limit_amount, :total_quota_amount, "0.00000000", 0,
         :default_return_mode, :default_return_delay_days, :status, :sort_order, :created_at, :updated_at
     )')->execute([
         ':product_code' => $payload['product_code'],
+        ':admin_group_code' => $productGroupCode,
         ':asset_code' => $payload['asset_code'],
         ':wallet_code' => $payload['wallet_code'],
         ':display_name' => $payload['display_name'],
@@ -10785,6 +11037,7 @@ if (preg_match('#^/api/admin/financial-products/(\d+)$#', $path, $matches) && $m
     if (!$existing) {
         failure('AUTH_INVALID_PARAMS', 'Financial product not found');
     }
+    require_admin_can_access_group($admin, $existing['admin_group_code'] ?? null);
     $payload = sanitize_financial_product_payload([
         'product_code' => $input['product_code'] ?? $existing['product_code'],
         'asset_code' => $input['asset_code'] ?? $existing['asset_code'],
@@ -10899,7 +11152,7 @@ if ($path === '/api/admin/financial-subscriptions' && $method === 'GET') {
     $total = (int) $countStmt->fetchColumn();
 
     $offset = ($page - 1) * $pageSize;
-    $stmt = $pdo->prepare("SELECT s.*, u.username, u.email, u.mobile_e164
+    $stmt = $pdo->prepare("SELECT s.*, u.username, u.email, u.mobile_e164, u.admin_group_code AS user_admin_group_code
         FROM user_financial_subscriptions s
         JOIN users u ON u.id = s.user_id
         {$whereSql}
@@ -10916,6 +11169,8 @@ if ($path === '/api/admin/financial-subscriptions' && $method === 'GET') {
         $serialized['username'] = (string) ($item['username'] ?? '');
         $serialized['email'] = (string) ($item['email'] ?? '');
         $serialized['mobile_e164'] = (string) ($item['mobile_e164'] ?? '');
+        $serialized['admin_group_code'] = normalize_admin_group_code($item['user_admin_group_code'] ?? '') ?: null;
+        $serialized['admin_group'] = group_label_from_code($item['user_admin_group_code'] ?? null);
         return $serialized;
     }, $stmt->fetchAll());
 
@@ -10933,7 +11188,7 @@ if (preg_match('#^/api/admin/financial-subscriptions/(\d+)$#', $path, $matches) 
     process_due_financial_returns($pdo);
     $admin = require_admin($pdo);
     $subscriptionId = (int) $matches[1];
-    $stmt = $pdo->prepare('SELECT s.*, u.username, u.email, u.mobile_e164, a.name AS returned_admin_name
+    $stmt = $pdo->prepare('SELECT s.*, u.username, u.email, u.mobile_e164, u.admin_group_code AS user_admin_group_code, a.name AS returned_admin_name
         FROM user_financial_subscriptions s
         JOIN users u ON u.id = s.user_id
         LEFT JOIN admin_users a ON a.id = s.returned_by_admin_id
@@ -10949,6 +11204,8 @@ if (preg_match('#^/api/admin/financial-subscriptions/(\d+)$#', $path, $matches) 
     $payload['username'] = (string) ($subscription['username'] ?? '');
     $payload['email'] = (string) ($subscription['email'] ?? '');
     $payload['mobile_e164'] = (string) ($subscription['mobile_e164'] ?? '');
+    $payload['admin_group_code'] = normalize_admin_group_code($subscription['user_admin_group_code'] ?? '') ?: null;
+    $payload['admin_group'] = group_label_from_code($subscription['user_admin_group_code'] ?? null);
     $payload['returned_admin_name'] = (string) ($subscription['returned_admin_name'] ?? '');
     success('ADMIN_FINANCIAL_SUBSCRIPTION_DETAIL_SUCCESS', 'ok', ['subscription' => $payload]);
 }
@@ -11332,10 +11589,10 @@ if ($path === '/api/admin/listings' && $method === 'GET') {
         $where[] = '(l.nickname LIKE :keyword OR COALESCE(u.username, "") LIKE :keyword OR l.asset_code LIKE :keyword OR l.fiat_code LIKE :keyword)';
         $params[':keyword'] = '%' . $keyword . '%';
     }
-    $scope = admin_user_scope_sql($pdo, $admin, 'u');
-    if ($scope['sql'] !== '') {
-        $where[] = $scope['sql'];
-        $params = array_merge($params, $scope['params']);
+    $groupScope = admin_group_filter_sql($admin, 'l.admin_group_code', 'listing_group');
+    if ($groupScope['sql'] !== '') {
+        $where[] = $groupScope['sql'];
+        $params = array_merge($params, $groupScope['params']);
     }
     $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
@@ -11347,7 +11604,7 @@ if ($path === '/api/admin/listings' && $method === 'GET') {
     $total = (int) $countStmt->fetchColumn();
 
     $offset = ($page - 1) * $pageSize;
-    $stmt = $pdo->prepare("SELECT l.id, l.owner_user_id, u.username AS owner_username, u.email AS owner_email, u.mobile_e164 AS owner_mobile_e164, u.invited_by_admin_id AS owner_invited_by_admin_id, l.nickname, l.side, l.asset_code, l.fiat_code, l.price,
+    $stmt = $pdo->prepare("SELECT l.id, l.owner_user_id, l.admin_group_code, u.username AS owner_username, u.email AS owner_email, u.mobile_e164 AS owner_mobile_e164, u.invited_by_admin_id AS owner_invited_by_admin_id, l.nickname, l.side, l.asset_code, l.fiat_code, l.price,
             l.min_amount, l.max_amount, l.available_amount, l.payment_method_summary, l.completion_rate,
             l.badge_vip, l.badge_pro, l.badge_stars, l.status, l.updated_at
         FROM c2c_listings l
@@ -11364,6 +11621,7 @@ if ($path === '/api/admin/listings' && $method === 'GET') {
     $items = array_map(static function (array $item): array {
         $item['id'] = (int) $item['id'];
         $item['owner_user_id'] = (int) $item['owner_user_id'];
+        $item['admin_group'] = group_label_from_code($item['admin_group_code'] ?? null);
         $item['owner_source'] = admin_user_source_label($item['owner_invited_by_admin_id'] ?? null, (int) $item['owner_user_id']);
         $item['completion_rate'] = normalize_listing_completion_rate($item['completion_rate'] ?? null);
         unset($item['owner_invited_by_admin_id']);
@@ -11407,15 +11665,17 @@ if ($path === '/api/admin/listings' && $method === 'POST') {
         require_user_exists($pdo, $ownerUserId);
         require_admin_can_access_user($pdo, $admin, $ownerUserId);
     }
+    $listingGroupCode = group_code_for_owned_resource($pdo, $admin, $ownerUserId);
     $now = now_iso();
     $pdo->prepare('INSERT INTO c2c_listings (
-        owner_user_id, nickname, side, asset_code, fiat_code, price, min_amount, max_amount, available_amount,
+        owner_user_id, admin_group_code, nickname, side, asset_code, fiat_code, price, min_amount, max_amount, available_amount,
         payment_method_summary, completion_rate, badge_vip, badge_pro, badge_stars, status, created_at, updated_at
     ) VALUES (
-        :owner_user_id, :nickname, :side, :asset_code, :fiat_code, :price, :min_amount, :max_amount, :available_amount,
+        :owner_user_id, :admin_group_code, :nickname, :side, :asset_code, :fiat_code, :price, :min_amount, :max_amount, :available_amount,
         :payment_method_summary, :completion_rate, :badge_vip, :badge_pro, :badge_stars, :status, :created_at, :updated_at
     )')->execute([
         ':owner_user_id' => $ownerUserId > 0 ? $ownerUserId : 0,
+        ':admin_group_code' => $listingGroupCode,
         ':nickname' => $nickname,
         ':side' => $side,
         ':asset_code' => $assetCode,
@@ -11454,6 +11714,7 @@ if (preg_match('#^/api/admin/listings/(\d+)$#', $path, $matches) && $method === 
     if ((int) $listing['owner_user_id'] > 0) {
         require_admin_can_access_user($pdo, $admin, (int) $listing['owner_user_id']);
     }
+    require_admin_can_access_group($admin, $listing['admin_group_code'] ?? null);
     $listing['id'] = (int) $listing['id'];
     $listing['owner_user_id'] = (int) $listing['owner_user_id'];
     $listing['owner_source'] = admin_user_source_label($listing['owner_invited_by_admin_id'] ?? null, (int) $listing['owner_user_id']);
@@ -11475,6 +11736,7 @@ if (preg_match('#^/api/admin/listings/(\d+)$#', $path, $matches) && $method === 
     if ((int) $listing['owner_user_id'] > 0) {
         require_admin_can_access_user($pdo, $admin, (int) $listing['owner_user_id']);
     }
+    require_admin_can_access_group($admin, $listing['admin_group_code'] ?? null);
     $next = [
         'owner_user_id' => array_key_exists('owner_user_id', $input) ? (int) $input['owner_user_id'] : (int) $listing['owner_user_id'],
         'nickname' => array_key_exists('nickname', $input) ? trim((string) $input['nickname']) : (string) $listing['nickname'],
@@ -11501,14 +11763,16 @@ if (preg_match('#^/api/admin/listings/(\d+)$#', $path, $matches) && $method === 
         require_user_exists($pdo, $next['owner_user_id']);
         require_admin_can_access_user($pdo, $admin, $next['owner_user_id']);
     }
+    $nextGroupCode = group_code_for_owned_resource($pdo, $admin, $next['owner_user_id']);
     $pdo->prepare('UPDATE c2c_listings
-        SET owner_user_id = :owner_user_id, nickname = :nickname, side = :side, asset_code = :asset_code, fiat_code = :fiat_code,
+        SET owner_user_id = :owner_user_id, admin_group_code = :admin_group_code, nickname = :nickname, side = :side, asset_code = :asset_code, fiat_code = :fiat_code,
             price = :price, min_amount = :min_amount, max_amount = :max_amount, available_amount = :available_amount,
             payment_method_summary = :payment_method_summary, completion_rate = :completion_rate,
             badge_vip = :badge_vip, badge_pro = :badge_pro, badge_stars = :badge_stars,
             status = :status, updated_at = :updated_at
         WHERE id = :id')->execute([
         ':owner_user_id' => $next['owner_user_id'] > 0 ? $next['owner_user_id'] : 0,
+        ':admin_group_code' => $nextGroupCode,
         ':nickname' => $next['nickname'],
         ':side' => $next['side'],
         ':asset_code' => $next['asset_code'],
@@ -11534,7 +11798,7 @@ if (preg_match('#^/api/admin/listings/(\d+)$#', $path, $matches) && $method === 
     $admin = require_admin($pdo);
     $listingId = (int) $matches[1];
     $reason = trim((string) ($input['reason'] ?? ''));
-    $stmt = $pdo->prepare('SELECT id, owner_user_id, status FROM c2c_listings WHERE id = :id LIMIT 1');
+    $stmt = $pdo->prepare('SELECT id, owner_user_id, admin_group_code, status FROM c2c_listings WHERE id = :id LIMIT 1');
     $stmt->execute([':id' => $listingId]);
     $listing = $stmt->fetch();
     if (!$listing) {
@@ -11543,17 +11807,20 @@ if (preg_match('#^/api/admin/listings/(\d+)$#', $path, $matches) && $method === 
     if ((int) $listing['owner_user_id'] > 0) {
         require_admin_can_access_user($pdo, $admin, (int) $listing['owner_user_id']);
     }
+    require_admin_can_access_group($admin, $listing['admin_group_code'] ?? null);
     $pdo->prepare('DELETE FROM c2c_listings WHERE id = :id')->execute([':id' => $listingId]);
     audit($pdo, 'admin', 'listing_deleted', 'admin', (int) $admin['admin_user_id'], 'listing', $listingId, $reason !== '' ? $reason : null, ['status' => $listing['status']], ['deleted' => true]);
     success('ADMIN_LISTING_DELETED', 'ok', []);
 }
 
 if ($path === '/api/admin/home-content' && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
+    $groupCode = admin_request_group_code($pdo, $admin);
     success('ADMIN_HOME_CONTENT_SUCCESS', 'ok', [
-        'notice' => get_system_config($pdo, 'trade', 'hall_notice', ''),
-        'banners' => home_banner_list($pdo),
-        'tutorial_links' => home_tutorial_link_list($pdo),
+        'admin_group_code' => $groupCode,
+        'notice' => get_group_system_config($pdo, 'trade', 'hall_notice', $groupCode, ''),
+        'banners' => home_banner_list($pdo, $groupCode),
+        'tutorial_links' => home_tutorial_link_list($pdo, $groupCode),
     ]);
 }
 
@@ -11563,9 +11830,10 @@ if ($path === '/api/admin/home-content/notice' && $method === 'PATCH') {
     if ($reason === '') {
         failure('ADMIN_REASON_REQUIRED', 'Reason is required');
     }
+    $groupCode = admin_request_group_code($pdo, $admin, $input);
     $notice = trim((string) ($input['notice'] ?? ''));
-    $beforeValue = get_system_config($pdo, 'trade', 'hall_notice', '');
-    set_system_config($pdo, 'trade', 'hall_notice', $notice);
+    $beforeValue = get_group_system_config($pdo, 'trade', 'hall_notice', $groupCode, '');
+    set_group_system_config($pdo, 'trade', 'hall_notice', $groupCode, $notice);
     audit(
         $pdo,
         'admin',
@@ -11582,8 +11850,9 @@ if ($path === '/api/admin/home-content/notice' && $method === 'PATCH') {
 }
 
 if ($path === '/api/admin/home-content/banners' && $method === 'GET') {
-    require_admin($pdo);
-    success('ADMIN_HOME_BANNERS_SUCCESS', 'ok', ['items' => home_banner_list($pdo)]);
+    $admin = require_admin($pdo);
+    $groupCode = admin_request_group_code($pdo, $admin);
+    success('ADMIN_HOME_BANNERS_SUCCESS', 'ok', ['admin_group_code' => $groupCode, 'items' => home_banner_list($pdo, $groupCode)]);
 }
 
 if ($path === '/api/admin/home-content/banners' && $method === 'POST') {
@@ -11592,12 +11861,13 @@ if ($path === '/api/admin/home-content/banners' && $method === 'POST') {
     if ($reason === '') {
         failure('ADMIN_REASON_REQUIRED', 'Reason is required');
     }
+    $groupCode = admin_request_group_code($pdo, $admin, $input);
     $title = trim((string) ($input['title'] ?? ''));
     $imageUrl = trim((string) ($input['image_url'] ?? ''));
     if ($title === '' || $imageUrl === '') {
         failure('ADMIN_INVALID_PARAMS', 'Title and image are required');
     }
-    $items = home_banner_list($pdo);
+    $items = home_banner_list($pdo, $groupCode);
     $nextId = 1;
     foreach ($items as $item) {
         $nextId = max($nextId, (int) $item['id'] + 1);
@@ -11615,7 +11885,7 @@ if ($path === '/api/admin/home-content/banners' && $method === 'POST') {
         'updated_at' => now_iso(),
     ];
     $items[] = $banner;
-    save_home_banner_list($pdo, $items);
+    save_home_banner_list($pdo, $items, $groupCode);
     audit(
         $pdo,
         'admin',
@@ -11632,10 +11902,11 @@ if ($path === '/api/admin/home-content/banners' && $method === 'POST') {
 }
 
 if (preg_match('#^/api/admin/home-content/banners/(\d+)$#', $path, $matches) && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
+    $groupCode = admin_request_group_code($pdo, $admin);
     $bannerId = (int) $matches[1];
     $banner = null;
-    foreach (home_banner_list($pdo) as $item) {
+    foreach (home_banner_list($pdo, $groupCode) as $item) {
         if ((int) $item['id'] === $bannerId) {
             $banner = $item;
             break;
@@ -11654,7 +11925,8 @@ if (preg_match('#^/api/admin/home-content/banners/(\d+)$#', $path, $matches) && 
     if ($reason === '') {
         failure('ADMIN_REASON_REQUIRED', 'Reason is required');
     }
-    $items = home_banner_list($pdo);
+    $groupCode = admin_request_group_code($pdo, $admin, $input);
+    $items = home_banner_list($pdo, $groupCode);
     $index = null;
     foreach ($items as $key => $item) {
         if ((int) $item['id'] === $bannerId) {
@@ -11682,7 +11954,7 @@ if (preg_match('#^/api/admin/home-content/banners/(\d+)$#', $path, $matches) && 
         failure('ADMIN_INVALID_PARAMS', 'Title and image are required');
     }
     $items[$index] = $next;
-    save_home_banner_list($pdo, $items);
+    save_home_banner_list($pdo, $items, $groupCode);
     audit(
         $pdo,
         'admin',
@@ -11702,7 +11974,8 @@ if (preg_match('#^/api/admin/home-content/banners/(\d+)$#', $path, $matches) && 
     $admin = require_admin($pdo);
     $bannerId = (int) $matches[1];
     $reason = trim((string) ($input['reason'] ?? ''));
-    $items = home_banner_list($pdo);
+    $groupCode = admin_request_group_code($pdo, $admin, $input);
+    $items = home_banner_list($pdo, $groupCode);
     $deleted = null;
     $nextItems = [];
     foreach ($items as $item) {
@@ -11715,7 +11988,7 @@ if (preg_match('#^/api/admin/home-content/banners/(\d+)$#', $path, $matches) && 
     if (!$deleted) {
         failure('ADMIN_HOME_BANNER_NOT_FOUND', 'Home banner not found');
     }
-    save_home_banner_list($pdo, $nextItems);
+    save_home_banner_list($pdo, $nextItems, $groupCode);
     audit(
         $pdo,
         'admin',
@@ -11742,7 +12015,7 @@ if ($path === '/api/admin/home-content/tutorial-links' && $method === 'POST') {
     if ($title === '' || $linkUrl === '') {
         failure('ADMIN_INVALID_PARAMS', 'Title and link are required');
     }
-    $items = home_tutorial_link_list($pdo);
+    $items = home_tutorial_link_list($pdo, $groupCode);
     $nextId = 1;
     foreach ($items as $item) {
         $nextId = max($nextId, (int) $item['id'] + 1);
@@ -11759,7 +12032,7 @@ if ($path === '/api/admin/home-content/tutorial-links' && $method === 'POST') {
         'updated_at' => $now,
     ];
     $items[] = $row;
-    save_home_tutorial_link_list($pdo, $items);
+    save_home_tutorial_link_list($pdo, $items, $groupCode);
     audit(
         $pdo,
         'admin',
@@ -11776,10 +12049,11 @@ if ($path === '/api/admin/home-content/tutorial-links' && $method === 'POST') {
 }
 
 if (preg_match('#^/api/admin/home-content/tutorial-links/(\d+)$#', $path, $matches) && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
+    $groupCode = admin_request_group_code($pdo, $admin);
     $linkId = (int) $matches[1];
     $found = null;
-    foreach (home_tutorial_link_list($pdo) as $item) {
+    foreach (home_tutorial_link_list($pdo, $groupCode) as $item) {
         if ((int) $item['id'] === $linkId) {
             $found = $item;
             break;
@@ -11798,7 +12072,8 @@ if (preg_match('#^/api/admin/home-content/tutorial-links/(\d+)$#', $path, $match
     if ($reason === '') {
         failure('ADMIN_REASON_REQUIRED', 'Reason is required');
     }
-    $items = home_tutorial_link_list($pdo);
+    $groupCode = admin_request_group_code($pdo, $admin, $input);
+    $items = home_tutorial_link_list($pdo, $groupCode);
     $index = null;
     foreach ($items as $key => $item) {
         if ((int) $item['id'] === $linkId) {
@@ -11824,7 +12099,7 @@ if (preg_match('#^/api/admin/home-content/tutorial-links/(\d+)$#', $path, $match
         failure('ADMIN_INVALID_PARAMS', 'Title and link are required');
     }
     $items[$index] = $next;
-    save_home_tutorial_link_list($pdo, $items);
+    save_home_tutorial_link_list($pdo, $items, $groupCode);
     audit(
         $pdo,
         'admin',
@@ -11844,7 +12119,8 @@ if (preg_match('#^/api/admin/home-content/tutorial-links/(\d+)$#', $path, $match
     $admin = require_admin($pdo);
     $linkId = (int) $matches[1];
     $reason = trim((string) ($input['reason'] ?? ''));
-    $items = home_tutorial_link_list($pdo);
+    $groupCode = admin_request_group_code($pdo, $admin, $input);
+    $items = home_tutorial_link_list($pdo, $groupCode);
     $deleted = null;
     $nextItems = [];
     foreach ($items as $item) {
@@ -11857,7 +12133,7 @@ if (preg_match('#^/api/admin/home-content/tutorial-links/(\d+)$#', $path, $match
     if (!$deleted) {
         failure('ADMIN_HOME_TUTORIAL_LINK_NOT_FOUND', 'Tutorial link not found');
     }
-    save_home_tutorial_link_list($pdo, $nextItems);
+    save_home_tutorial_link_list($pdo, $nextItems, $groupCode);
     audit(
         $pdo,
         'admin',
@@ -11874,7 +12150,7 @@ if (preg_match('#^/api/admin/home-content/tutorial-links/(\d+)$#', $path, $match
 }
 
 if ($path === '/api/admin/trade-feed-events' && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
     $status = trim((string) ($_GET['status'] ?? ''));
     $keyword = trim((string) ($_GET['keyword'] ?? ''));
     $page = max(1, (int) ($_GET['page'] ?? 1));
@@ -11890,6 +12166,11 @@ if ($path === '/api/admin/trade-feed-events' && $method === 'GET') {
         $where[] = '(title LIKE :keyword OR actor_name LIKE :keyword OR asset_code LIKE :keyword)';
         $params[':keyword'] = '%' . $keyword . '%';
     }
+    $groupScope = admin_group_filter_sql($admin, 'admin_group_code', 'feed_group');
+    if ($groupScope['sql'] !== '') {
+        $where[] = $groupScope['sql'];
+        $params = array_merge($params, $groupScope['params']);
+    }
     $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
     $countStmt = $pdo->prepare("SELECT COUNT(*) FROM trade_feed_events {$whereSql}");
     foreach ($params as $key => $value) {
@@ -11897,7 +12178,7 @@ if ($path === '/api/admin/trade-feed-events' && $method === 'GET') {
     }
     $countStmt->execute();
     $total = (int) $countStmt->fetchColumn();
-    $stmt = $pdo->prepare("SELECT id, action_type, title, actor_name, asset_code, amount, occurred_at, sort_order, status, updated_at
+    $stmt = $pdo->prepare("SELECT id, admin_group_code, action_type, title, actor_name, asset_code, amount, occurred_at, sort_order, status, updated_at
         FROM trade_feed_events
         {$whereSql}
         ORDER BY sort_order ASC, id DESC
@@ -11911,6 +12192,7 @@ if ($path === '/api/admin/trade-feed-events' && $method === 'GET') {
     $items = array_map(static function (array $item): array {
         $item['id'] = (int) $item['id'];
         $item['sort_order'] = (int) $item['sort_order'];
+        $item['admin_group'] = group_label_from_code($item['admin_group_code'] ?? null);
         $item['action_type'] = normalize_trade_feed_action_type($item['action_type'] ?? '');
         $item['title_display'] = trade_feed_display_title($item, 'hkg');
         return $item;
@@ -11937,12 +12219,14 @@ if ($path === '/api/admin/trade-feed-events' && $method === 'POST') {
     if ($title === '' || $actorName === '' || !is_numeric($amount) || !in_array($status, ['active', 'inactive'], true)) {
         failure('ADMIN_INVALID_PARAMS', 'Invalid trade feed params');
     }
+    $groupCode = admin_request_group_code($pdo, $admin, $input);
     $now = now_iso();
     $pdo->prepare('INSERT INTO trade_feed_events (
-        action_type, title, actor_name, asset_code, amount, occurred_at, sort_order, status, created_at, updated_at
+        admin_group_code, action_type, title, actor_name, asset_code, amount, occurred_at, sort_order, status, created_at, updated_at
     ) VALUES (
-        :action_type, :title, :actor_name, :asset_code, :amount, :occurred_at, :sort_order, :status, :created_at, :updated_at
+        :admin_group_code, :action_type, :title, :actor_name, :asset_code, :amount, :occurred_at, :sort_order, :status, :created_at, :updated_at
     )')->execute([
+        ':admin_group_code' => $groupCode,
         ':action_type' => $actionType,
         ':title' => $title,
         ':actor_name' => $actorName,
@@ -11972,12 +12256,14 @@ if ($path === '/api/admin/trade-feed-events/random' && $method === 'POST') {
         : (random_int(0, 1) === 1 ? 'completed_buy' : 'completed_sell');
     $title = trade_feed_action_default_title($actionType);
     $actorName = random_trade_feed_email();
+    $groupCode = admin_request_group_code($pdo, $admin, $input);
     $now = now_iso();
     $pdo->prepare('INSERT INTO trade_feed_events (
-        action_type, title, actor_name, asset_code, amount, occurred_at, sort_order, status, created_at, updated_at
+        admin_group_code, action_type, title, actor_name, asset_code, amount, occurred_at, sort_order, status, created_at, updated_at
     ) VALUES (
-        :action_type, :title, :actor_name, :asset_code, :amount, :occurred_at, :sort_order, :status, :created_at, :updated_at
+        :admin_group_code, :action_type, :title, :actor_name, :asset_code, :amount, :occurred_at, :sort_order, :status, :created_at, :updated_at
     )')->execute([
+        ':admin_group_code' => $groupCode,
         ':action_type' => $actionType,
         ':title' => $title,
         ':actor_name' => $actorName,
@@ -12009,7 +12295,7 @@ if ($path === '/api/admin/trade-feed-events/random' && $method === 'POST') {
 }
 
 if (preg_match('#^/api/admin/trade-feed-events/(\d+)$#', $path, $matches) && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
     $eventId = (int) $matches[1];
     $stmt = $pdo->prepare('SELECT * FROM trade_feed_events WHERE id = :id LIMIT 1');
     $stmt->execute([':id' => $eventId]);
@@ -12017,6 +12303,7 @@ if (preg_match('#^/api/admin/trade-feed-events/(\d+)$#', $path, $matches) && $me
     if (!$eventItem) {
         failure('ADMIN_TRADE_FEED_NOT_FOUND', 'Trade feed event not found');
     }
+    require_admin_can_access_group($admin, $eventItem['admin_group_code'] ?? null);
     $eventItem['id'] = (int) $eventItem['id'];
     $eventItem['sort_order'] = (int) $eventItem['sort_order'];
     $eventItem['action_type'] = normalize_trade_feed_action_type($eventItem['action_type'] ?? '');
@@ -12033,6 +12320,7 @@ if (preg_match('#^/api/admin/trade-feed-events/(\d+)$#', $path, $matches) && $me
     if (!$eventItem) {
         failure('ADMIN_TRADE_FEED_NOT_FOUND', 'Trade feed event not found');
     }
+    require_admin_can_access_group($admin, $eventItem['admin_group_code'] ?? null);
     $next = [
         'action_type' => array_key_exists('action_type', $input) ? normalize_trade_feed_action_type($input['action_type']) : normalize_trade_feed_action_type($eventItem['action_type'] ?? ''),
         'title' => array_key_exists('title', $input) ? trim((string) $input['title']) : (string) $eventItem['title'],
@@ -12071,11 +12359,13 @@ if (preg_match('#^/api/admin/trade-feed-events/(\d+)$#', $path, $matches) && $me
 if (preg_match('#^/api/admin/trade-feed-events/(\d+)$#', $path, $matches) && $method === 'DELETE') {
     $admin = require_admin($pdo);
     $eventId = (int) $matches[1];
-    $stmt = $pdo->prepare('SELECT id FROM trade_feed_events WHERE id = :id LIMIT 1');
+    $stmt = $pdo->prepare('SELECT id, admin_group_code FROM trade_feed_events WHERE id = :id LIMIT 1');
     $stmt->execute([':id' => $eventId]);
-    if (!$stmt->fetch()) {
+    $eventItem = $stmt->fetch();
+    if (!$eventItem) {
         failure('ADMIN_TRADE_FEED_NOT_FOUND', 'Trade feed event not found');
     }
+    require_admin_can_access_group($admin, $eventItem['admin_group_code'] ?? null);
     $pdo->prepare('DELETE FROM trade_feed_events WHERE id = :id')->execute([':id' => $eventId]);
     audit($pdo, 'admin', 'trade_feed_deleted', 'admin', (int) $admin['admin_user_id'], 'trade_feed_event', $eventId);
     success('ADMIN_TRADE_FEED_DELETED', 'ok', []);
@@ -12193,7 +12483,7 @@ if ($path === '/api/admin/dashboard-summary' && $method === 'GET') {
 }
 
 if ($path === '/api/admin/auth/events' && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
     $page = max(1, (int) ($_GET['page'] ?? 1));
     $pageSize = min(100, max(1, (int) ($_GET['page_size'] ?? 20)));
     $account = trim((string) ($_GET['account'] ?? ''));
@@ -12220,6 +12510,7 @@ if ($path === '/api/admin/auth/events' && $method === 'GET') {
                 ],
             ]);
         }
+        require_admin_can_access_user($pdo, $admin, $resolvedUserId);
         $where[] = 'target_id = :target_id';
         $params[':target_id'] = $resolvedUserId;
     }
@@ -12234,6 +12525,26 @@ if ($path === '/api/admin/auth/events' && $method === 'GET') {
     if ($ip !== '') {
         $where[] = 'ip LIKE :ip';
         $params[':ip'] = '%' . $ip . '%';
+    }
+    if (!admin_is_root_admin($admin)) {
+        $scope = admin_user_scope_sql($pdo, $admin, 'u', 'auth_event_scope');
+        if ($scope['sql'] === '1 = 0') {
+            success('ADMIN_AUTH_EVENTS_SUCCESS', 'ok', [
+                'items' => [],
+                'pagination' => [
+                    'page' => $page,
+                    'page_size' => $pageSize,
+                    'total' => 0,
+                ],
+            ]);
+        }
+        if ($scope['sql'] !== '') {
+            $where[] = '(target_id IS NOT NULL AND EXISTS (
+                SELECT 1 FROM users u
+                WHERE u.id = audit_logs.target_id AND ' . $scope['sql'] . '
+            ))';
+            $params = array_merge($params, $scope['params']);
+        }
     }
     $whereSql = 'WHERE ' . implode(' AND ', $where);
 
@@ -12277,7 +12588,7 @@ if ($path === '/api/admin/auth/events' && $method === 'GET') {
 }
 
 if (preg_match('#^/api/admin/auth/events/(\d+)$#', $path, $matches) && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
     $eventId = (int) $matches[1];
     $stmt = $pdo->prepare('SELECT id, action, account, target_id AS user_id, ip, error_code, msg, payload_json, created_at
         FROM audit_logs
@@ -12287,6 +12598,9 @@ if (preg_match('#^/api/admin/auth/events/(\d+)$#', $path, $matches) && $method =
     $event = $stmt->fetch();
     if (!$event) {
         failure('ADMIN_AUTH_EVENT_NOT_FOUND', 'Auth event not found');
+    }
+    if ($event['user_id'] !== null) {
+        require_admin_can_access_user($pdo, $admin, (int) $event['user_id']);
     }
     $payload = $event['payload_json'] ? json_decode((string) $event['payload_json'], true) : null;
     $event['id'] = (int) $event['id'];
@@ -12379,6 +12693,11 @@ if ($path === '/api/admin/deposit-addresses' && $method === 'GET') {
     $items = array_values(array_filter($items));
     success('ADMIN_DEPOSIT_ADDRESSES_SUCCESS', 'ok', [
         'items' => $items,
+        'platform_defaults' => [
+            'TRC20' => platform_default_usdt_deposit_address($pdo, 'TRC20'),
+            'ERC20' => platform_default_usdt_deposit_address($pdo, 'ERC20'),
+            'BEP20' => platform_default_usdt_deposit_address($pdo, 'BEP20'),
+        ],
         'pagination' => [
             'page' => $page,
             'page_size' => $pageSize,
@@ -12388,18 +12707,27 @@ if ($path === '/api/admin/deposit-addresses' && $method === 'GET') {
 }
 
 if (preg_match('#^/api/admin/deposit-addresses/(\d+)$#', $path, $matches) && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
     $userId = (int) $matches[1];
+    require_admin_can_access_user($pdo, $admin, $userId);
     $item = build_user_deposit_address_item($pdo, $userId);
     if (!$item) {
         failure('ADMIN_DEPOSIT_ADDRESS_NOT_FOUND', 'Deposit address not found');
     }
-    success('ADMIN_DEPOSIT_ADDRESS_SUCCESS', 'ok', ['item' => $item]);
+    success('ADMIN_DEPOSIT_ADDRESS_SUCCESS', 'ok', [
+        'item' => $item,
+        'platform_defaults' => [
+            'TRC20' => platform_default_usdt_deposit_address($pdo, 'TRC20'),
+            'ERC20' => platform_default_usdt_deposit_address($pdo, 'ERC20'),
+            'BEP20' => platform_default_usdt_deposit_address($pdo, 'BEP20'),
+        ],
+    ]);
 }
 
 if ($path === '/api/admin/deposit-addresses' && $method === 'POST') {
     $admin = require_admin($pdo);
     $payload = sanitize_user_deposit_address_payload($input);
+    require_admin_can_access_user($pdo, $admin, (int) $payload['user_id']);
     $item = save_user_deposit_addresses($pdo, $payload['user_id'], $payload['addresses'], (int) $admin['admin_user_id']);
     success('ADMIN_DEPOSIT_ADDRESS_CREATED', 'Deposit address created', ['item' => $item]);
 }
@@ -12407,6 +12735,7 @@ if ($path === '/api/admin/deposit-addresses' && $method === 'POST') {
 if (preg_match('#^/api/admin/deposit-addresses/(\d+)$#', $path, $matches) && $method === 'PATCH') {
     $admin = require_admin($pdo);
     $userId = (int) $matches[1];
+    require_admin_can_access_user($pdo, $admin, $userId);
     if (!build_user_deposit_address_item($pdo, $userId)) {
         failure('ADMIN_DEPOSIT_ADDRESS_NOT_FOUND', 'Deposit address not found');
     }
@@ -12418,6 +12747,7 @@ if (preg_match('#^/api/admin/deposit-addresses/(\d+)$#', $path, $matches) && $me
 if (preg_match('#^/api/admin/deposit-addresses/(\d+)$#', $path, $matches) && $method === 'DELETE') {
     $admin = require_admin($pdo);
     $userId = (int) $matches[1];
+    require_admin_can_access_user($pdo, $admin, $userId);
     $before = build_user_deposit_address_item($pdo, $userId);
     if (!$before) {
         failure('ADMIN_DEPOSIT_ADDRESS_NOT_FOUND', 'Deposit address not found');
@@ -12539,7 +12869,7 @@ if ($path === '/api/admin/withdrawal-settings/eur-swap' && $method === 'PATCH') 
 }
 
 if ($path === '/api/admin/support-tickets' && $method === 'GET') {
-    require_admin($pdo);
+    $admin = require_admin($pdo);
     $page = max(1, (int) ($_GET['page'] ?? 1));
     $pageSize = min(100, max(1, (int) ($_GET['page_size'] ?? 20)));
     $status = trim((string) ($_GET['status'] ?? ''));
@@ -12549,9 +12879,17 @@ if ($path === '/api/admin/support-tickets' && $method === 'GET') {
         $where[] = 's.status = :status';
         $params[':status'] = $status;
     }
+    $scope = admin_user_scope_sql($pdo, $admin, 'u', 'support_ticket_scope');
+    if ($scope['sql'] !== '') {
+        $where[] = $scope['sql'] === '1 = 0' ? '1 = 0' : '(' . $scope['sql'] . ')';
+        $params = array_merge($params, $scope['params']);
+    }
     $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM support_tickets s {$whereSql}");
-    $countStmt->execute($params);
+    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM support_tickets s LEFT JOIN users u ON u.id = s.user_id {$whereSql}");
+    foreach ($params as $key => $value) {
+        $countStmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+    }
+    $countStmt->execute();
     $total = (int) $countStmt->fetchColumn();
     $offset = ($page - 1) * $pageSize;
     $stmt = $pdo->prepare("SELECT s.*, u.username, u.email, u.mobile_e164
@@ -12585,6 +12923,11 @@ if (preg_match('#^/api/admin/support-tickets/(\d+)$#', $path, $matches) && $meth
     $stmt->execute([':id' => $id]);
     $before = $stmt->fetch();
     if (!$before) {
+        failure('ADMIN_SUPPORT_TICKET_NOT_FOUND', 'Support ticket not found');
+    }
+    if ($before['user_id'] !== null) {
+        require_admin_can_access_user($pdo, $admin, (int) $before['user_id']);
+    } elseif (!admin_is_root_admin($admin)) {
         failure('ADMIN_SUPPORT_TICKET_NOT_FOUND', 'Support ticket not found');
     }
     $status = array_key_exists('status', $input) ? trim((string) $input['status']) : (string) $before['status'];

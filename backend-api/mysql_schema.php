@@ -25,7 +25,10 @@ function mysql_schema_queries(): array
             last_login_at VARCHAR(64) NULL,
             last_login_ip VARCHAR(64) NULL,
             created_at VARCHAR(64) NOT NULL,
-            updated_at VARCHAR(64) NOT NULL
+            updated_at VARCHAR(64) NOT NULL,
+            KEY idx_users_group (admin_group_code, id),
+            KEY idx_users_invited_admin (invited_by_admin_id, id),
+            KEY idx_users_invited_user (invited_by_user_id, id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
 
         'CREATE TABLE IF NOT EXISTS invitation_codes (
@@ -71,6 +74,7 @@ function mysql_schema_queries(): array
         'CREATE TABLE IF NOT EXISTS financial_products (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
             product_code VARCHAR(191) NOT NULL UNIQUE,
+            admin_group_code VARCHAR(64) NULL,
             asset_code VARCHAR(32) NOT NULL,
             wallet_code VARCHAR(64) NOT NULL,
             display_name VARCHAR(191) NULL,
@@ -88,7 +92,8 @@ function mysql_schema_queries(): array
             status VARCHAR(32) NOT NULL DEFAULT "active",
             sort_order INT NOT NULL DEFAULT 0,
             created_at VARCHAR(64) NOT NULL,
-            updated_at VARCHAR(64) NOT NULL
+            updated_at VARCHAR(64) NOT NULL,
+            KEY idx_financial_products_group (admin_group_code, status, sort_order)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
 
         'CREATE TABLE IF NOT EXISTS user_financial_subscriptions (
@@ -155,7 +160,8 @@ function mysql_schema_queries(): array
             status VARCHAR(32) NOT NULL DEFAULT "enabled",
             created_at VARCHAR(64) NOT NULL,
             updated_at VARCHAR(64) NOT NULL,
-            UNIQUE KEY uniq_deposit_address (asset_code, network_code, address)
+            UNIQUE KEY uniq_deposit_address (asset_code, network_code, address),
+            KEY idx_deposit_addresses_user_asset (user_id, asset_code)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
 
         'CREATE TABLE IF NOT EXISTS deposit_requests (
@@ -172,7 +178,9 @@ function mysql_schema_queries(): array
             reviewed_by_admin_id BIGINT UNSIGNED NULL,
             reviewed_at VARCHAR(64) NULL,
             created_at VARCHAR(64) NOT NULL,
-            updated_at VARCHAR(64) NOT NULL
+            updated_at VARCHAR(64) NOT NULL,
+            KEY idx_deposit_requests_user (user_id, id),
+            KEY idx_deposit_requests_status (status, id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
 
         'CREATE TABLE IF NOT EXISTS withdrawal_requests (
@@ -190,13 +198,16 @@ function mysql_schema_queries(): array
             reviewed_at VARCHAR(64) NULL,
             remark TEXT NULL,
             created_at VARCHAR(64) NOT NULL,
-            updated_at VARCHAR(64) NOT NULL
+            updated_at VARCHAR(64) NOT NULL,
+            KEY idx_withdrawal_requests_user (user_id, id),
+            KEY idx_withdrawal_requests_status (status, id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
 
         'CREATE TABLE IF NOT EXISTS c2c_orders (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
             order_no VARCHAR(191) NOT NULL UNIQUE,
             listing_id BIGINT UNSIGNED NULL,
+            admin_group_code VARCHAR(64) NULL,
             side VARCHAR(32) NOT NULL,
             buyer_user_id BIGINT UNSIGNED NOT NULL,
             seller_user_id BIGINT UNSIGNED NOT NULL,
@@ -211,7 +222,8 @@ function mysql_schema_queries(): array
             cancel_reason TEXT NULL,
             dispute_reason TEXT NULL,
             created_at VARCHAR(64) NOT NULL,
-            updated_at VARCHAR(64) NOT NULL
+            updated_at VARCHAR(64) NOT NULL,
+            KEY idx_c2c_orders_group (admin_group_code, id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
 
         'CREATE TABLE IF NOT EXISTS order_evidences (
@@ -228,6 +240,7 @@ function mysql_schema_queries(): array
         'CREATE TABLE IF NOT EXISTS c2c_listings (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
             owner_user_id BIGINT UNSIGNED NOT NULL,
+            admin_group_code VARCHAR(64) NULL,
             nickname VARCHAR(191) NOT NULL,
             side VARCHAR(32) NOT NULL,
             asset_code VARCHAR(32) NOT NULL,
@@ -243,11 +256,13 @@ function mysql_schema_queries(): array
             badge_stars TINYINT(1) NOT NULL DEFAULT 0,
             status VARCHAR(32) NOT NULL DEFAULT "active",
             created_at VARCHAR(64) NOT NULL,
-            updated_at VARCHAR(64) NOT NULL
+            updated_at VARCHAR(64) NOT NULL,
+            KEY idx_c2c_listings_group (admin_group_code, status, side)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
 
         'CREATE TABLE IF NOT EXISTS trade_feed_events (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            admin_group_code VARCHAR(64) NULL,
             action_type VARCHAR(64) NOT NULL DEFAULT "custom",
             title VARCHAR(255) NOT NULL,
             actor_name VARCHAR(191) NOT NULL,
@@ -257,7 +272,8 @@ function mysql_schema_queries(): array
             sort_order INT NOT NULL DEFAULT 0,
             status VARCHAR(32) NOT NULL DEFAULT "active",
             created_at VARCHAR(64) NOT NULL,
-            updated_at VARCHAR(64) NOT NULL
+            updated_at VARCHAR(64) NOT NULL,
+            KEY idx_trade_feed_group (admin_group_code, status, sort_order)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
 
         'CREATE TABLE IF NOT EXISTS user_kyc_applications (
@@ -274,7 +290,9 @@ function mysql_schema_queries(): array
             reviewed_at VARCHAR(64) NULL,
             submitted_at VARCHAR(64) NOT NULL,
             created_at VARCHAR(64) NOT NULL,
-            updated_at VARCHAR(64) NOT NULL
+            updated_at VARCHAR(64) NOT NULL,
+            KEY idx_kyc_applications_user (user_id, id),
+            KEY idx_kyc_applications_status (status, id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
 
         'CREATE TABLE IF NOT EXISTS user_payout_methods (
@@ -293,7 +311,9 @@ function mysql_schema_queries(): array
             reviewed_by_admin_id BIGINT UNSIGNED NULL,
             reviewed_at VARCHAR(64) NULL,
             created_at VARCHAR(64) NOT NULL,
-            updated_at VARCHAR(64) NOT NULL
+            updated_at VARCHAR(64) NOT NULL,
+            KEY idx_payout_methods_user (user_id, id),
+            KEY idx_payout_methods_status (status, id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
 
         'CREATE TABLE IF NOT EXISTS admin_users (
@@ -499,6 +519,7 @@ function mysql_schema_missing_columns(): array
             'remark' => 'TEXT NULL',
         ],
         'financial_products' => [
+            'admin_group_code' => 'VARCHAR(64) NULL',
             'display_name' => 'VARCHAR(191) NULL',
             'subtitle' => 'VARCHAR(255) NULL',
             'detail_note' => 'TEXT NULL',
@@ -512,15 +533,52 @@ function mysql_schema_missing_columns(): array
             'returned_by_admin_id' => 'BIGINT UNSIGNED NULL',
         ],
         'trade_feed_events' => [
+            'admin_group_code' => 'VARCHAR(64) NULL',
             'action_type' => 'VARCHAR(64) NOT NULL DEFAULT "custom"',
         ],
         'c2c_listings' => [
+            'admin_group_code' => 'VARCHAR(64) NULL',
             'badge_vip' => 'TINYINT(1) NOT NULL DEFAULT 0',
             'badge_pro' => 'TINYINT(1) NOT NULL DEFAULT 0',
             'badge_stars' => 'TINYINT(1) NOT NULL DEFAULT 0',
         ],
         'c2c_orders' => [
             'listing_id' => 'BIGINT UNSIGNED NULL',
+            'admin_group_code' => 'VARCHAR(64) NULL',
+        ],
+    ];
+}
+
+function mysql_schema_missing_indexes(): array
+{
+    return [
+        'users' => [
+            'idx_users_group' => '(admin_group_code, id)',
+            'idx_users_invited_admin' => '(invited_by_admin_id, id)',
+            'idx_users_invited_user' => '(invited_by_user_id, id)',
+        ],
+        'deposit_addresses' => [
+            'idx_deposit_addresses_user_asset' => '(user_id, asset_code)',
+        ],
+        'deposit_requests' => [
+            'idx_deposit_requests_user' => '(user_id, id)',
+            'idx_deposit_requests_status' => '(status, id)',
+        ],
+        'withdrawal_requests' => [
+            'idx_withdrawal_requests_user' => '(user_id, id)',
+            'idx_withdrawal_requests_status' => '(status, id)',
+        ],
+        'user_kyc_applications' => [
+            'idx_kyc_applications_user' => '(user_id, id)',
+            'idx_kyc_applications_status' => '(status, id)',
+        ],
+        'user_payout_methods' => [
+            'idx_payout_methods_user' => '(user_id, id)',
+            'idx_payout_methods_status' => '(status, id)',
+        ],
+        'support_tickets' => [
+            'idx_support_tickets_user' => '(user_id, id)',
+            'idx_support_tickets_status' => '(status, id)',
         ],
     ];
 }

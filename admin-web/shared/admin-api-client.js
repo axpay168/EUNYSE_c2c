@@ -9,6 +9,9 @@
   var tokenKey = "eurnyse_admin_token";
   var token = window.localStorage.getItem(tokenKey) || "";
   var debugEnabled = /(?:\?|&)debugApi=1(?:&|$)/.test(window.location.search);
+  var ADMIN_ERROR_MESSAGES = {
+    ADMIN_PASSWORD_CHANGE_REQUIRED: "此後台帳號首次登入需先修改密碼，完成後才能使用此功能。"
+  };
 
   var endpointByView = {
     dashboard: "/api/admin/auth/events?page=1&page_size=5",
@@ -70,7 +73,7 @@
               throw new Error("SESSION_EXPIRED");
             });
           }
-          throw new Error(payload.msg || "Request failed");
+          throw new Error(ADMIN_ERROR_MESSAGES[payload.error_code] || payload.msg || "Request failed");
         }
         return payload.data || {};
       });

@@ -52,12 +52,18 @@
 
   function renderAdminUserSummaryCell(user, fallbackId) {
     var code = adminUserDisplayCode(user, fallbackId);
+    var group = user && user.admin_group ? user.admin_group : null;
+    var groupCode = String((group && group.code) || (user && user.admin_group_code) || "").trim();
+    var groupName = String((group && group.name) || (user && user.admin_group_name) || "").trim();
+    var groupLabel = groupName && groupCode && groupName !== groupCode ? groupName + "（" + groupCode + "）" : groupName || groupCode;
     return (
       '<td><div class="mono">' +
       esc(code) +
       '</div><div class="admin-cell-sub">' +
       esc(adminUserAccountText(user, code)) +
-      "</div></td>"
+      "</div>" +
+      (currentAdminIsRoot() && groupLabel ? '<div class="admin-cell-sub">組別：' + esc(groupLabel) + "</div>" : "") +
+      "</td>"
     );
   }
 
@@ -1505,6 +1511,14 @@
   var ADMIN_DEFAULT_DEPOSIT_ERC20 = "0x9208A00F5D4B652a68687335Fae4050B5f006332";
   var ADMIN_DEFAULT_DEPOSIT_BEP20 = "0x9208A00F5D4B652a68687335Fae4050B5f006332";
 
+  function applyAdminDepositPlatformDefaults(defs) {
+    if (!defs || typeof defs !== "object") return;
+    if ("TRC20" in defs) ADMIN_DEFAULT_DEPOSIT_TRC20 = String(defs.TRC20 != null ? defs.TRC20 : "").trim();
+    if ("ERC20" in defs) ADMIN_DEFAULT_DEPOSIT_ERC20 = String(defs.ERC20 != null ? defs.ERC20 : "").trim();
+    if ("BEP20" in defs) ADMIN_DEFAULT_DEPOSIT_BEP20 = String(defs.BEP20 != null ? defs.BEP20 : "").trim();
+    syncAdminDepositPlatformDefaultsPanel();
+  }
+
   function syncAdminDepositPlatformDefaultsPanel() {
     var trc = document.getElementById("view-da-default-trc");
     var eth = document.getElementById("view-da-default-eth");
@@ -1600,7 +1614,7 @@
   }
 
   function validateDepositAddressBody(body) {
-    if (!(body.user_id > 0) || isNaN(body.user_id)) return "請填寫有效的用戶 ID";
+    if (!(body.user_id > 0) || isNaN(body.user_id)) return "請填寫有效的 ID（與會員列表「ID」欄相同）";
     if (!body.trc20_address && !body.erc20_address && !body.bep20_address) {
       return "請至少填寫一條鏈地址";
     }
@@ -1616,12 +1630,15 @@
         fallbackMessage: "載入充值地址失敗"
       })
       .then(function (data) {
+        if (data && data.platform_defaults) {
+          applyAdminDepositPlatformDefaults(data.platform_defaults);
+        }
         var it = data && data.item;
         if (!it || it.user_id == null) throw new Error("無地址資料");
         var hid = document.getElementById("view-da-detail-user-id");
         if (hid) hid.value = String(it.user_id);
         var disp = document.getElementById("view-da-detail-user-id-display");
-        if (disp) disp.value = String(it.user_id);
+        if (disp) disp.value = userOrdinalId({ id: it.user_id }, it.user_id);
         var set = function (sid, val) {
           var el = document.getElementById(sid);
           if (el) el.value = val != null ? String(val) : "";
@@ -3712,6 +3729,9 @@
     return api()
       .requestJson(requestPath, { fallbackMessage: "載入充值地址失敗" })
       .then(function (data) {
+        if (data && data.platform_defaults) {
+          applyAdminDepositPlatformDefaults(data.platform_defaults);
+        }
         var items = (data && data.items) || [];
         var page = (data && data.pagination && data.pagination.page) || 1;
         var pageSize = (data && data.pagination && data.pagination.page_size) || pager.pageSize;
@@ -3727,16 +3747,18 @@
           .map(function (it, idx) {
             var seqNum = (page - 1) * pageSize + idx + 1;
             var seq = seqNum <= 99 ? ("0" + seqNum).slice(-2) : String(seqNum);
-            var uid = it.user_id != null ? it.user_id : "—";
+            var uidNum = it.user_id != null ? Number(it.user_id) : NaN;
+            var idDisp = Number.isFinite(uidNum) && uidNum > 0 ? userOrdinalId({ id: uidNum }, uidNum) : "—";
+            var uidForApi = Number.isFinite(uidNum) && uidNum > 0 ? uidNum : null;
             var un = it.username != null && String(it.username).trim() !== "" ? String(it.username).trim() : "";
-            var userTitle = un || "用戶 " + uid;
+            var userTitle = un || "用戶 " + idDisp;
             var em = String(it.email || "").trim();
             var userCell =
               "<td>" +
               esc(userTitle) +
               (em ? '<div class="admin-cell-sub">' + esc(em) + "</div>" : "") +
-              '<div class="admin-cell-sub mono">用戶 ID：' +
-              esc(uid) +
+              '<div class="admin-cell-sub mono">ID：' +
+              esc(idDisp) +
               "</div></td>";
             return (
               "<tr><td class=\"mono\">" +
@@ -3744,17 +3766,17 @@
               "</td>" +
               userCell +
               '<td class="mono">' +
-              depositAddressListCellHtml(it.trc20_address, "TRC20") +
+              depositAddressListCellHtml(depositChainEffective(it.trc20_address, ADMIN_DEFAULT_DEPOSIT_TRC20), "TRC20") +
               "</td><td class=\"mono\">" +
-              depositAddressListCellHtml(it.erc20_address, "ERC20") +
+              depositAddressListCellHtml(depositChainEffective(it.erc20_address, ADMIN_DEFAULT_DEPOSIT_ERC20), "ERC20") +
               "</td><td class=\"mono\">" +
-              depositAddressListCellHtml(it.bep20_address, "BEP20") +
+              depositAddressListCellHtml(depositChainEffective(it.bep20_address, ADMIN_DEFAULT_DEPOSIT_BEP20), "BEP20") +
               "</td><td>" +
               adminRowActions(
                 adminBtn({
                   variant: "ghost",
                   sm: true,
-                  attrs: 'data-admin-da-open-detail="' + esc(String(uid)) + '"',
+                  attrs: 'data-admin-da-open-detail="' + esc(uidForApi != null ? String(uidForApi) : "") + '"',
                   label: "編輯"
                 })
               ) +
@@ -4402,6 +4424,7 @@
         return (
           "<tr><td class=\"mono\">" +
           esc(it.id) +
+          (currentAdminIsRoot() && it.admin_group ? '<div class="admin-cell-sub">組別：' + esc(adminGroupLabelZh(it.admin_group)) + "</div>" : "") +
           "</td><td class=\"mono\">" +
           esc(it.order_no) +
           "</td><td>" +
@@ -5082,6 +5105,7 @@
                 esc(it.id) +
                 "</td><td>" +
                 esc(it.nickname || it.owner_username || it.owner_user_id) +
+                (currentAdminIsRoot() && it.admin_group ? '<div class="admin-cell-sub">組別：' + esc(adminGroupLabelZh(it.admin_group)) + "</div>" : "") +
                 '<div class="admin-cell-sub">來源：' +
                 sourceBadge(it.owner_source) +
                 "</div>" +
@@ -6384,6 +6408,20 @@
     return currentAdminIsRoot() || p.can_view_group_global_data === true;
   }
 
+  function syncRootOnlyControls() {
+    var root = currentAdminIsRoot();
+    Array.prototype.forEach.call(document.querySelectorAll("[data-root-only]"), function (el) {
+      if (el.tagName === "BUTTON" || el.tagName === "INPUT" || el.tagName === "SELECT") {
+        el.disabled = !root;
+        el.hidden = !root;
+      } else {
+        el.hidden = !root;
+      }
+    });
+    var groupField = document.getElementById("view-admin-create-group-field");
+    if (groupField) groupField.hidden = !root;
+  }
+
   function adminGroupLabelZh(u) {
     var name = String((u && u.admin_group_name) || "").trim();
     var code = String((u && u.admin_group_code) || "").trim();
@@ -6950,10 +6988,12 @@
     var totalPages = Math.max(1, Math.ceil(total / (_adminUsersPageSize || ADMIN_PAGE_SIZE_DEFAULT)));
     var countEl = document.getElementById("view-admin-users-count");
     var info = document.getElementById("view-admin-users-page-info");
+    var pageDisplay = document.getElementById("view-admin-users-page-display");
     var prev = document.getElementById("view-admin-users-prev");
     var next = document.getElementById("view-admin-users-next");
     if (countEl) countEl.textContent = "共 " + total + " 筆";
     if (info) info.textContent = "第 " + _adminUsersPage + " / " + totalPages + " 頁（每頁 " + _adminUsersPageSize + " 筆）";
+    if (pageDisplay) pageDisplay.textContent = "第 " + _adminUsersPage + " / " + totalPages + " 頁";
     if (prev) prev.disabled = _adminUsersPage <= 1;
     if (next) next.disabled = _adminUsersPage >= totalPages || total === 0;
   }
@@ -7026,6 +7066,8 @@
         if (countEl) countEl.textContent = "載入失敗";
         var info = document.getElementById("view-admin-users-page-info");
         if (info) info.textContent = "";
+        var pageDisplay = document.getElementById("view-admin-users-page-display");
+        if (pageDisplay) pageDisplay.textContent = "第 - / - 頁";
         var prev = document.getElementById("view-admin-users-prev");
         var next = document.getElementById("view-admin-users-next");
         if (prev) prev.disabled = true;
@@ -7074,7 +7116,9 @@
     _adminGroupCache = Array.isArray(groups) ? groups.slice() : [];
     var createSel = document.getElementById("view-admin-create-group-select");
     if (!createSel) return;
-    var html = '<option value="">不指定分組（沿用建立者目前組別）</option>';
+    var html = currentAdminIsRoot()
+      ? '<option value="">請選擇分組</option>'
+      : '<option value="">沿用自己的分組</option>';
     html += _adminGroupCache
       .map(function (group) {
         var code = String(group.group_code || "").trim();
@@ -7091,6 +7135,7 @@
       })
       .join("");
     createSel.innerHTML = html;
+    syncRootOnlyControls();
   }
 
   function bindAdminUsersPage() {
@@ -7228,6 +7273,7 @@
           if (!opener) return;
           _adminCreateUserModuleAccessDraft = null;
           var p = currentAdminProfile() || {};
+          syncRootOnlyControls();
           setAdminScopeControls("create", {
             admin_group_code: currentAdminIsRoot() ? "" : p.admin_group_code,
             admin_group_name: currentAdminIsRoot() ? "" : p.admin_group_name,
@@ -7244,6 +7290,7 @@
       createSuper.title = "只有大老板可新增組超級管理員";
     }
     var profileForCreate = currentAdminProfile() || {};
+    syncRootOnlyControls();
     setAdminScopeControls("create", {
       admin_group_code: currentAdminIsRoot() ? "" : profileForCreate.admin_group_code,
       admin_group_name: currentAdminIsRoot() ? "" : profileForCreate.admin_group_name,
@@ -7311,6 +7358,10 @@
       };
       if (!body.account || !body.password) {
         if (msg) msg.textContent = "請填寫帳號與密碼。";
+        return;
+      }
+      if (currentAdminIsRoot() && !body.admin_group_code) {
+        if (msg) msg.textContent = "大老板新增管理員時必須選擇分組。";
         return;
       }
       if (msg) msg.textContent = "送出中…";

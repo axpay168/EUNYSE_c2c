@@ -517,9 +517,9 @@
       });
   }
 
-  function playDepositAlertSound(mode) {
+  function playDepositAlertBeep(mode) {
     var Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return;
+    if (!Ctx) return false;
     var ctx = new Ctx();
     var count = mode === "loop" ? 3 : 1;
     for (var i = 0; i < count; i += 1) {
@@ -536,6 +536,27 @@
       osc.start(start);
       osc.stop(start + 0.3);
     }
+    return true;
+  }
+
+  function playDepositAlertSound(mode) {
+    var message = "您有新的充值订单";
+    var count = mode === "loop" ? 3 : 1;
+    if ("speechSynthesis" in window && "SpeechSynthesisUtterance" in window) {
+      try {
+        window.speechSynthesis.cancel();
+        for (var i = 0; i < count; i += 1) {
+          var utterance = new SpeechSynthesisUtterance(message);
+          utterance.lang = "zh-CN";
+          utterance.rate = 1;
+          utterance.pitch = 1;
+          utterance.volume = 1;
+          window.speechSynthesis.speak(utterance);
+        }
+        return;
+      } catch (e) {}
+    }
+    playDepositAlertBeep(mode);
   }
 
   function readDepositAlertSettings() {

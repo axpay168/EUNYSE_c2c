@@ -49,7 +49,7 @@
         <div class="nc2c-products" id="nc2c-product-list">
           <LoadingInlineSpinner v-if="loading" aria-label="理財商品載入" />
           <p v-else-if="errorMessage" class="rounded-2xl bg-error/5 px-4 py-8 text-center text-sm text-error">{{ errorMessage }}</p>
-          <p v-else-if="!filteredProducts.length" class="rounded-2xl bg-surface-container-lowest/80 px-4 py-8 text-center text-sm text-on-surface-variant">目前沒有可申購的理財商品。</p>
+          <p v-else-if="!filteredProducts.length" class="rounded-2xl bg-surface-container-lowest/80 px-4 py-8 text-center text-sm text-on-surface-variant">暫無可用產品</p>
           <template v-else>
             <div
               v-for="product in filteredProducts"
