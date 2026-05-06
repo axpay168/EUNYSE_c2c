@@ -1,4 +1,4 @@
-const AVATAR_STORAGE_PREFIX = 'eurnyse.user.avatar.'
+const AVATAR_STORAGE_PREFIX = 'eurforex.user.avatar.'
 
 function svgData(svg) {
   return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg)

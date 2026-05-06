@@ -10,7 +10,7 @@ function resolveDefaultApiBase() {
 
 export function getApiBaseUrl() {
   if (typeof window !== 'undefined') {
-    const config = window.__EURNYSE_RUNTIME_CONFIG__ || {}
+    const config = window.__EURFOREX_RUNTIME_CONFIG__ || {}
     return String(config.apiBaseUrl || resolveDefaultApiBase()).replace(/\/$/, '')
   }
   return DEFAULT_API_BASE

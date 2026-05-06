@@ -1,5 +1,5 @@
 window.__ADMIN_RUNTIME_CONFIG__ = {
-  apiBaseUrl: 'https://eunyse.top',
+  apiBaseUrl: 'https://eurforex.top',
   envName: 'production',
   prototypeUi: false
 }

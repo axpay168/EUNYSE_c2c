@@ -11,7 +11,7 @@
         <div class="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-3xl md:h-40 md:w-40"></div>
         <div class="pointer-events-none absolute bottom-0 left-1/2 h-24 w-56 -translate-x-1/2 rounded-full bg-black/10 blur-2xl md:h-32 md:w-64"></div>
         <div class="relative z-10">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">EURNYSE · 一站式收益配置</p>
+          <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">EURFOREX · 一站式收益配置</p>
           <h1 class="font-headline mt-1.5 text-xl font-bold leading-tight md:text-2xl">讓閒置資金為你工作</h1>
           <div class="mt-4 grid grid-cols-3 gap-2 border-t border-white/15 pt-3 text-center md:mt-5 md:gap-3 md:pt-4">
             <div>
@@ -255,7 +255,7 @@ export default {
       document.body.setAttribute("data-nc2c-page", "financial");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
     this.fetchFinancialData();
   },
   beforeDestroy: function () {
@@ -268,9 +268,9 @@ export default {
   },
   methods: {
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     },
     fetchFinancialData: function () {

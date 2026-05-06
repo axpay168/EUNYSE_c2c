@@ -28,8 +28,8 @@ export function escapeHashForUrlRegex(hash: string): string {
 
 export function sessionInitScriptSource(): string {
   return `
-    localStorage.setItem('eurnyse_user_token', 'playwright-route-token');
-    localStorage.setItem('eurnyse_user_profile', JSON.stringify({
+    localStorage.setItem('eurforex_user_token', 'playwright-route-token');
+    localStorage.setItem('eurforex_user_profile', JSON.stringify({
       display_code: 'ENPWTEST',
       email: 'playwright@test.local'
     }));

@@ -17,6 +17,9 @@ const API_ERROR_MESSAGES = {
     AUTH_TOKEN_INVALID: '登入狀態已失效，請重新登入',
     AUTH_TOKEN_EXPIRED: '登入狀態已過期，請重新登入',
     AUTH_UNAUTHORIZED: '請先登入',
+    INVITE_CODE_REQUIRED: '請輸入邀請碼',
+    INVITATION_CODE_REQUIRED: '請輸入邀請碼',
+    INVITATION_CODE_INVALID: '邀請碼錯誤或不存在',
     AUTH_INVITATION_REQUIRED: '請輸入邀請碼',
     AUTH_INVITATION_INVALID: '邀請碼錯誤或不存在',
     AUTH_EMAIL_INVALID: 'Email 格式不正確',
@@ -41,6 +44,9 @@ const API_ERROR_MESSAGES = {
     AUTH_TOKEN_INVALID: '登录状态已失效，请重新登录',
     AUTH_TOKEN_EXPIRED: '登录状态已过期，请重新登录',
     AUTH_UNAUTHORIZED: '请先登录',
+    INVITE_CODE_REQUIRED: '请输入邀请码',
+    INVITATION_CODE_REQUIRED: '请输入邀请码',
+    INVITATION_CODE_INVALID: '邀请码错误或不存在',
     AUTH_INVITATION_REQUIRED: '请输入邀请码',
     AUTH_INVITATION_INVALID: '邀请码错误或不存在',
     AUTH_EMAIL_INVALID: 'Email 格式不正确',
@@ -65,6 +71,9 @@ const API_ERROR_MESSAGES = {
     AUTH_TOKEN_INVALID: 'Login session is invalid. Please sign in again',
     AUTH_TOKEN_EXPIRED: 'Login session expired. Please sign in again',
     AUTH_UNAUTHORIZED: 'Please sign in first',
+    INVITE_CODE_REQUIRED: 'Please enter an invitation code',
+    INVITATION_CODE_REQUIRED: 'Please enter an invitation code',
+    INVITATION_CODE_INVALID: 'Invitation code is invalid or does not exist',
     AUTH_INVITATION_REQUIRED: 'Please enter an invitation code',
     AUTH_INVITATION_INVALID: 'Invitation code is invalid or does not exist',
     AUTH_EMAIL_INVALID: 'Invalid email format',
@@ -153,10 +162,17 @@ export function login(account, password, lang = getStoredLang()) {
   return apiRequest('/api/user/login', {
     method: 'POST',
     body: { account, password, lang }
-  }).then(data => {
-    const token = data.userinfo && data.userinfo.token
-    if (token) setToken(token)
-    return me().catch(() => data.userinfo)
+  }).then(persistUserAuthSession)
+}
+
+function persistUserAuthSession(data) {
+  const userinfo = (data && data.userinfo) || {}
+  const token = userinfo.token || (data && data.token)
+  if (token) setToken(token)
+  return me().catch(() => {
+    const user = (data && (data.userInfo || data.user)) || userinfo
+    if (user) setStoredUser(user)
+    return user
   })
 }
 
@@ -169,7 +185,7 @@ export function register(username, password, invitationCode, lang = getStoredLan
       invitation_code: invitationCode,
       lang
     }
-  })
+  }).then(persistUserAuthSession)
 }
 
 export function me() {
@@ -183,6 +199,16 @@ export function updateAvatar(avatarId) {
   return apiRequest('/api/user/avatar', {
     method: 'PATCH',
     body: { avatar_id: avatarId }
+  }).then(data => {
+    if (data.user) setStoredUser(data.user)
+    return data.user
+  })
+}
+
+export function updateAvatarUrl(avatarUrl) {
+  return apiRequest('/api/user/avatar', {
+    method: 'PATCH',
+    body: { avatar_url: avatarUrl }
   }).then(data => {
     if (data.user) setStoredUser(data.user)
     return data.user
@@ -219,6 +245,7 @@ export const userApi = {
   },
   uploadFile,
   updateAvatar,
+  updateAvatarUrl,
   overview: () => apiRequest('/api/user/overview'),
   homeSnapshot: () => apiRequest('/api/user/home-snapshot'),
   listings: query => apiRequest('/api/user/listings' + (query || '')),

@@ -30,15 +30,15 @@
             <span class="text-sm font-semibold text-on-surface">收款銀行</span>
           </div>
 
-          <div id="fiat-bank-empty" class="eurnyse-empty-card eurnyse-empty-card--compact" v-show="!selectedBank">
-            <div class="eurnyse-empty-illustration" aria-hidden="true">
-              <span class="eurnyse-empty-illustration__cube eurnyse-empty-illustration__cube--one"></span>
-              <span class="eurnyse-empty-illustration__cube eurnyse-empty-illustration__cube--two"></span>
-              <span class="eurnyse-empty-illustration__cube eurnyse-empty-illustration__cube--three"></span>
-              <span class="eurnyse-empty-illustration__box"></span>
+          <div id="fiat-bank-empty" class="eurforex-empty-card eurforex-empty-card--compact" v-show="!selectedBank">
+            <div class="eurforex-empty-illustration" aria-hidden="true">
+              <span class="eurforex-empty-illustration__cube eurforex-empty-illustration__cube--one"></span>
+              <span class="eurforex-empty-illustration__cube eurforex-empty-illustration__cube--two"></span>
+              <span class="eurforex-empty-illustration__cube eurforex-empty-illustration__cube--three"></span>
+              <span class="eurforex-empty-illustration__box"></span>
             </div>
-            <div class="eurnyse-empty-actions">
-              <button type="button" id="open-bank-picker-empty" class="eurnyse-empty-btn" @click="showModal">選擇收款銀行</button>
+            <div class="eurforex-empty-actions">
+              <button type="button" id="open-bank-picker-empty" class="eurforex-empty-btn" @click="showModal">選擇收款銀行</button>
             </div>
           </div>
 
@@ -138,11 +138,11 @@
 import { userApi } from '@/utils/api'
 
 /**
- * EURNYSE - 法幣提現 (純 H5 Vue2 Options API)
+ * EURFOREX - 法幣提現 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/withdraw.html 為唯一基準逐字遷移
  * 外部腳本：../shared/marble-bg.js、../shared/back-nav.js（動態注入）
  * 原稿內聯 IIFE 遷移：
- *   STORAGE_KEY = "eurnyse-fiat-withdraw-bank-id" → sessionStorage
+ *   STORAGE_KEY = "eurforex-fiat-withdraw-bank-id" → sessionStorage
  *   BANKS 資料、選擇 modal、金額輸入 → Vue data/methods/computed
  */
 var BODY_CLASSES = [
@@ -156,7 +156,7 @@ var BODY_CLASSES = [
   "antialiased"
 ];
 
-var STORAGE_KEY = "eurnyse-fiat-withdraw-bank-id";
+var STORAGE_KEY = "eurforex-fiat-withdraw-bank-id";
 export default {
   name: "WithdrawH5",
   data: function () {
@@ -200,8 +200,8 @@ export default {
     try {
       this.selectedId = sessionStorage.getItem(STORAGE_KEY) || "";
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurnyseMarbleBgJs");
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurforexMarbleBgJs");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
     this.loadPageData();
   },
   beforeDestroy: function () {
@@ -216,9 +216,9 @@ export default {
   },
   methods: {
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     },
     formatEur: function (n) {

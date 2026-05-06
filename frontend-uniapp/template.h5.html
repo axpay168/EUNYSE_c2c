@@ -8,15 +8,15 @@
   </head>
   <body>
     <noscript>
-      <strong>EURNYSE C2C needs JavaScript enabled.</strong>
+      <strong>EURFOREX C2C needs JavaScript enabled.</strong>
     </noscript>
     <script src="<%= BASE_URL %>runtime-config.js"></script>
     <div id="app"></div>
     <!-- Chatwoot 線上客服（僅 H5；使用官方 SDK，外層只補拖拽/關閉控制） -->
     <script>
       (function (d, t) {
-        if (window.__eurnyseChatwootBootstrapped) return;
-        window.__eurnyseChatwootBootstrapped = true;
+        if (window.__eurforexChatwootBootstrapped) return;
+        window.__eurforexChatwootBootstrapped = true;
 
         var BASE_URL = "https://chat.mxscr.vip";
         var CHATWOOT_TOKEN = "nUi2ucprkAwp2g5nKEzUv7TW";
@@ -34,20 +34,20 @@
         var didDrag = false;
 
         function installChatwootStyles() {
-          if (d.getElementById("eurnyse-chatwoot-control-styles")) return;
+          if (d.getElementById("eurforex-chatwoot-control-styles")) return;
           var style = d.createElement("style");
-          style.id = "eurnyse-chatwoot-control-styles";
+          style.id = "eurforex-chatwoot-control-styles";
           style.textContent =
             "#cw-bubble-holder,.woot--bubble-holder{display:none!important}" +
-            "#eurnyse-chat-bubble{position:fixed;right:20px;bottom:88px;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#2f9cff 0%,#176ad8 100%);box-shadow:0 12px 28px rgba(23,106,216,.35),0 4px 12px rgba(15,23,42,.24);z-index:2147483600;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;display:flex;align-items:center;justify-content:center;transition:box-shadow .18s ease,transform .18s ease}" +
-            "#eurnyse-chat-bubble.eurnyse-chat-bubble--dragging{cursor:grabbing;transition:none;transform:scale(1.03)}" +
-            "#eurnyse-chat-bubble[hidden]{display:none!important}" +
-            "#eurnyse-chat-close{position:absolute;right:-2px;top:-4px;width:22px;height:22px;border:0;border-radius:999px;background:#ef4444;color:#fff;font-size:16px;font-weight:800;line-height:22px;text-align:center;box-shadow:0 4px 12px rgba(15,23,42,.25);cursor:pointer;z-index:1;padding:0;pointer-events:auto}" +
-            "#eurnyse-chat-window-close{position:fixed;width:34px;height:34px;border:0;border-radius:999px;background:#ef4444;color:#fff;font-size:24px;font-weight:800;line-height:34px;text-align:center;box-shadow:0 6px 16px rgba(15,23,42,.25);cursor:pointer;z-index:2147483601;padding:0;pointer-events:auto}" +
-            "#eurnyse-chat-window-close[hidden]{display:none!important}" +
-            "#eurnyse-chat-icon{position:relative;width:34px;height:26px;border-radius:18px;background:#fff;pointer-events:none}" +
-            "#eurnyse-chat-icon:after{content:'';position:absolute;right:5px;bottom:-5px;width:11px;height:11px;background:#fff;clip-path:polygon(0 0,100% 0,100% 100%)}" +
-            "#eurnyse-chat-icon:before{content:'';position:absolute;left:8px;top:10px;width:5px;height:5px;border-radius:50%;background:#176ad8;box-shadow:8px 0 0 #176ad8,16px 0 0 #176ad8}";
+            "#eurforex-chat-bubble{position:fixed;right:20px;bottom:88px;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#2f9cff 0%,#176ad8 100%);box-shadow:0 12px 28px rgba(23,106,216,.35),0 4px 12px rgba(15,23,42,.24);z-index:2147483600;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;display:flex;align-items:center;justify-content:center;transition:box-shadow .18s ease,transform .18s ease}" +
+            "#eurforex-chat-bubble.eurforex-chat-bubble--dragging{cursor:grabbing;transition:none;transform:scale(1.03)}" +
+            "#eurforex-chat-bubble[hidden]{display:none!important}" +
+            "#eurforex-chat-close{position:absolute;right:-2px;top:-4px;width:22px;height:22px;border:0;border-radius:999px;background:#ef4444;color:#fff;font-size:16px;font-weight:800;line-height:22px;text-align:center;box-shadow:0 4px 12px rgba(15,23,42,.25);cursor:pointer;z-index:1;padding:0;pointer-events:auto}" +
+            "#eurforex-chat-window-close{position:fixed;width:34px;height:34px;border:0;border-radius:999px;background:#ef4444;color:#fff;font-size:24px;font-weight:800;line-height:34px;text-align:center;box-shadow:0 6px 16px rgba(15,23,42,.25);cursor:pointer;z-index:2147483601;padding:0;pointer-events:auto}" +
+            "#eurforex-chat-window-close[hidden]{display:none!important}" +
+            "#eurforex-chat-icon{position:relative;width:34px;height:26px;border-radius:18px;background:#fff;pointer-events:none}" +
+            "#eurforex-chat-icon:after{content:'';position:absolute;right:5px;bottom:-5px;width:11px;height:11px;background:#fff;clip-path:polygon(0 0,100% 0,100% 100%)}" +
+            "#eurforex-chat-icon:before{content:'';position:absolute;left:8px;top:10px;width:5px;height:5px;border-radius:50%;background:#176ad8;box-shadow:8px 0 0 #176ad8,16px 0 0 #176ad8}";
           d.head.appendChild(style);
         }
 
@@ -124,21 +124,21 @@
 
         function ensureCustomBubble() {
           installChatwootStyles();
-          customBubble = d.getElementById("eurnyse-chat-bubble");
+          customBubble = d.getElementById("eurforex-chat-bubble");
           if (customBubble) {
-            closeButton = d.getElementById("eurnyse-chat-close");
+            closeButton = d.getElementById("eurforex-chat-close");
             return customBubble;
           }
 
           customBubble = d.createElement("div");
-          customBubble.id = "eurnyse-chat-bubble";
+          customBubble.id = "eurforex-chat-bubble";
           customBubble.setAttribute("role", "button");
           customBubble.setAttribute("aria-label", "開啟客服聊天");
           customBubble.setAttribute("hidden", "");
           customBubble.style.display = "none";
 
           closeButton = d.createElement("button");
-          closeButton.id = "eurnyse-chat-close";
+          closeButton.id = "eurforex-chat-close";
           closeButton.type = "button";
           closeButton.setAttribute("aria-label", "關閉客服浮窗");
           closeButton.textContent = "×";
@@ -149,11 +149,11 @@
           closeButton.addEventListener("click", function (event) {
             event.preventDefault();
             event.stopPropagation();
-            window.EurnyseHideChatBubble();
+            window.EurforexHideChatBubble();
           });
 
           var icon = d.createElement("div");
-          icon.id = "eurnyse-chat-icon";
+          icon.id = "eurforex-chat-icon";
           icon.setAttribute("aria-hidden", "true");
 
           customBubble.appendChild(closeButton);
@@ -169,10 +169,10 @@
         }
 
         function ensureChatWindowCloseButton() {
-          chatWindowCloseButton = d.getElementById("eurnyse-chat-window-close");
+          chatWindowCloseButton = d.getElementById("eurforex-chat-window-close");
           if (chatWindowCloseButton) return chatWindowCloseButton;
           chatWindowCloseButton = d.createElement("button");
-          chatWindowCloseButton.id = "eurnyse-chat-window-close";
+          chatWindowCloseButton.id = "eurforex-chat-window-close";
           chatWindowCloseButton.type = "button";
           chatWindowCloseButton.setAttribute("aria-label", "收回客服聊天窗口");
           chatWindowCloseButton.textContent = "×";
@@ -231,7 +231,7 @@
           startY = event.clientY;
           originX = rect.left;
           originY = rect.top;
-          customBubble.classList.add("eurnyse-chat-bubble--dragging");
+          customBubble.classList.add("eurforex-chat-bubble--dragging");
           if (customBubble.setPointerCapture && activePointerId !== null) {
             try {
               customBubble.setPointerCapture(activePointerId);
@@ -276,7 +276,7 @@
 
         function endPointerCapture() {
           if (!customBubble) return;
-          customBubble.classList.remove("eurnyse-chat-bubble--dragging");
+          customBubble.classList.remove("eurforex-chat-bubble--dragging");
           if (customBubble.releasePointerCapture && activePointerId !== null) {
             try {
               customBubble.releasePointerCapture(activePointerId);
@@ -352,7 +352,7 @@
               window.$chatwoot.toggle({ toggleValue: true });
               window.setTimeout(syncChatWindowCloseButton, 120);
             } catch (error) {
-              window.console && window.console.warn && window.console.warn("[EURNYSE] Chatwoot open skipped:", error);
+              window.console && window.console.warn && window.console.warn("[EURFOREX] Chatwoot open skipped:", error);
             }
           });
         }
@@ -362,22 +362,22 @@
             try {
               window.$chatwoot.toggle({ toggleValue: false });
             } catch (error) {
-              window.console && window.console.warn && window.console.warn("[EURNYSE] Chatwoot close skipped:", error);
+              window.console && window.console.warn && window.console.warn("[EURFOREX] Chatwoot close skipped:", error);
             }
             showCustomBubble();
             window.setTimeout(syncChatWindowCloseButton, 120);
           });
         }
 
-        window.EurnyseShowChatBubble = function () {
+        window.EurforexShowChatBubble = function () {
           showCustomBubble();
         };
 
-        window.EurnyseHideChatBubble = function () {
+        window.EurforexHideChatBubble = function () {
           hideCustomBubble();
         };
 
-        window.EurnyseOpenChatwoot = function () {
+        window.EurforexOpenChatwoot = function () {
           showCustomBubble();
           openChatwootWindow();
         };
@@ -386,7 +386,7 @@
           ensureCustomBubble();
           startChatWindowCloseSync();
           applyChatwootLocale();
-          if (d.querySelector('script[data-eurnyse-chatwoot-sdk="1"]')) {
+          if (d.querySelector('script[data-eurforex-chatwoot-sdk="1"]')) {
             runWhenChatwootReady(function () {});
             return;
           }
@@ -395,7 +395,7 @@
           g.src = BASE_URL + "/packs/js/sdk.js";
           g.defer = true;
           g.async = true;
-          g.setAttribute("data-eurnyse-chatwoot-sdk", "1");
+          g.setAttribute("data-eurforex-chatwoot-sdk", "1");
           s.parentNode.insertBefore(g, s);
           g.onload = function () {
             if (window.chatwootSDK && typeof window.chatwootSDK.run === "function") {

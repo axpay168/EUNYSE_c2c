@@ -1,5 +1,5 @@
 /**
- * EURNYSE 後台指揮台 — 靜態原型樣式
+ * EURFOREX 後台指揮台 — 靜態原型樣式
  * Token 對齊 docs/design/DESIGN.md
  */
 :root {
@@ -1105,7 +1105,7 @@
   border-bottom: 1px solid var(--ac-border) !important;
 }
 
-/* 對齊前台 eurnyse-empty-card：插畫 + 標題 + 說明（深色主題玻璃質感） */
+/* 對齊前台 eurforex-empty-card：插畫 + 標題 + 說明（深色主題玻璃質感） */
 .admin-empty-state {
   position: relative;
   max-width: 400px;
@@ -2012,7 +2012,7 @@
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
 }
 
-/* ========== 後台彈窗（對齊 New_C2C modal + EURNYSE token） ========== */
+/* ========== 後台彈窗（對齊 New_C2C modal + EURFOREX token） ========== */
 /* 使用者詳情內：刪除雙重確認覆蓋層（對齊 New_C2C 多步確認） */
 .admin-delete-overlay {
   position: absolute;

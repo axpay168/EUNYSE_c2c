@@ -1,5 +1,5 @@
 /**
- * EURNYSE 後台原型：獨立彈窗開關（對齊 New_C2C modal 行為：遮罩、Esc、單層聚焦）
+ * EURFOREX 後台原型：獨立彈窗開關（對齊 New_C2C modal 行為：遮罩、Esc、單層聚焦）
  */
 (function (window, document) {
   var OPEN_CLASS = "admin-modal--open";
@@ -140,7 +140,7 @@
     if (window.__ADMIN_SESSION__ && window.__ADMIN_SESSION__.getApiToken) {
       return window.__ADMIN_SESSION__.getApiToken() || "";
     }
-    return window.localStorage.getItem("eurnyse_admin_token") || "";
+    return window.localStorage.getItem("eurforex_admin_token") || "";
   }
 
   function whenAdminApiJsonRejected(response, body, retryDepth, retryFn, fallbackMessage) {
@@ -224,6 +224,7 @@
     return username || "-";
   }
 
+
   function renderUplineLabel(label) {
     var raw = String(label || "").trim();
     if (!raw || raw === "-") return '<span class="admin-muted">-</span>';
@@ -254,6 +255,14 @@
     return /^lv/i.test(text) ? text.toUpperCase() : "LV" + text;
   }
 
+  function adminGroupLabel(item) {
+    var group = item && item.admin_group ? item.admin_group : null;
+    var name = String((group && group.name) || (item && item.admin_group_name) || "").trim();
+    var code = String((group && group.code) || (item && item.admin_group_code) || "").trim();
+    if (name && code && name !== code) return name + "（" + code + "）";
+    return name || code || "—";
+  }
+
   function renderUsersTable(items, total) {
     var tbody = document.getElementById("admin-users-tbody");
     var count = document.getElementById("admin-users-count");
@@ -264,20 +273,22 @@
     if (!items.length) {
       tbody.innerHTML =
         typeof window.renderAdminTableEmptyRow === "function"
-          ? window.renderAdminTableEmptyRow(12, "目前沒有符合條件的使用者。", false)
-          : '<tr><td colspan="12" class="admin-muted">目前沒有符合條件的使用者。</td></tr>';
+          ? window.renderAdminTableEmptyRow(13, "目前沒有符合條件的使用者。", false)
+          : '<tr><td colspan="13" class="admin-muted">目前沒有符合條件的使用者。</td></tr>';
       return;
     }
     tbody.innerHTML = items.map(function (item, index) {
       var account = item.email || item.mobile || item.mobile_e164 || "-";
       var userCode = displayUserCode(item);
+      var accountTypeLabel = item.account_type === "mobile" ? "手機" : "郵箱";
       return [
         '<tr data-admin-user-id="' + escapeHtml(item.id) + '">',
         '<td><input type="checkbox" class="admin-users-cb" data-admin-user-select="' + escapeHtml(item.id) + '" aria-label="選取使用者 ' + escapeHtml(userOrdinalId(item)) + '"/></td>',
         '<td class="mono">' + escapeHtml(userOrdinalId(item)) + '</td>',
         '<td><div class="mono">' + escapeHtml(userCode) + '</div><div class="admin-cell-sub">' + escapeHtml(account) + '</div></td>',
+        '<td>' + escapeHtml(adminGroupLabel(item)) + '</td>',
         '<td>' + renderUplineLabel(item.upline_label) + '</td>',
-        '<td>' + (item.account_type === "mobile" ? "手機" : "郵箱") + '</td>',
+        '<td>' + accountTypeLabel + '</td>',
         '<td class="mono">' + escapeHtml(userLevelLabel(item)) + '</td>',
         '<td><span class="admin-badge ' + statusBadgeClass(item.status) + '">' + statusLabel(item.status) + '</span></td>',
         '<td><div class="mono">' + escapeHtml(item.invitation_code || "-") + '</div><div class="admin-cell-sub">' + invitationStatusLabel(item.invitation_status) + '</div></td>',
@@ -364,7 +375,7 @@
     if (keyword && keyword.value.trim()) query.set("keyword", keyword.value.trim());
     if (status && status.value) query.set("status", status.value);
     if (registeredFrom && registeredFrom.value) query.set("registered_from", registeredFrom.value);
-    tbody.innerHTML = '<tr><td colspan="12" class="admin-muted">正在載入真實使用者資料...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" class="admin-muted">正在載入真實使用者資料...</td></tr>';
     token = getAdminApiToken();
     return fetch(adminApiBaseUrl() + "/api/admin/users?" + query.toString(), {
       headers: { Authorization: "Bearer " + token }
@@ -393,7 +404,7 @@
       .catch(function (error) {
         if (error && error.adminSessionHandled) return;
         tbody.innerHTML =
-          '<tr><td colspan="12" class="admin-muted">' +
+          '<tr><td colspan="13" class="admin-muted">' +
           escapeHtml(error.message || "載入使用者列表失敗。") +
           "</td></tr>";
       });
@@ -591,7 +602,7 @@
         });
       });
     }
-    window.addEventListener("eurnyse-admin-api-token-ready", loadAdminUsers);
+    window.addEventListener("eurforex-admin-api-token-ready", loadAdminUsers);
     window.addEventListener("hashchange", function () {
       if ((window.location.hash || "") === "#users") loadAdminUsers();
     });

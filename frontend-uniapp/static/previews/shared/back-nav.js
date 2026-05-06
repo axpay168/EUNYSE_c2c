@@ -40,7 +40,7 @@
     return false;
   }
 
-  window.EurnyseBack = { go: go };
+  window.EurforexBack = { go: go };
 
   function isLockedPage() {
     var path = (window.location.pathname || "").toLowerCase();
@@ -54,7 +54,7 @@
   function bootElevatedTheme() {
     if (isLockedPage()) return;
     if (!document.body) return;
-    document.body.classList.add("eurnyse-elevated");
+    document.body.classList.add("eurforex-elevated");
 
     var targets = document.querySelectorAll(
       "main > section, main > div, main .glass-panel, main .glass-panel-high, main .usdt-card, main .fiat-card, main .eur-card"
@@ -63,7 +63,7 @@
 
     if (!("IntersectionObserver" in window)) {
       targets.forEach(function (el) {
-        el.classList.add("eurnyse-reveal", "is-visible");
+        el.classList.add("eurforex-reveal", "is-visible");
       });
       return;
     }
@@ -80,8 +80,8 @@
     );
 
     targets.forEach(function (el, idx) {
-      if (el.classList.contains("eurnyse-reveal")) return;
-      el.classList.add("eurnyse-reveal");
+      if (el.classList.contains("eurforex-reveal")) return;
+      el.classList.add("eurforex-reveal");
       el.style.transitionDelay = Math.min(idx * 35, 210) + "ms";
       observer.observe(el);
     });

@@ -1,4 +1,4 @@
-# EURNYSE_C2C 部署最短路徑
+# EURFOREX_C2C 部署最短路徑
 
 目前專案正式環境只支援：
 
@@ -20,7 +20,7 @@
 推薦部署目錄：
 
 ```text
-/www/wwwroot/eurnyse_c2c
+/www/wwwroot/eurforex_c2c
 ```
 
 ## 本機預設入口
@@ -47,12 +47,12 @@ API: http://127.0.0.1:8000
 
 ```bash
 cd /www/wwwroot
-git clone <你的 Git 倉庫地址> eurnyse_c2c
+git clone <你的 Git 倉庫地址> eurforex_c2c
 
-cd /www/wwwroot/eurnyse_c2c/backend-api
+cd /www/wwwroot/eurforex_c2c/backend-api
 cp .env.example .env
 
-cd /www/wwwroot/eurnyse_c2c/frontend-uniapp
+cd /www/wwwroot/eurforex_c2c/frontend-uniapp
 npm ci
 npm run build:h5
 ```
@@ -69,10 +69,10 @@ npm run build:h5
 ### 以後從 Git 更新照抄
 
 ```bash
-cd /www/wwwroot/eurnyse_c2c
+cd /www/wwwroot/eurforex_c2c
 git pull
 
-cd /www/wwwroot/eurnyse_c2c/frontend-uniapp
+cd /www/wwwroot/eurforex_c2c/frontend-uniapp
 npm ci
 npm run build:h5
 
@@ -110,8 +110,8 @@ PHP 擴展至少開啟：
 建議：
 
 ```text
-資料庫名：eurnyse_c2c
-使用者名：eurnyse_c2c
+資料庫名：eurforex_c2c
+使用者名：eurforex_c2c
 密碼：正式伺服器自行設定強密碼
 字符集：utf8mb4
 ```
@@ -126,7 +126,7 @@ PHP 擴展至少開啟：
 ## 後端配置
 
 ```bash
-cd /www/wwwroot/eurnyse_c2c/backend-api
+cd /www/wwwroot/eurforex_c2c/backend-api
 cp .env.example .env
 ```
 
@@ -137,8 +137,8 @@ cp .env.example .env
 ```dotenv
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_NAME=eurnyse_c2c
-DB_USER=eurnyse_c2c
+DB_NAME=eurforex_c2c
+DB_USER=eurforex_c2c
 DB_PASSWORD=change_me_to_real_password
 
 API_ALLOWED_ORIGINS=https://c2c.example.com,https://admin.example.com
@@ -181,13 +181,13 @@ AUTH_DEBUG_VERIFICATION_CODE=false
 編輯：
 
 ```text
-/www/wwwroot/eurnyse_c2c/frontend-uniapp/runtime-config.js
+/www/wwwroot/eurforex_c2c/frontend-uniapp/runtime-config.js
 ```
 
 如果前台與 API 不同網域，正式部署時明確指定：
 
 ```javascript
-window.__EURNYSE_RUNTIME_CONFIG__ = {
+window.__EURFOREX_RUNTIME_CONFIG__ = {
   apiBaseUrl: 'https://api.example.com',
   envName: 'production'
 }
@@ -198,7 +198,7 @@ window.__EURNYSE_RUNTIME_CONFIG__ = {
 改完後必須重新建置：
 
 ```bash
-cd /www/wwwroot/eurnyse_c2c/frontend-uniapp
+cd /www/wwwroot/eurforex_c2c/frontend-uniapp
 npm ci
 npm run build:h5
 ```
@@ -206,7 +206,7 @@ npm run build:h5
 前台最終站點目錄使用：
 
 ```text
-/www/wwwroot/eurnyse_c2c/frontend-uniapp/dist/build
+/www/wwwroot/eurforex_c2c/frontend-uniapp/dist/build
 ```
 
 正式入口通常是：
@@ -221,7 +221,7 @@ https://c2c.example.com/h5/#/pages/common/register
 編輯：
 
 ```text
-/www/wwwroot/eurnyse_c2c/admin-web/runtime-config.js
+/www/wwwroot/eurforex_c2c/admin-web/runtime-config.js
 ```
 
 如果後台與 API 不同網域，正式部署時明確指定：
@@ -242,7 +242,7 @@ API 站點：
 
 ```text
 域名：https://api.example.com
-目錄：/www/wwwroot/eurnyse_c2c/backend-api/public
+目錄：/www/wwwroot/eurforex_c2c/backend-api/public
 PHP：8.3
 ```
 
@@ -254,7 +254,7 @@ location / {
 }
 
 location ^~ /storage/uploads/ {
-    alias /www/wwwroot/eurnyse_c2c/backend-api/storage/uploads/;
+    alias /www/wwwroot/eurforex_c2c/backend-api/storage/uploads/;
     access_log off;
     expires 7d;
     try_files $uri =404;
@@ -273,7 +273,7 @@ location ~* /storage/uploads/.*\.(php|phtml|phar|cgi|pl|py|sh|bash)$ {
 
 ```text
 域名：https://c2c.example.com
-目錄：/www/wwwroot/eurnyse_c2c/frontend-uniapp/dist/build
+目錄：/www/wwwroot/eurforex_c2c/frontend-uniapp/dist/build
 類型：靜態站
 ```
 
@@ -281,7 +281,7 @@ location ~* /storage/uploads/.*\.(php|phtml|phar|cgi|pl|py|sh|bash)$ {
 
 ```text
 域名：https://admin.example.com
-目錄：/www/wwwroot/eurnyse_c2c/admin-web
+目錄：/www/wwwroot/eurforex_c2c/admin-web
 類型：靜態站
 ```
 
@@ -290,9 +290,9 @@ location ~* /storage/uploads/.*\.(php|phtml|phar|cgi|pl|py|sh|bash)$ {
 ## 後端權限
 
 ```bash
-chown -R www:www /www/wwwroot/eurnyse_c2c/backend-api/storage
-find /www/wwwroot/eurnyse_c2c/backend-api/storage -type d -exec chmod 750 {} \;
-find /www/wwwroot/eurnyse_c2c/backend-api/storage -type f -exec chmod 640 {} \;
+chown -R www:www /www/wwwroot/eurforex_c2c/backend-api/storage
+find /www/wwwroot/eurforex_c2c/backend-api/storage -type d -exec chmod 750 {} \;
+find /www/wwwroot/eurforex_c2c/backend-api/storage -type f -exec chmod 640 {} \;
 ```
 
 只公開 `/storage/uploads/`，不要把整個 `storage/` 目錄映射給外網。

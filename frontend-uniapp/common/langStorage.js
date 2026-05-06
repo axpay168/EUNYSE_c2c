@@ -1,4 +1,4 @@
-import { DEFAULT_LANG, detectBrowserLang, langMeta, normalizeLang } from './langs'
+import { DEFAULT_LANG, langMeta, normalizeLang } from './langs'
 
 export const LANG_STORAGE_KEY = 'lang'
 export const LANG_MANUAL_STORAGE_KEY = 'lang:manual'
@@ -25,7 +25,7 @@ export function hasStoredLang() {
 export function getStoredLang() {
   const stored = readStoredLangValue()
   if (stored) return normalizeLang(stored)
-  return detectBrowserLang() || DEFAULT_LANG
+  return DEFAULT_LANG
 }
 
 export function syncDocumentLang(lang) {

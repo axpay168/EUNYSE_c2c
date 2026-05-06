@@ -1,5 +1,5 @@
 /**
- * EURNYSE 區號選擇彈窗（結構對齊 New_C2C pages/common/area.vue：頂欄標題、搜尋欄、列表列）
+ * EURFOREX 區號選擇彈窗（結構對齊 New_C2C pages/common/area.vue：頂欄標題、搜尋欄、列表列）
  * 依賴：localStorage.lang、localStorage.selected_area_code
  */
 (function (window) {
@@ -69,17 +69,17 @@
 
   function itemName(item) {
     const lang = getLang();
-    return lang === "eng" ? item.nameEn : item.nameZh;
+    return lang === "zh-Hant" || lang === "zh-Hans" ? item.nameZh : item.nameEn;
   }
 
   let rootEl = null;
 
   function injectStyles() {
-    if (document.getElementById("eurnyse-area-picker-styles")) return;
+    if (document.getElementById("eurforex-area-picker-styles")) return;
     const style = document.createElement("style");
-    style.id = "eurnyse-area-picker-styles";
+    style.id = "eurforex-area-picker-styles";
     style.textContent = `
-      .eurnyse-area-picker {
+      .eurforex-area-picker {
         position: fixed;
         inset: 0;
         z-index: 1000;
@@ -89,16 +89,16 @@
         padding: 0;
         box-sizing: border-box;
       }
-      .eurnyse-area-picker.is-open {
+      .eurforex-area-picker.is-open {
         display: flex;
       }
-      .eurnyse-area-picker__backdrop {
+      .eurforex-area-picker__backdrop {
         position: absolute;
         inset: 0;
         background: rgba(19, 35, 51, 0.42);
         backdrop-filter: blur(4px);
       }
-      .eurnyse-area-picker__sheet {
+      .eurforex-area-picker__sheet {
         position: relative;
         width: 100%;
         max-width: 430px;
@@ -111,13 +111,13 @@
         flex-direction: column;
         color: #21384c;
         font-family: "Manrope", "PingFang TC", "Microsoft JhengHei", sans-serif;
-        animation: eurnyse-area-picker-in 0.28s ease-out;
+        animation: eurforex-area-picker-in 0.28s ease-out;
       }
-      @keyframes eurnyse-area-picker-in {
+      @keyframes eurforex-area-picker-in {
         from { transform: translateY(12px); opacity: 0.92; }
         to { transform: translateY(0); opacity: 1; }
       }
-      .eurnyse-area-picker__top {
+      .eurforex-area-picker__top {
         display: flex;
         align-items: center;
         gap: 10px;
@@ -125,7 +125,7 @@
         border-bottom: 1px solid rgba(82, 116, 164, 0.12);
         flex-shrink: 0;
       }
-      .eurnyse-area-picker__back {
+      .eurforex-area-picker__back {
         flex: 0 0 40px;
         width: 40px;
         height: 40px;
@@ -138,10 +138,10 @@
         cursor: pointer;
         padding: 0;
       }
-      .eurnyse-area-picker__back:hover {
+      .eurforex-area-picker__back:hover {
         background: rgba(82, 116, 164, 0.14);
       }
-      .eurnyse-area-picker__title {
+      .eurforex-area-picker__title {
         flex: 1;
         text-align: center;
         font-size: 18px;
@@ -151,7 +151,7 @@
         padding-right: 40px;
         box-sizing: border-box;
       }
-      .eurnyse-area-picker__card {
+      .eurforex-area-picker__card {
         margin: 12px 14px 0;
         padding: 12px 14px 14px;
         border-radius: 18px;
@@ -160,13 +160,13 @@
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.72);
         flex-shrink: 0;
       }
-      .eurnyse-area-picker__label {
+      .eurforex-area-picker__label {
         font-size: 12px;
         font-weight: 700;
         color: #52687d;
         margin-bottom: 8px;
       }
-      .eurnyse-area-picker__input {
+      .eurforex-area-picker__input {
         width: 100%;
         height: 46px;
         border-radius: 14px;
@@ -178,17 +178,17 @@
         outline: none;
         box-sizing: border-box;
       }
-      .eurnyse-area-picker__input:focus {
+      .eurforex-area-picker__input:focus {
         border-color: rgba(82, 116, 164, 0.5);
         box-shadow: 0 0 0 2px rgba(82, 116, 164, 0.12);
       }
-      .eurnyse-area-picker__list {
+      .eurforex-area-picker__list {
         flex: 1;
         overflow: auto;
         padding: 8px 14px 20px;
         -webkit-overflow-scrolling: touch;
       }
-      .eurnyse-area-picker__row {
+      .eurforex-area-picker__row {
         width: 100%;
         display: flex;
         align-items: center;
@@ -203,13 +203,13 @@
         color: inherit;
         font: inherit;
       }
-      .eurnyse-area-picker__row:last-child {
+      .eurforex-area-picker__row:last-child {
         border-bottom: 0;
       }
-      .eurnyse-area-picker__row:active {
+      .eurforex-area-picker__row:active {
         opacity: 0.88;
       }
-      .eurnyse-area-picker__name {
+      .eurforex-area-picker__name {
         min-width: 0;
         flex: 1;
         font-size: 14px;
@@ -217,7 +217,7 @@
         color: #12283b;
         line-height: 1.4;
       }
-      .eurnyse-area-picker__code {
+      .eurforex-area-picker__code {
         flex: 0 0 auto;
         font-size: 14px;
         font-weight: 800;
@@ -225,11 +225,11 @@
         color: #35557f;
       }
       @media (min-width: 480px) {
-        .eurnyse-area-picker {
+        .eurforex-area-picker {
           align-items: center;
           padding: 16px;
         }
-        .eurnyse-area-picker__sheet {
+        .eurforex-area-picker__sheet {
           border-radius: 22px;
           max-height: min(88vh, 720px);
         }
@@ -242,21 +242,21 @@
     injectStyles();
     if (rootEl) return;
     rootEl = document.createElement("div");
-    rootEl.id = "eurnyse-area-picker";
-    rootEl.className = "eurnyse-area-picker";
+    rootEl.id = "eurforex-area-picker";
+    rootEl.className = "eurforex-area-picker";
     rootEl.setAttribute("aria-hidden", "true");
     rootEl.innerHTML = `
-      <div class="eurnyse-area-picker__backdrop" data-eap-close="1"></div>
-      <div class="eurnyse-area-picker__sheet" role="dialog" aria-modal="true" aria-labelledby="eap-title-el">
-        <div class="eurnyse-area-picker__top">
-          <button type="button" class="eurnyse-area-picker__back" id="eap-back" aria-label="返回">‹</button>
-          <div class="eurnyse-area-picker__title" id="eap-title-el"></div>
+      <div class="eurforex-area-picker__backdrop" data-eap-close="1"></div>
+      <div class="eurforex-area-picker__sheet" role="dialog" aria-modal="true" aria-labelledby="eap-title-el">
+        <div class="eurforex-area-picker__top">
+          <button type="button" class="eurforex-area-picker__back" id="eap-back" aria-label="返回">‹</button>
+          <div class="eurforex-area-picker__title" id="eap-title-el"></div>
         </div>
-        <div class="eurnyse-area-picker__card">
-          <div class="eurnyse-area-picker__label" id="eap-search-label"></div>
-          <input type="text" class="eurnyse-area-picker__input" id="eap-search" autocomplete="off" />
+        <div class="eurforex-area-picker__card">
+          <div class="eurforex-area-picker__label" id="eap-search-label"></div>
+          <input type="text" class="eurforex-area-picker__input" id="eap-search" autocomplete="off" />
         </div>
-        <div class="eurnyse-area-picker__list" id="eap-list"></div>
+        <div class="eurforex-area-picker__list" id="eap-list"></div>
       </div>
     `;
     document.body.appendChild(rootEl);
@@ -293,13 +293,13 @@
       .map(function (item) {
         const name = itemName(item);
         return (
-          '<button type="button" class="eurnyse-area-picker__row" data-code="' +
+          '<button type="button" class="eurforex-area-picker__row" data-code="' +
           item.code.replace(/"/g, "&quot;") +
           '">' +
-          '<span class="eurnyse-area-picker__name">' +
+          '<span class="eurforex-area-picker__name">' +
           name +
           "</span>" +
-          '<span class="eurnyse-area-picker__code">' +
+          '<span class="eurforex-area-picker__code">' +
           item.code +
           "</span>" +
           "</button>"
@@ -307,12 +307,12 @@
       })
       .join("");
 
-    list.querySelectorAll(".eurnyse-area-picker__row").forEach(function (btn) {
+    list.querySelectorAll(".eurforex-area-picker__row").forEach(function (btn) {
       btn.addEventListener("click", function () {
         const code = btn.getAttribute("data-code");
         localStorage.setItem("selected_area_code", code);
-        if (typeof window.__eurnyseAreaPickerOnSelect === "function") {
-          window.__eurnyseAreaPickerOnSelect(code);
+        if (typeof window.__eurforexAreaPickerOnSelect === "function") {
+          window.__eurforexAreaPickerOnSelect(code);
         }
         close();
       });
@@ -337,5 +337,5 @@
     rootEl.setAttribute("aria-hidden", "true");
   }
 
-  window.EurnyseAreaPicker = { open: open, close: close };
+  window.EurforexAreaPicker = { open: open, close: close };
 })(window);

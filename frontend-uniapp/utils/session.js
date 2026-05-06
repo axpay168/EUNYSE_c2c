@@ -1,36 +1,109 @@
-const TOKEN_KEY = 'eurnyse_user_token'
-const USER_KEY = 'eurnyse_user_profile'
+const TOKEN_KEY = 'eurforex_user_token'
+const USER_KEY = 'eurforex_user_profile'
+
+function getUniStorage() {
+  try {
+    if (typeof uni !== 'undefined') return uni
+  } catch (error) {}
+  try {
+    if (typeof window !== 'undefined' && window.uni) return window.uni
+  } catch (error) {}
+  return null
+}
+
+function getLocalStorage() {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) return window.localStorage
+  } catch (error) {}
+  try {
+    if (typeof localStorage !== 'undefined') return localStorage
+  } catch (error) {}
+  return null
+}
+
+function readUniStorage(key) {
+  try {
+    const api = getUniStorage()
+    if (api && typeof api.getStorageSync === 'function') {
+      const value = api.getStorageSync(key)
+      return value == null ? '' : String(value)
+    }
+  } catch (error) {}
+  return ''
+}
+
+function writeUniStorage(key, value) {
+  try {
+    const api = getUniStorage()
+    if (!api) return
+    if (value) {
+      if (typeof api.setStorageSync === 'function') api.setStorageSync(key, value)
+      return
+    }
+    if (typeof api.removeStorageSync === 'function') api.removeStorageSync(key)
+  } catch (error) {}
+}
+
+function readLocalStorage(key) {
+  try {
+    const storage = getLocalStorage()
+    return storage ? (storage.getItem(key) || '') : ''
+  } catch (error) {
+    return ''
+  }
+}
+
+function writeLocalStorage(key, value) {
+  try {
+    const storage = getLocalStorage()
+    if (!storage) return
+    if (value) {
+      storage.setItem(key, value)
+      return
+    }
+    storage.removeItem(key)
+  } catch (error) {}
+}
+
+function readStorage(key) {
+  const uniValue = readUniStorage(key)
+  if (uniValue) {
+    writeLocalStorage(key, uniValue)
+    return uniValue
+  }
+
+  const localValue = readLocalStorage(key)
+  if (localValue) writeUniStorage(key, localValue)
+  return localValue
+}
+
+function writeStorage(key, value) {
+  writeUniStorage(key, value)
+  writeLocalStorage(key, value)
+}
 
 export function getToken() {
-  if (typeof localStorage === 'undefined') return ''
-  return localStorage.getItem(TOKEN_KEY) || ''
+  return readStorage(TOKEN_KEY)
 }
 
 export function setToken(token) {
-  if (typeof localStorage === 'undefined') return
-  if (token) {
-    localStorage.setItem(TOKEN_KEY, token)
-    return
-  }
-  localStorage.removeItem(TOKEN_KEY)
+  writeStorage(TOKEN_KEY, token || '')
 }
 
 export function getStoredUser() {
-  if (typeof localStorage === 'undefined') return null
   try {
-    return JSON.parse(localStorage.getItem(USER_KEY) || 'null')
+    return JSON.parse(readStorage(USER_KEY) || 'null')
   } catch (error) {
     return null
   }
 }
 
 export function setStoredUser(user) {
-  if (typeof localStorage === 'undefined') return
   if (user) {
-    localStorage.setItem(USER_KEY, JSON.stringify(user))
+    writeStorage(USER_KEY, JSON.stringify(user))
     return
   }
-  localStorage.removeItem(USER_KEY)
+  writeStorage(USER_KEY, '')
 }
 
 export function clearSession() {

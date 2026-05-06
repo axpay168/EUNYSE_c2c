@@ -1,5 +1,5 @@
 <template>
-  <div class="eurnyse-language-selector" :class="{ 'eurnyse-language-selector--row': variant === 'menu-row' }">
+  <div class="eurforex-language-selector" :class="{ 'eurforex-language-selector--row': variant === 'menu-row' }">
     <button
       v-if="variant !== 'menu-row'"
       type="button"
@@ -39,17 +39,17 @@
     <div
       v-if="open"
       ref="overlay"
-      class="eurnyse-language-overlay"
-      :class="{ 'eurnyse-language-overlay--profile': variant === 'menu-row' }"
+      class="eurforex-language-overlay"
+      :class="{ 'eurforex-language-overlay--profile': variant === 'menu-row' }"
       @click.self="open = false"
     >
       <div
-        class="eurnyse-language-sheet"
-        :class="{ 'eurnyse-language-sheet--profile': variant === 'menu-row' }"
+        class="eurforex-language-sheet"
+        :class="{ 'eurforex-language-sheet--profile': variant === 'menu-row' }"
         role="dialog"
         aria-modal="true"
       >
-        <div class="eurnyse-language-sheet__head">
+        <div class="eurforex-language-sheet__head">
           <div>
             <p>{{ $t('ui.currentLanguage') }}</p>
             <h3>{{ $t('ui.selectLanguage') }}</h3>
@@ -206,7 +206,7 @@ export default {
   font-weight: 700;
 }
 
-.eurnyse-language-overlay {
+.eurforex-language-overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
@@ -217,7 +217,7 @@ export default {
   backdrop-filter: blur(8px);
 }
 
-.eurnyse-language-overlay.eurnyse-language-overlay--profile {
+.eurforex-language-overlay.eurforex-language-overlay--profile {
   position: fixed !important;
   inset: 0 !important;
   align-items: center;
@@ -227,7 +227,7 @@ export default {
   backdrop-filter: blur(5px);
 }
 
-.eurnyse-language-sheet {
+.eurforex-language-sheet {
   width: min(100%, 520px);
   max-height: min(78vh, 720px);
   overflow: hidden;
@@ -237,7 +237,7 @@ export default {
   border: 1px solid rgba(47, 115, 205, 0.12);
 }
 
-.eurnyse-language-sheet--profile {
+.eurforex-language-sheet--profile {
   width: min(100%, 430px);
   max-height: min(86vh, 680px);
   border-radius: 30px;
@@ -247,7 +247,7 @@ export default {
   box-shadow: 0 24px 80px rgba(25, 50, 79, 0.24);
 }
 
-.eurnyse-language-sheet__head {
+.eurforex-language-sheet__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -255,7 +255,7 @@ export default {
   padding: 1.25rem 1.25rem 0.75rem;
 }
 
-.eurnyse-language-sheet__head p {
+.eurforex-language-sheet__head p {
   margin: 0;
   color: #6c7f96;
   font-size: 0.78rem;
@@ -263,13 +263,13 @@ export default {
   text-transform: uppercase;
 }
 
-.eurnyse-language-sheet__head h3 {
+.eurforex-language-sheet__head h3 {
   margin: 0.2rem 0 0;
   color: #19324f;
   font-size: 1.25rem;
 }
 
-.eurnyse-language-sheet__head button {
+.eurforex-language-sheet__head button {
   width: 2.4rem;
   height: 2.4rem;
   border: 0;
@@ -456,11 +456,11 @@ export default {
 }
 
 @media (min-width: 720px) {
-  .eurnyse-language-overlay {
+  .eurforex-language-overlay {
     align-items: center;
   }
 
-  .eurnyse-language-sheet {
+  .eurforex-language-sheet {
     border-radius: 28px;
   }
 }

@@ -57,7 +57,7 @@ function mergeH5IndexFromTemplate() {
   if (!fs.existsSync(templatePath) || !fs.existsSync(indexPath)) return
   let tpl = fs.readFileSync(templatePath, 'utf8')
   tpl = tpl.replace(/<%= BASE_URL %>/g, '/h5/')
-  tpl = tpl.replace(/<%= htmlWebpackPlugin\.options\.title %>/g, 'EURNYSE C2C')
+  tpl = tpl.replace(/<%= htmlWebpackPlugin\.options\.title %>/g, 'EURFOREX C2C')
   const built = fs.readFileSync(indexPath, 'utf8')
   const seenSrc = new Set()
   const scripts = []
@@ -100,6 +100,6 @@ fs.mkdirSync(distBuildDir, { recursive: true })
 fs.copyFileSync(path.join(projectRoot, 'runtime-config.js'), path.join(distDir, 'runtime-config.js'))
 fs.writeFileSync(
   path.join(distBuildDir, 'index.html'),
-  '<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=h5/"><title>Redirect</title></head><body><p>Opening H5 app... <a href="h5/">continue</a></p></body></html>\n',
+  '<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=h5/"><title>Redirect</title><style>html,body{margin:0;background:#eefaff}</style></head><body></body></html>\n',
   'utf8'
 )

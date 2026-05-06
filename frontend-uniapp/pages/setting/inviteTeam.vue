@@ -47,7 +47,7 @@ import { userApi } from '@/utils/api'
 import QRCode from 'qrcode'
 
 /**
- * EURNYSE - 邀請團隊 (純 H5 Vue2 Options API)
+ * EURFOREX - 邀請團隊 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/invite-team.html 為唯一基準逐字遷移
  * 原稿內聯 IIFE：clipboard 複製 + fallback execCommand，完整遷移至 methods
  */
@@ -101,8 +101,8 @@ export default {
       document.body.setAttribute("data-nc2c-page", "invite-team");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurnyseMarbleBgJs");
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurforexMarbleBgJs");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
     this.loadInviteTeam();
   },
   beforeDestroy: function () {
@@ -147,9 +147,9 @@ export default {
       });
     },
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     },
     copyFromEl: function (id) {

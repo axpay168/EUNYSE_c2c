@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer'
 
-const baseUrl = process.env.EURNYSE_SMOKE_BASE_URL || 'http://127.0.0.1:8097/h5/index.html'
+const baseUrl = process.env.EURFOREX_SMOKE_BASE_URL || 'http://127.0.0.1:8097/h5/index.html'
 
 const routes = [
   '#/pages/index/index',
@@ -27,19 +27,19 @@ try {
       const page = await browser.newPage()
       await page.setViewport({ ...viewport, deviceScaleFactor: 2 })
       await page.evaluateOnNewDocument(() => {
-        localStorage.setItem('eurnyse_user_token', 'smoke-test-token')
+        localStorage.setItem('eurforex_user_token', 'smoke-test-token')
         localStorage.setItem(
-          'eurnyse_user_profile',
+          'eurforex_user_profile',
           JSON.stringify({ display_code: 'ENSMOKE', email: 'smoke@test.local' })
         )
       })
 
       await page.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle0', timeout: 90000 })
-      await page.waitForSelector('.eurnyse-shell-tabbar', { timeout: 30000 })
+      await page.waitForSelector('.eurforex-shell-tabbar', { timeout: 30000 })
 
       const result = await page.evaluate(() => {
-      const nav = document.querySelector('.eurnyse-shell-tabbar')
-      const oldNavs = document.querySelectorAll('nav.eurnyse-home-bottom-nav:not(.eurnyse-shell-tabbar)')
+      const nav = document.querySelector('.eurforex-shell-tabbar')
+      const oldNavs = document.querySelectorAll('nav.eurforex-home-bottom-nav:not(.eurforex-shell-tabbar)')
       if (!nav) return { ok: false, reason: 'missing nav' }
       const rect = nav.getBoundingClientRect()
       const style = window.getComputedStyle(nav)

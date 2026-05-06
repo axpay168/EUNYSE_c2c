@@ -1,4 +1,4 @@
-@import url("./eurnyse-appbar-tokens.css");
+@import url("./eurforex-appbar-tokens.css");
 /* 與各頁 preview-entry 重複匯入可接受：確保首屏與切頁時 Material Symbols 的 @font-face 已在主包，避免短暫出現 "home" 等字串 */
 @import url("../static/previews/shared/local-fonts-local.css");
 
@@ -433,9 +433,9 @@ textarea:active {
  * 主導航底欄（四 Tab：主頁／大廳／訂單／個人中心等）
  * 自 App.vue 引入，不倚賴 body.nc2c-page（該 class 多數頁在 mounted 才寫入），
  * 否則首幀或快取下會出現底欄「不見」。
- * 凡底欄 <nav> 必含 class eurnyse-home-bottom-nav；勿僅寫 fixed bottom-0。
+ * 凡底欄 <nav> 必含 class eurforex-home-bottom-nav；勿僅寫 fixed bottom-0。
  * -------------------------------------------------------------------------- */
-nav.eurnyse-home-bottom-nav {
+nav.eurforex-home-bottom-nav {
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
@@ -447,7 +447,14 @@ nav.eurnyse-home-bottom-nav {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
+.eurforex-nav-brand-icon {
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
 /* RootShell 全域底欄已接管主導航；頁面內殘留的舊底欄一律不顯示，避免雙底欄或漏樣式。 */
-.eurnyse-shell nav.eurnyse-home-bottom-nav:not(.eurnyse-shell-tabbar) {
+.eurforex-shell nav.eurforex-home-bottom-nav:not(.eurforex-shell-tabbar) {
   display: none !important;
 }

@@ -107,12 +107,12 @@
     </main>
 
     <nav
-      class="eurnyse-home-bottom-nav fixed bottom-0 left-0 z-50 w-full rounded-t-2xl bg-white/78 font-body shadow-[0px_-8px_24px_rgba(33,79,131,0.08)] backdrop-blur-lg"
+      class="eurforex-home-bottom-nav fixed bottom-0 left-0 z-50 w-full rounded-t-2xl bg-white/78 font-body shadow-[0px_-8px_24px_rgba(33,79,131,0.08)] backdrop-blur-lg"
       aria-label="主頁底部導航"
     >
       <div class="flex h-20 items-center justify-around px-4 pb-safe">
         <a class="flex flex-col items-center justify-center px-3 py-1 text-on-surface-variant transition-all hover:text-primary-dim" href="#/pages/index/index">
-          <span class="material-symbols-outlined">home</span>
+          <img class="eurforex-nav-brand-icon" :src="homeNavLogoSrc" alt="EURFOREX 主頁" />
           <span class="mt-0.5 text-[11px] font-semibold tracking-wide">主頁</span>
         </a>
         <a class="flex flex-col items-center justify-center px-3 py-1 text-on-surface-variant transition-all hover:text-primary-dim" href="#/pages/index/hall">
@@ -134,9 +134,10 @@
 
 <script>
 import { userApi } from "@/utils/api";
+import { brandMarkLogo } from "@/assets/images";
 
 /**
- * EURNYSE - 更多功能 (純 H5 Vue2 Options API)
+ * EURFOREX - 更多功能 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/more.html 為唯一基準逐字遷移
  * 外部腳本：../shared/marble-bg.js、../shared/back-nav.js（動態注入）
  */
@@ -154,6 +155,7 @@ export default {
   name: "MoreH5",
   data: function () {
     return {
+      homeNavLogoSrc: brandMarkLogo,
       merchantEnabled: false,
       createMerchantModalOpen: false
     };
@@ -166,8 +168,8 @@ export default {
       document.body.setAttribute("data-nc2c-page", "more");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurnyseMarbleBgJs");
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurforexMarbleBgJs");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
     this.loadOverview();
   },
   beforeDestroy: function () {
@@ -181,9 +183,9 @@ export default {
   },
   methods: {
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     },
     loadOverview: function () {

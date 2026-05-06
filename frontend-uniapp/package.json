@@ -1,8 +1,8 @@
 {
-  "name": "eurnyse-c2c-frontend-uniapp",
+  "name": "eurforex-c2c-frontend-uniapp",
   "version": "0.1.0",
   "private": true,
-  "description": "EURNYSE C2C H5 pages built with uni-app Vue 2",
+  "description": "EURFOREX C2C H5 pages built with uni-app Vue 2",
   "scripts": {
     "postinstall": "patch-package",
     "audit:prod": "node scripts/audit-production.mjs",

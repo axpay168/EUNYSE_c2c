@@ -26,7 +26,7 @@
 
 <script>
 /**
- * EURNYSE - 新手指南 (純 H5 Vue2 Options API)
+ * EURFOREX - 新手指南 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/tutorial.html 為唯一基準逐字遷移
  * 外部腳本：../shared/marble-bg.js、../shared/back-nav.js（動態注入）
  */
@@ -51,8 +51,8 @@ export default {
       document.body.setAttribute("data-nc2c-page", "tutorial");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurnyseMarbleBgJs");
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurforexMarbleBgJs");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
   },
   beforeDestroy: function () {
     try {
@@ -65,9 +65,9 @@ export default {
   },
   methods: {
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     }
   }

@@ -3,14 +3,14 @@
  * 輕量 API 煙霧：連線 + 種子帳號登入 + /api/user/me。
  * 用法：在 backend-api 目錄啟動 PHP 後執行
  *   node scripts/smoke-api.mjs
- * 環境變數：API_BASE（預設 http://127.0.0.1:8000）、EURNYSE_SMOKE_ACCOUNT、EURNYSE_SMOKE_PASSWORD
+ * 環境變數：API_BASE（預設 http://127.0.0.1:8000）、EURFOREX_SMOKE_ACCOUNT、EURFOREX_SMOKE_PASSWORD
  */
 const base = (process.env.API_BASE || 'http://127.0.0.1:8000').replace(/\/$/, '')
-const account = process.env.EURNYSE_SMOKE_ACCOUNT || ''
-const password = process.env.EURNYSE_SMOKE_PASSWORD || ''
+const account = process.env.EURFOREX_SMOKE_ACCOUNT || ''
+const password = process.env.EURFOREX_SMOKE_PASSWORD || ''
 
 if (!account || !password) {
-  console.error('[smoke-api] EURNYSE_SMOKE_ACCOUNT and EURNYSE_SMOKE_PASSWORD are required.')
+  console.error('[smoke-api] EURFOREX_SMOKE_ACCOUNT and EURFOREX_SMOKE_PASSWORD are required.')
   process.exit(2)
 }
 

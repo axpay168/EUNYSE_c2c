@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>EURNYSE 後台</title>
+<title>EURFOREX 後台</title>
 <link rel="stylesheet" href="./shared/admin-console.css"/>
 <link rel="stylesheet" href="./shared/admin-glass-theme.css"/>
 </head>
@@ -37,7 +37,7 @@
 <div class="admin-sidebar__brand">
 <div class="admin-sidebar__brand-mark" aria-hidden="true">E</div>
 <div>
-<div class="admin-sidebar__title">EURNYSE</div>
+<div class="admin-sidebar__title">EURFOREX</div>
 <div class="admin-sidebar__subtitle">營運總控</div>
 </div>
 </div>
@@ -195,9 +195,9 @@
 <button type="button" class="admin-btn admin-btn--warning" id="admin-users-batch-risk">批次標記風控</button>
 </div>
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="admin-users-select-all" title="全選本頁使用者" aria-label="全選使用者"/></th><th>ID</th><th>UID / 帳號</th><th>上級</th><th>類型</th><th>等級</th><th>狀態</th><th>邀請碼</th><th>邀請人數</th><th>USDT 餘額</th><th>歐元餘額</th><th>操作</th></tr></thead>
+<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="admin-users-select-all" title="全選本頁使用者" aria-label="全選使用者"/></th><th>ID</th><th>UID / 帳號</th><th>組別</th><th>上級</th><th>類型</th><th>等級</th><th>狀態</th><th>邀請碼</th><th>邀請人數</th><th>USDT 餘額</th><th>歐元餘額</th><th>操作</th></tr></thead>
 <tbody id="admin-users-tbody">
-<tr><td colspan="12" class="admin-muted">正在載入真實使用者資料…</td></tr>
+<tr><td colspan="13" class="admin-muted">正在載入真實使用者資料…</td></tr>
 </tbody></table></div>
 <div class="admin-table-pager" id="admin-users-pager">
 <div class="admin-table-pager__meta" id="admin-users-page-info">第 1 頁 · 每頁 25 筆</div>
@@ -224,15 +224,15 @@
 <div class="admin-card admin-card--flush">
 <div class="admin-toolbar"><button type="button" class="admin-btn admin-btn--accent" data-admin-modal-open="admin-modal-wallet-adjust" data-admin-wallet-adjust-toolbar="1">調整餘額</button><button type="button" class="admin-btn admin-btn--info" id="view-wallets-ledger" title="先填用戶 ID，或點列表列內「流水」">查看調帳紀錄</button></div>
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th>ID</th><th>UID / 帳號</th><th>可用USDT</th><th>凍結USDT</th><th>可用EUR</th><th>凍結EUR</th><th>其他</th><th>更新時間</th><th>操作</th></tr></thead>
+<thead><tr><th>ID</th><th>UID / 帳號</th><th>組別</th><th>可用USDT</th><th>凍結USDT</th><th>可用EUR</th><th>凍結EUR</th><th>其他</th><th>更新時間</th><th>操作</th></tr></thead>
 <tbody id="view-wallets-tbody">
-<tr><td colspan="9" class="admin-muted">進入本頁或按「載入」以取得成員錢包彙總；填 ID 可查單一用戶明細。</td></tr>
+<tr><td colspan="10" class="admin-muted">進入本頁或按「載入」以取得成員錢包彙總；填 ID 可查單一用戶明細。</td></tr>
 </tbody></table></div>
 </div>
 <p class="admin-footnote">API 參考：列表彙總 <code>GET /api/admin/users</code>（ID 留空）；單用戶明細 <code>GET /api/admin/users/:id/wallets</code></p>
 </section>
 
-<!-- tiers：New_C2C 單用戶等級 + EURNYSE 全站等級模板（只增不減） -->
+<!-- tiers：New_C2C 單用戶等級 + EURFOREX 全站等級模板（只增不減） -->
 <section id="view-tiers" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-tiers">
 <div class="admin-page-head"><h1 id="head-tiers">等級與限額</h1><p>單用戶等級資料與全站等級模板；單筆 / 日累計限額、保證金與升降級規則。</p></div>
 <div class="admin-submodule-bar" role="group" aria-label="等級與限額子模組">
@@ -254,8 +254,8 @@
 </div>
 <div id="view-tier-user-result" class="admin-table-wrap" style="border-top:1px solid var(--ac-border)">
 <table class="admin-table">
-<thead><tr><th>ID</th><th>UID / 帳號</th><th>等級</th><th>信用分</th><th>日交易上限</th><th>最低賣出</th><th>保證金</th><th>保證金比例</th><th>風控狀態</th><th>操作</th></tr></thead>
-<tbody><tr><td colspan="10" class="admin-muted">載入中…</td></tr></tbody>
+<thead><tr><th>ID</th><th>UID / 帳號</th><th>等級</th><th>組別</th><th>信用分</th><th>日交易上限</th><th>最低賣出</th><th>保證金</th><th>保證金比例</th><th>風控狀態</th><th>操作</th></tr></thead>
+<tbody><tr><td colspan="11" class="admin-muted">載入中…</td></tr></tbody>
 </table>
 </div>
 </div>
@@ -268,9 +268,9 @@
 </div>
 <div class="admin-card admin-card--flush">
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th>顯示名稱</th><th>等級</th><th>日交易上限</th><th>最低賣出</th><th>商家權限</th><th>保證金</th><th>操作</th></tr></thead>
+<thead><tr><th>顯示名稱</th><th>等級</th><th>組別</th><th>日交易上限</th><th>最低賣出</th><th>商家權限</th><th>保證金</th><th>操作</th></tr></thead>
 <tbody id="view-tiers-templates-tbody">
-<tr><td colspan="7" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="8" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 </div>
 </div>
@@ -280,7 +280,7 @@
 <section id="view-deposits" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-deposits">
 <div class="admin-page-head"><h1 id="head-deposits">充值審核</h1><p>法幣 / 鏈上充值憑證審核、駁回與補件。待審核列可操作通過／駁回；勾選多筆後可用上方批次按鈕。</p></div>
 <div class="admin-filters">
-<div class="admin-field"><label>關鍵字</label><input id="view-dp-keyword" class="admin-input" placeholder="用戶名／參考號／資產"/></div>
+<div class="admin-field"><label>關鍵字</label><input id="view-dp-keyword" class="admin-input" placeholder="訂單編號／用戶名／參考號／資產"/></div>
 <div class="admin-field"><label>用戶</label><input id="view-dp-user" class="admin-input mono" placeholder="用戶 ID／郵箱／手機"/></div>
 <div class="admin-field"><label>狀態</label><select id="view-dp-status" class="admin-select"><option value="">全部狀態</option><option value="pending">待審核</option><option value="approved">已通過</option><option value="rejected">已駁回</option><option value="cancelled">已取消</option></select></div>
 <span data-admin-filter-actions="reset#view-dp-reset|query#view-dp-query|refresh#view-dp-refresh"></span>
@@ -303,9 +303,9 @@
 </div>
 </div>
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="view-dp-select-all" title="本頁待審列全選" aria-label="全選待審"/></th><th>ID</th><th>用戶</th><th>金額</th><th>資產</th><th>網路</th><th>狀態</th><th>操作</th></tr></thead>
+<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="view-dp-select-all" title="本頁待審列全選" aria-label="全選待審"/></th><th title="編號僅供快速查詢用">編號</th><th>訂單編號</th><th>用戶</th><th>組別</th><th>金額</th><th>資產</th><th>網路</th><th>狀態</th><th>操作</th></tr></thead>
 <tbody id="view-deposits-tbody">
-<tr><td colspan="8" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="10" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 </div>
 </section>
@@ -329,9 +329,9 @@
 </div>
 <div class="admin-card admin-card--flush">
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th>序列</th><th>用戶</th><th>TRC</th><th>ETH</th><th>BEP</th><th>操作</th></tr></thead>
+<thead><tr><th>序列</th><th>用戶</th><th>組別</th><th>TRC</th><th>ETH</th><th>BEP</th><th>操作</th></tr></thead>
 <tbody id="view-deposit-addresses-tbody">
-<tr><td colspan="6" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="7" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 </div>
 </section>
@@ -340,7 +340,7 @@
 <section id="view-withdrawals" class="admin-view" aria-hidden="true" role="region" aria-labelledby="head-wd">
 <div class="admin-page-head"><h1 id="head-wd">提現審核</h1><p>法幣 / 鏈上提現放款、風控攔截與人工覆核。</p></div>
 <div class="admin-filters">
-<div class="admin-field"><label>關鍵字</label><input id="view-wd-keyword" class="admin-input" placeholder="搜索用户名 / 地址 / 资产"/></div>
+<div class="admin-field"><label>關鍵字</label><input id="view-wd-keyword" class="admin-input" placeholder="訂單編號 / 用戶名 / 地址 / 資產"/></div>
 <div class="admin-field"><label>用戶</label><input id="view-wd-user" class="admin-input mono" placeholder="用户 ID / 邮箱 / 手机"/></div>
 <div class="admin-field"><label>渠道</label><select id="view-wd-channel" class="admin-select"><option value="">全部渠道</option><option value="bank">銀行卡</option><option value="usdt">鏈上 USDT</option><option value="pix">PIX</option></select></div>
 <div class="admin-field"><label>資產</label><select id="view-wd-asset" class="admin-select"><option value="">全部分類</option><option value="USDT">USDT</option><option value="USD">美元</option><option value="EUR">歐元</option></select></div>
@@ -356,9 +356,9 @@
 </div>
 </div>
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="view-wd-select-all" title="本頁可勾選之待審列全選" aria-label="全選待審"/></th><th>ID</th><th>用戶</th><th>金額</th><th>資產</th><th>渠道</th><th>備註</th><th>狀態</th><th>操作</th></tr></thead>
+<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="view-wd-select-all" title="本頁可勾選之待審列全選" aria-label="全選待審"/></th><th title="編號僅供快速查詢用">編號</th><th>訂單編號</th><th>用戶</th><th>組別</th><th>金額</th><th>資產</th><th>渠道</th><th>備註</th><th>狀態</th><th>操作</th></tr></thead>
 <tbody id="view-withdrawals-tbody">
-<tr><td colspan="9" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="11" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 </div>
 </section>
@@ -406,9 +406,9 @@
 </div>
 <div class="admin-card admin-card--flush">
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th>編號</th><th>訂單號</th><th>方向</th><th>交易信息</th><th>買家帳戶</th><th>賣家帳戶</th><th>狀態</th><th>操作</th></tr></thead>
+<thead><tr><th>編號</th><th>訂單號</th><th>組別</th><th>方向</th><th>交易信息</th><th>買家帳戶</th><th>賣家帳戶</th><th>狀態</th><th>操作</th></tr></thead>
 <tbody id="view-orders-tbody">
-<tr><td colspan="8" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="9" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 </div>
 </section>
@@ -425,9 +425,9 @@
 </div>
 <div class="admin-card admin-card--flush">
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th>ID</th><th>產品</th><th>收益</th><th>期限</th><th>申購限制</th><th>預設返還</th><th>狀態</th><th>操作</th></tr></thead>
+<thead><tr><th>ID</th><th>產品</th><th>組別</th><th>收益</th><th>期限</th><th>申購限制</th><th>預設返還</th><th>狀態</th><th>操作</th></tr></thead>
 <tbody id="view-financial-products-tbody">
-<tr><td colspan="8" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="9" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 </div>
 </section>
@@ -444,9 +444,9 @@
 </div>
 <div class="admin-card admin-card--flush">
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th>ID</th><th>用戶</th><th>產品</th><th>金額</th><th>返還模式</th><th>狀態</th><th>操作</th></tr></thead>
+<thead><tr><th>ID</th><th>用戶</th><th>組別</th><th>產品</th><th>金額</th><th>返還模式</th><th>狀態</th><th>操作</th></tr></thead>
 <tbody id="view-financial-orders-tbody">
-<tr><td colspan="7" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="8" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 </div>
 </section>
@@ -485,9 +485,9 @@
 </div>
 </div>
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="view-listings-select-all" title="本頁全選" aria-label="全選本頁掛單"/></th><th>ID</th><th>商戶</th><th>方向</th><th>價格</th><th>限額範圍（USDT）</th><th>庫存</th><th>狀態</th><th>操作</th></tr></thead>
+<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="view-listings-select-all" title="本頁全選" aria-label="全選本頁掛單"/></th><th>ID</th><th>商戶</th><th>組別</th><th>方向</th><th>價格</th><th>限額範圍（USDT）</th><th>庫存</th><th>狀態</th><th>操作</th></tr></thead>
 <tbody id="view-listings-tbody">
-<tr><td colspan="9" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="10" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 </div>
 </section>
@@ -506,9 +506,9 @@
 </div>
 <div class="admin-card admin-card--flush">
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th>ID</th><th>標題</th><th>名稱</th><th>金額</th><th>排序</th><th>狀態</th><th>操作</th></tr></thead>
+<thead><tr><th>ID</th><th>標題</th><th>組別</th><th>名稱</th><th>金額</th><th>排序</th><th>狀態</th><th>操作</th></tr></thead>
 <tbody id="view-trade-feed-tbody">
-<tr><td colspan="7" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="8" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 </div>
 </section>
@@ -585,9 +585,9 @@
 <button type="button" class="admin-btn admin-btn--danger" id="view-kyc-batch-reject">批量駁回</button>
 </div>
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="view-kyc-select-all" title="本頁待審列全選" aria-label="全選待審 KYC"/></th><th>序號</th><th>用戶 ID / 帳號</th><th>姓名</th><th>證件號</th><th>操作</th></tr></thead>
+<thead><tr><th scope="col" style="width:44px"><input type="checkbox" id="view-kyc-select-all" title="本頁待審列全選" aria-label="全選待審 KYC"/></th><th>序號</th><th>用戶 ID / 帳號</th><th>組別</th><th>姓名</th><th>證件號</th><th>操作</th></tr></thead>
 <tbody id="view-kyc-tbody">
-<tr><td colspan="6" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="7" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 </div>
 </section>
@@ -603,9 +603,9 @@
 </div>
 <div class="admin-card admin-card--flush">
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th>序號</th><th>用戶 ID / 帳號</th><th>地址</th><th>銀行</th><th>操作</th></tr></thead>
+<thead><tr><th>序號</th><th>用戶 ID / 帳號</th><th>組別</th><th>地址</th><th>銀行</th><th>操作</th></tr></thead>
 <tbody id="view-payout-methods-tbody">
-<tr><td colspan="5" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="6" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 </div>
 </section>
@@ -690,9 +690,9 @@
 </div>
 <div class="admin-card admin-card--flush">
 <div class="admin-table-wrap"><table class="admin-table">
-<thead><tr><th>ID</th><th>帳號</th><th>名稱備註</th><th>組別</th><th>專屬邀請碼</th><th>角色模板</th><th>狀態</th><th>底層權限</th><th>模組權限</th><th>創建時間</th><th>操作</th></tr></thead>
+<thead><tr><th>ID</th><th>帳號</th><th>名稱備註</th><th>組別</th><th>專屬邀請碼</th><th>角色模板</th><th>狀態</th><th>IP 白名單</th><th>底層權限</th><th>模組權限</th><th>創建時間</th><th>操作</th></tr></thead>
 <tbody id="view-admin-users-tbody">
-<tr><td colspan="11" class="admin-muted">載入中…</td></tr>
+<tr><td colspan="12" class="admin-muted">載入中…</td></tr>
 </tbody></table></div>
 <div class="admin-toolbar">
 <button type="button" class="admin-btn admin-btn--ghost" id="view-admin-users-prev" disabled>上一頁</button>
@@ -720,7 +720,7 @@
 </section>
 
 </main>
-<!-- EURNYSE 後台彈窗骨架：對齊 New_C2C admin-web 各 *Modal；繁中標籤；提示文案不少於舊版 -->
+<!-- EURFOREX 後台彈窗骨架：對齊 New_C2C admin-web 各 *Modal；繁中標籤；提示文案不少於舊版 -->
 <div id="admin-modals-root" aria-live="polite">
 <div class="admin-modal" id="admin-modal-admin-settings" role="dialog" aria-modal="true" aria-labelledby="amt-settings-title" hidden data-admin-modal>
 <div class="admin-modal__backdrop" data-admin-modal-close tabindex="-1"></div>
@@ -1277,10 +1277,15 @@
 <fieldset class="admin-scope-group" id="view-admin-edit-scope-group">
 <legend>管理員可見範圍</legend>
 <div class="admin-modal__grid2">
-<label class="admin-modal__field"><span class="admin-modal__label">組別名稱</span><input class="admin-input" id="view-admin-edit-group-name" maxlength="191"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">組別名稱</span><input class="admin-input" id="view-admin-edit-group-name" maxlength="191" readonly title="組別名稱由組別設定帶入，不可在管理員資料中修改"/></label>
 <label class="admin-modal__field"><span class="admin-modal__label">組別代碼</span><input class="admin-input mono" id="view-admin-edit-group-code" maxlength="64"/></label>
 <label class="admin-modal__field admin-modal__field--full admin-scope-toggle"><span class="admin-modal__label"><input type="checkbox" id="view-admin-edit-group-global"/> 可查看全組會員/會員數據</span><span class="admin-modal__hint">未勾選時只看自己與下級鏈路；不能看同級或其他組。</span></label>
 </div>
+</fieldset>
+<fieldset class="admin-scope-group" id="view-admin-edit-ip-allowlist-group">
+<legend>登入 IP 白名單</legend>
+<label class="admin-modal__field admin-modal__field--full admin-scope-toggle"><span class="admin-modal__label"><input type="checkbox" id="view-admin-edit-ip-allowlist-enabled"/> 啟用此管理員登入 IP 白名單</span><span class="admin-modal__hint">未勾選時不限制；勾選後可填 IP 或 CIDR，每行一個，也可暫時留空。</span></label>
+<label class="admin-modal__field admin-modal__field--full"><span class="admin-modal__label">允許 IP / CIDR</span><textarea class="admin-input mono" id="view-admin-edit-ip-allowlist" rows="4" placeholder="例：1.2.3.4&#10;2001:db8::/32"></textarea></label>
 </fieldset>
 <p class="admin-modal__message-slot" id="view-admin-edit-msg" role="status"></p>
 <div class="admin-modal__form-actions">
@@ -1414,7 +1419,7 @@
 <h2 class="admin-modal__title" id="amt-tier-title">等級限額</h2>
 <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-admin-modal-close>關閉</button>
 </div>
-<p class="admin-modal__callout">更新等級資料：等級、組別代碼、積分、商戶權限、認證、賣單次數、最小賣出金額、保證金、風控狀態、違規提示與原因；對齊 <code>tierAdjustModal</code> 全表單。</p>
+<p class="admin-modal__callout">更新等級資料：等級、組別代碼、信用分、商戶權限、認證、賣單次數、最小賣出金額、保證金、風控狀態、違規提示與原因；對齊 <code>tierAdjustModal</code> 全表單。</p>
 <form class="admin-modal__form" id="view-tier-user-edit-form">
 <input type="hidden" id="view-tier-user-edit-id" value=""/>
 <div class="admin-modal__scroll-body admin-modal__scroll-body--h52">
@@ -1745,7 +1750,7 @@
 <label class="admin-modal__field"><span class="admin-modal__label">顯示名稱</span><input class="admin-input" id="view-tt-create-display" type="text" required placeholder="例：VIP 商戶"/></label>
 <label class="admin-modal__field"><span class="admin-modal__label">等級（1–3）</span><input class="admin-input mono" id="view-tt-create-level" type="number" min="1" max="3" step="1" value="1" required/></label>
 <label class="admin-modal__field"><span class="admin-modal__label">組別代碼</span><input class="admin-input mono" id="view-tt-create-group" type="text" placeholder="預設隨等級：basic / vip / vip_plus"/></label>
-<label class="admin-modal__field"><span class="admin-modal__label">積分</span><input class="admin-input mono" id="view-tt-create-score" type="number" step="1" value="0"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">信用分</span><input class="admin-input mono" id="view-tt-create-score" type="number" step="1" value="0"/></label>
 <label class="admin-modal__field"><span class="admin-modal__label">日交易上限</span><input class="admin-input mono" id="view-tt-create-daily" type="number" step="1" min="0" placeholder="留空由系統依等級帶入（LV1=1 / LV2=2 / LV3=不限）"/></label>
 <label class="admin-modal__field"><span class="admin-modal__label">商戶權限</span><select class="admin-select" id="view-tt-create-merchant"><option value="false">否</option><option value="true">是</option></select></label>
 <label class="admin-modal__field"><span class="admin-modal__label">需實名</span><select class="admin-select" id="view-tt-create-verified"><option value="false">否</option><option value="true">是</option></select></label>
@@ -1784,7 +1789,7 @@
 <label class="admin-modal__field"><span class="admin-modal__label">顯示名稱</span><input class="admin-input" id="view-tt-detail-display" type="text" required/></label>
 <label class="admin-modal__field"><span class="admin-modal__label">等級（1–3）</span><input class="admin-input mono" id="view-tt-detail-level" type="number" min="1" max="3" step="1" required/></label>
 <label class="admin-modal__field"><span class="admin-modal__label">組別代碼</span><input class="admin-input mono" id="view-tt-detail-group" type="text" placeholder="預設隨等級：basic / vip / vip_plus"/></label>
-<label class="admin-modal__field"><span class="admin-modal__label">積分</span><input class="admin-input mono" id="view-tt-detail-score" type="number" step="1"/></label>
+<label class="admin-modal__field"><span class="admin-modal__label">信用分</span><input class="admin-input mono" id="view-tt-detail-score" type="number" step="1"/></label>
 <label class="admin-modal__field"><span class="admin-modal__label">日交易上限</span><input class="admin-input mono" id="view-tt-detail-daily" type="number" step="1" min="0" placeholder="留空由系統依等級帶入（LV1=1 / LV2=2 / LV3=不限）"/></label>
 <label class="admin-modal__field"><span class="admin-modal__label">商戶權限</span><select class="admin-select" id="view-tt-detail-merchant"><option value="false">否</option><option value="true">是</option></select></label>
 <label class="admin-modal__field"><span class="admin-modal__label">需實名</span><select class="admin-select" id="view-tt-detail-verified"><option value="false">否</option><option value="true">是</option></select></label>
@@ -1882,12 +1887,12 @@
 </div>
 
 <!-- 後台 API 位址：預設由 runtime-config.js 依「與本頁同源」自動帶入；僅在 API 與靜態頁不同網域時才需改該檔的 apiBaseUrl。 -->
-<script src="./runtime-config.js"></script>
-<script src="./shared/admin-console.js"></script>
-<script src="./shared/admin-api-fetch.js"></script>
-<script src="./shared/admin-modals.js"></script>
-<script src="./shared/admin-view-loaders.js"></script>
-<script src="./shared/admin-api-client.js"></script>
+<script src="./runtime-config.js?v=20260505-2353"></script>
+<script src="./shared/admin-console.js?v=20260506-0018"></script>
+<script src="./shared/admin-api-fetch.js?v=20260506-0018"></script>
+<script src="./shared/admin-modals.js?v=20260506-0018"></script>
+<script src="./shared/admin-view-loaders.js?v=20260506-0146"></script>
+<script src="./shared/admin-api-client.js?v=20260506-0018"></script>
 <script>
 (function () {
   var el = document.getElementById("admin-clock");

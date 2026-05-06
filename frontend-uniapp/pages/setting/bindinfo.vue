@@ -62,7 +62,7 @@
 import { userApi } from '@/utils/api'
 
 /**
- * EURNYSE - 銀行綁定 (純 H5 Vue2 Options API)
+ * EURFOREX - 銀行綁定 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/bank-binding.html 為唯一基準逐字遷移
  * 外部腳本：../shared/marble-bg.js、../shared/back-nav.js（動態注入）
  * 原稿 IIFE（開關彈窗 + ESC 關閉 + 提交表單追加 bank-card）→ 全部遷移為 methods + v-for
@@ -100,8 +100,8 @@ export default {
       document.body.setAttribute("data-nc2c-page", "bank-binding");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurnyseMarbleBgJs");
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurforexMarbleBgJs");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
 
     this.__escHandler = this.handleEscKey.bind(this);
     document.addEventListener("keydown", this.__escHandler);
@@ -120,9 +120,9 @@ export default {
   },
   methods: {
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     },
     openModal: function () {

@@ -16,7 +16,7 @@
       return window.__ADMIN_SESSION__.getApiToken() || "";
     }
     try {
-      return window.localStorage.getItem("eurnyse_admin_token") || "";
+      return window.localStorage.getItem("eurforex_admin_token") || "";
     } catch (e) {
       return "";
     }

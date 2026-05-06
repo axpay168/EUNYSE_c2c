@@ -3,6 +3,8 @@
  * 依賴：admin-api-fetch.js、admin-console.js、admin-modals.js（users）
  */
 (function (window, document) {
+  var tierUserListCache = {};
+
   function api() {
     return window.__ADMIN_API_FETCH__;
   }
@@ -52,19 +54,17 @@
 
   function renderAdminUserSummaryCell(user, fallbackId) {
     var code = adminUserDisplayCode(user, fallbackId);
-    var group = user && user.admin_group ? user.admin_group : null;
-    var groupCode = String((group && group.code) || (user && user.admin_group_code) || "").trim();
-    var groupName = String((group && group.name) || (user && user.admin_group_name) || "").trim();
-    var groupLabel = groupName && groupCode && groupName !== groupCode ? groupName + "（" + groupCode + "）" : groupName || groupCode;
     return (
       '<td><div class="mono">' +
       esc(code) +
       '</div><div class="admin-cell-sub">' +
       esc(adminUserAccountText(user, code)) +
-      "</div>" +
-      (currentAdminIsRoot() && groupLabel ? '<div class="admin-cell-sub">組別：' + esc(groupLabel) + "</div>" : "") +
-      "</td>"
+      "</div></td>"
     );
+  }
+
+  function renderAdminGroupCell(item) {
+    return "<td>" + esc(adminGroupLabelZh(item && item.admin_group ? item.admin_group : item)) + "</td>";
   }
 
   function adminUserFromPrefixedFields(row, prefix) {
@@ -660,7 +660,8 @@
       .filter(Boolean)
       .join(" · ");
     var rows = [
-      ["申請單號", String(req.id != null ? req.id : "—")],
+      ["訂單編號", String(req.order_no || "—")],
+      ["編號", String(req.id != null ? req.id : "—")],
       ["用戶 ID", String(uid)],
       ["用戶名", req.username != null ? String(req.username) : "—"],
       ["聯絡方式", contact || "—"],
@@ -2765,6 +2766,7 @@
       esc(String(userIdLabel)) +
       "</td>" +
       userCell +
+      renderAdminGroupCell(user) +
       '<td class="mono">' +
       esc(usdtCells.a) +
       '</td><td class="mono">' +
@@ -2971,7 +2973,7 @@
     var assetF = assetEl && assetEl.value ? String(assetEl.value).trim() : "";
     var kwEl = document.getElementById("view-wallets-keyword");
     var keyword = kwEl && kwEl.value.trim() ? kwEl.value.trim() : "";
-    setTbodyLoading("view-wallets-tbody", 9);
+    setTbodyLoading("view-wallets-tbody", 10);
 
     if (!uid) {
       var qs = new URLSearchParams();
@@ -2987,7 +2989,7 @@
           if (!tb) return;
           if (!items.length) {
             tb.innerHTML =
-              '<tr><td colspan="9" class="admin-muted">目前沒有成員，或關鍵字篩選結果為空。</td></tr>';
+              '<tr><td colspan="10" class="admin-muted">目前沒有成員，或關鍵字篩選結果為空。</td></tr>';
             adminPagerRender("view-wallets-tbody", (data && data.pagination) || { page: pager.page, page_size: pager.pageSize, total: 0 }, loadViewWallets);
             return;
           }
@@ -3002,7 +3004,7 @@
         })
         .catch(function (e) {
           if (e && e.adminSessionHandled) return;
-          setTbodyError("view-wallets-tbody", e.message, 9);
+          setTbodyError("view-wallets-tbody", e.message, 10);
         });
     }
 
@@ -3032,7 +3034,7 @@
       })
       .catch(function (e) {
         if (e && e.adminSessionHandled) return;
-        setTbodyError("view-wallets-tbody", e.message, 9);
+        setTbodyError("view-wallets-tbody", e.message, 10);
       });
   }
 
@@ -3044,7 +3046,7 @@
   function renderTierUserTableHeader() {
     return (
       '<thead><tr>' +
-      "<th>ID</th><th>UID / 帳號</th><th>等級</th><th>信用分</th><th>日交易上限</th><th>最低賣出</th><th>保證金</th><th>保證金比例</th><th>風控狀態</th><th>操作</th>" +
+      "<th>ID</th><th>UID / 帳號</th><th>等級</th><th>組別</th><th>信用分</th><th>日交易上限</th><th>最低賣出</th><th>保證金</th><th>保證金比例</th><th>風控狀態</th><th>操作</th>" +
       "</tr></thead>"
     );
   }
@@ -3059,6 +3061,7 @@
   function renderTierUserTableRow(user, profile) {
     var code = adminUserDisplayCode(user, user && user.id);
     var daily = profile.daily_trade_limit == null ? "—" : profile.daily_trade_limit + " 筆";
+    cacheTierUserListItem(user, profile);
     return (
       '<tr data-admin-tier-user-id="' +
       esc(user && user.id) +
@@ -3069,6 +3072,8 @@
       renderAdminUserSummaryCell(user, user && user.id) +
       '<td class="mono">' +
       esc(tierLevelLabel(profile.level)) +
+      '</td><td class="mono">' +
+      esc(profile.group_code || "basic") +
       '</td><td class="mono">' +
       esc(profile.score != null ? profile.score : "30") +
       '</td><td class="mono">' +
@@ -3098,6 +3103,20 @@
     return '<table class="admin-table">' + renderTierUserTableHeader() + "<tbody>" + rows.join("") + "</tbody></table>";
   }
 
+  function cacheTierUserListItem(user, profile) {
+    var id = user && user.id != null ? String(user.id) : "";
+    if (!id) return;
+    var cached = Object.assign({}, user || {});
+    cached.tier_profile = Object.assign({}, profile || tierProfileForUser(user));
+    tierUserListCache[id] = cached;
+  }
+
+  function tierUserListFallback(userId) {
+    var id = String(userId || "").trim();
+    if (id && tierUserListCache[id]) return tierUserListCache[id];
+    return { id: userId };
+  }
+
   function tierProfileForUser(user) {
     if (user && user.tier_profile) return user.tier_profile;
     if (user && user.tier) return user.tier;
@@ -3118,7 +3137,7 @@
     if (!root) return Promise.resolve();
     var input = document.getElementById("view-tier-user-keyword");
     var keyword = input && input.value.trim() ? input.value.trim() : "";
-    root.innerHTML = '<table class="admin-table"><tbody><tr><td colspan="10" class="admin-muted">載入中…</td></tr></tbody></table>';
+    root.innerHTML = '<table class="admin-table"><tbody><tr><td colspan="11" class="admin-muted">載入中…</td></tr></tbody></table>';
 
     var q = new URLSearchParams();
     q.set("page", "1");
@@ -3130,7 +3149,7 @@
       .then(function (data) {
         var users = (data && data.items) || [];
         if (!users.length) {
-          root.innerHTML = '<table class="admin-table"><tbody><tr><td colspan="10" class="admin-muted">查無用戶，請確認 ID / UID / Email / 手機是否正確。</td></tr></tbody></table>';
+          root.innerHTML = '<table class="admin-table"><tbody><tr><td colspan="11" class="admin-muted">查無用戶，請確認 ID / UID / Email / 手機是否正確。</td></tr></tbody></table>';
           return null;
         }
         var jobs = users.map(function (user) {
@@ -3151,7 +3170,7 @@
       })
       .catch(function (e) {
         if (e && e.adminSessionHandled) return;
-        root.innerHTML = '<table class="admin-table"><tbody><tr><td colspan="10" class="admin-muted">' + esc(e.message || "載入用戶等級失敗") + "</td></tr></tbody></table>";
+        root.innerHTML = '<table class="admin-table"><tbody><tr><td colspan="11" class="admin-muted">' + esc(e.message || "載入用戶等級失敗") + "</td></tr></tbody></table>";
       });
   }
 
@@ -3164,9 +3183,20 @@
     if (!api()) return;
     var msg = document.getElementById("view-tier-user-edit-msg");
     if (msg) msg.textContent = "載入中…";
+    var fallbackUser = tierUserListFallback(userId);
     Promise.all([
-      api().requestJson("/api/admin/users/" + encodeURIComponent(userId), { fallbackMessage: "載入用戶資料失敗" }),
-      api().requestJson("/api/admin/users/" + encodeURIComponent(userId) + "/tier-profile", { fallbackMessage: "載入用戶等級失敗" })
+      api()
+        .requestJson("/api/admin/users/" + encodeURIComponent(userId), { fallbackMessage: "載入用戶資料失敗" })
+        .catch(function (e) {
+          if (e && e.adminSessionHandled) throw e;
+          return { user: fallbackUser };
+        }),
+      api()
+        .requestJson("/api/admin/users/" + encodeURIComponent(userId) + "/tier-profile", { fallbackMessage: "載入用戶等級失敗" })
+        .catch(function (e) {
+          if (e && e.adminSessionHandled) throw e;
+          return { tier_profile: tierProfileForUser(fallbackUser) };
+        })
     ])
       .then(function (packs) {
         var user = packs[0] && packs[0].user ? packs[0].user : { id: userId };
@@ -3295,7 +3325,7 @@
           var items = (data && data.items) || [];
           if (ttKeyword) {
             items = items.filter(function (it) {
-              return [it.template_code, it.display_name, it.level != null ? "LV" + it.level : "", it.level]
+              return [it.template_code, it.display_name, it.group_code, it.level != null ? "LV" + it.level : "", it.level]
                 .join(" ")
                 .toLowerCase()
                 .indexOf(ttKeyword) !== -1;
@@ -3304,7 +3334,7 @@
           var tb = document.getElementById("view-tiers-templates-tbody");
           if (!tb) return;
           if (!items.length) {
-            tb.innerHTML = '<tr><td colspan="7" class="admin-muted">尚無等級模板或篩選結果為空。</td></tr>';
+            tb.innerHTML = '<tr><td colspan="8" class="admin-muted">尚無等級模板或篩選結果為空。</td></tr>';
             return;
           }
           tb.innerHTML = items
@@ -3316,6 +3346,8 @@
                 esc(it.display_name || it.template_code || "—") +
                 '</td><td class="mono">' +
                 esc(lv) +
+                '</td><td class="mono">' +
+                esc(it.group_code || "—") +
                 '</td><td class="mono">' +
                 esc(lim) +
                 '</td><td class="mono">' +
@@ -3340,7 +3372,7 @@
         })
         .catch(function (e) {
           if (e && e.adminSessionHandled) return;
-          setTbodyError("view-tiers-templates-tbody", e.message || "載入失敗", 7);
+          setTbodyError("view-tiers-templates-tbody", e.message || "載入失敗", 8);
         })
     ]);
   }
@@ -3654,11 +3686,13 @@
     return loadItems(
       buildAdminDepositsListPath(),
       "view-deposits-tbody",
-      8,
+      10,
       function (it) {
         var st = String(it.status != null ? it.status : "").trim().toLowerCase();
         var pending = st === "pending";
         var userCell = renderAdminUserSummaryCell(it, it.user_id);
+        var orderNo = String(it.order_no || "—");
+        var orderNoShort = orderNo.length > 18 ? orderNo.slice(0, 5) + "...." + orderNo.slice(-10) : orderNo;
         var cb = pending
           ? '<td><input type="checkbox" class="view-dp-cb" data-dp-id="' +
             esc(it.id) +
@@ -3672,7 +3706,13 @@
           "<td class=\"mono\">" +
           esc(it.id) +
           "</td>" +
+          '<td class="mono" title="' +
+          esc(orderNo) +
+          '">' +
+          esc(orderNoShort) +
+          "</td>" +
           userCell +
+          renderAdminGroupCell(it) +
           '<td class="mono">' +
           esc(it.amount) +
           "</td><td>" +
@@ -3725,7 +3765,7 @@
     if (!api()) return Promise.resolve();
     var pager = adminPagerGet("view-deposit-addresses-tbody");
     var requestPath = adminPagerRequestPath("view-deposit-addresses-tbody", buildAdminDepositAddressesPath());
-    setTbodyLoading("view-deposit-addresses-tbody", 6);
+    setTbodyLoading("view-deposit-addresses-tbody", 7);
     return api()
       .requestJson(requestPath, { fallbackMessage: "載入充值地址失敗" })
       .then(function (data) {
@@ -3739,7 +3779,7 @@
         if (!tb) return;
         if (!items.length) {
           tb.innerHTML =
-            tableEmptyRow(6, "尚無用戶資料", "請調整搜尋條件或稍後重新查詢。");
+            tableEmptyRow(7, "尚無用戶資料", "請調整搜尋條件或稍後重新查詢。");
           adminPagerRender("view-deposit-addresses-tbody", (data && data.pagination) || { page: pager.page, page_size: pager.pageSize, total: 0 }, loadViewDepositAddresses);
           return;
         }
@@ -3765,6 +3805,7 @@
               esc(seq) +
               "</td>" +
               userCell +
+              renderAdminGroupCell(it) +
               '<td class="mono">' +
               depositAddressListCellHtml(depositChainEffective(it.trc20_address, ADMIN_DEFAULT_DEPOSIT_TRC20), "TRC20") +
               "</td><td class=\"mono\">" +
@@ -3788,7 +3829,7 @@
       })
       .catch(function (e) {
         if (e && e.adminSessionHandled) return;
-        setTbodyError("view-deposit-addresses-tbody", e.message, 6);
+        setTbodyError("view-deposit-addresses-tbody", e.message, 7);
       });
   }
 
@@ -4064,11 +4105,13 @@
     return loadItems(
       buildAdminWithdrawalsListPath(),
       "view-withdrawals-tbody",
-      9,
+      11,
       function (it) {
         var st = String(it.status != null ? it.status : "").trim().toLowerCase();
         var pending = st === "pending";
         var userCell = renderAdminUserSummaryCell(it, it.user_id);
+        var orderNo = String(it.order_no || "—");
+        var orderNoShort = orderNo.length > 18 ? orderNo.slice(0, 5) + "...." + orderNo.slice(-10) : orderNo;
         var cb = pending
           ? '<td><input type="checkbox" class="view-wd-cb" data-wd-id="' +
             esc(it.id) +
@@ -4082,7 +4125,13 @@
           "<td class=\"mono\">" +
           esc(it.id) +
           "</td>" +
+          '<td class="mono" title="' +
+          esc(orderNo) +
+          '">' +
+          esc(orderNoShort) +
+          "</td>" +
           userCell +
+          renderAdminGroupCell(it) +
           '<td class="mono">' +
           esc(it.amount) +
           "</td><td>" +
@@ -4149,7 +4198,8 @@
         setModalBodyHtml(
           "view-withdrawal-detail-body",
           detailRows([
-            { label: "申請單號", value: it.id, mono: true },
+            { label: "訂單編號", value: it.order_no || "—", mono: true },
+            { label: "編號", value: it.id, mono: true },
             { label: "用戶", value: renderAdminUserSummaryHtml(user, it.user_id), raw: true },
             { label: "金額", value: formatListingPriceDisplay(it.amount) + " " + assetLabelZh(it.asset_code), mono: true },
             { label: "路徑", value: payoutChannelLabelZh(it.channel_type) },
@@ -4409,7 +4459,7 @@
     return loadItems(
       buildAdminOrdersListPath(),
       "view-orders-tbody",
-      8,
+      9,
       function (it) {
         var buyerCell =
           renderAdminUserSummaryHtml(adminUserFromPrefixedFields(it, "buyer_"), it.buyer_user_id) +
@@ -4424,10 +4474,11 @@
         return (
           "<tr><td class=\"mono\">" +
           esc(it.id) +
-          (currentAdminIsRoot() && it.admin_group ? '<div class="admin-cell-sub">組別：' + esc(adminGroupLabelZh(it.admin_group)) + "</div>" : "") +
           "</td><td class=\"mono\">" +
           esc(it.order_no) +
-          "</td><td>" +
+          "</td>" +
+          renderAdminGroupCell(it) +
+          "<td>" +
           orderSideBadge(it.side) +
           "</td><td class=\"mono\">" +
           esc(formatListingPriceDisplay(it.amount)) +
@@ -4660,14 +4711,16 @@
     return loadItems(
       buildFinancialProductsPath(),
       "view-financial-products-tbody",
-      8,
+      9,
       function (it) {
         return (
           "<tr><td class=\"mono\">" +
           esc(it.product_code || it.id) +
           "</td><td>" +
           esc(it.display_name || "—") +
-          '</td><td class="mono">' +
+          "</td>" +
+          renderAdminGroupCell(it) +
+          '<td class="mono">' +
           esc(it.apr_rate || "—") +
           "</td><td>" +
           esc(it.term_days != null ? it.term_days + " 天" : "—") +
@@ -4711,14 +4764,16 @@
     return loadItems(
       buildFinancialOrdersPath(),
       "view-financial-orders-tbody",
-      7,
+      8,
       function (it) {
         return (
           "<tr><td class=\"mono\">" +
           esc(it.id) +
           "</td><td>" +
           esc(it.username || it.email || it.user_id) +
-          "</td><td>" +
+          "</td>" +
+          renderAdminGroupCell(it) +
+          "<td>" +
           esc(it.product_code || "—") +
           '</td><td class="mono">' +
           esc(it.amount != null ? it.amount : it.principal_amount || "—") +
@@ -5082,7 +5137,7 @@
     if (!api()) return Promise.resolve();
     var pager = adminPagerGet("view-listings-tbody");
     var requestPath = adminPagerRequestPath("view-listings-tbody", buildAdminListingsListPath());
-    setTbodyLoading("view-listings-tbody", 9);
+    setTbodyLoading("view-listings-tbody", 10);
     return api()
       .requestJson(requestPath, { fallbackMessage: "載入掛單失敗" })
       .then(function (data) {
@@ -5090,7 +5145,7 @@
         var tb = document.getElementById("view-listings-tbody");
         if (!tb) return;
         if (!items.length) {
-          tb.innerHTML = tableEmptyRow(9, "尚無掛單", "");
+          tb.innerHTML = tableEmptyRow(10, "尚無掛單", "");
           adminPagerRender("view-listings-tbody", (data && data.pagination) || { page: pager.page, page_size: pager.pageSize, total: 0 }, loadViewListings);
         } else {
           tb.innerHTML = items
@@ -5105,11 +5160,12 @@
                 esc(it.id) +
                 "</td><td>" +
                 esc(it.nickname || it.owner_username || it.owner_user_id) +
-                (currentAdminIsRoot() && it.admin_group ? '<div class="admin-cell-sub">組別：' + esc(adminGroupLabelZh(it.admin_group)) + "</div>" : "") +
                 '<div class="admin-cell-sub">來源：' +
                 sourceBadge(it.owner_source) +
                 "</div>" +
-                "</td><td>" +
+                "</td>" +
+                renderAdminGroupCell(it) +
+                "<td>" +
                 esc(formatC2cOrderSideLabel(it.side)) +
                 '</td><td class="mono">' +
                 esc(formatListingPriceDisplay(it.price)) +
@@ -5148,7 +5204,7 @@
       })
       .catch(function (e) {
         if (e && e.adminSessionHandled) return;
-        setTbodyError("view-listings-tbody", e.message, 9);
+        setTbodyError("view-listings-tbody", e.message, 10);
       });
   }
 
@@ -5156,14 +5212,16 @@
     return loadItems(
       buildTradeFeedPath(),
       "view-trade-feed-tbody",
-      7,
+      8,
       function (it) {
         return (
           "<tr><td class=\"mono\">" +
           esc(it.id) +
           "</td><td>" +
           esc(it.title_display || it.title || "—") +
-          "</td><td>" +
+          "</td>" +
+          renderAdminGroupCell(it) +
+          "<td>" +
           esc(it.actor_name || "—") +
           '</td><td class="mono">' +
           esc(formatTradeFeedAmount(it.amount, it.asset_code)) +
@@ -5804,7 +5862,7 @@
     return loadItems(
       buildAdminKycListPath(),
       "view-kyc-tbody",
-      6,
+      7,
       function (it, index) {
         var st = String(it.status || "").toLowerCase();
         var pending = st === "pending";
@@ -5820,6 +5878,7 @@
           esc(sequenceNo(index)) +
           "</td>" +
           userCell +
+          renderAdminGroupCell(it) +
           "<td>" +
           esc(it.legal_name || "—") +
           '</td><td class="mono">' +
@@ -5892,6 +5951,9 @@
           display_code: it.display_code || "",
           email: it.email || "",
           mobile_e164: it.mobile_e164 || "",
+          admin_group_code: it.admin_group_code || "",
+          admin_group_name: it.admin_group_name || "",
+          admin_group: it.admin_group || null,
           items: [],
           bank_count: 0,
           address_count: 0
@@ -6019,7 +6081,7 @@
     if (!api()) return Promise.resolve();
     var pager = adminPagerGet("view-payout-methods-tbody");
     var requestPath = adminPagerRequestPath("view-payout-methods-tbody", buildAdminPayoutMethodsPath());
-    setTbodyLoading("view-payout-methods-tbody", 5);
+    setTbodyLoading("view-payout-methods-tbody", 6);
     return api()
       .requestJson(requestPath, { fallbackMessage: "載入失敗" })
       .then(function (data) {
@@ -6027,7 +6089,7 @@
         if (!tb) return;
         var users = aggregatePayoutMethodsByUser((data && data.items) || []);
         if (!users.length) {
-          tb.innerHTML = tableEmptyRow(5, "尚無收款方式", "請調整關鍵字或用戶條件後重新查詢。");
+          tb.innerHTML = tableEmptyRow(6, "尚無收款方式", "請調整關鍵字或用戶條件後重新查詢。");
           adminPagerRender("view-payout-methods-tbody", (data && data.pagination) || { page: pager.page, page_size: pager.pageSize, total: 0 }, loadViewPayoutMethods);
           return;
         }
@@ -6038,6 +6100,7 @@
               esc(sequenceNo(index)) +
               "</td>" +
               renderAdminUserSummaryCell(it, it.user_id) +
+              renderAdminGroupCell(it) +
               '<td><span class="mono">' +
               esc(it.address_count) +
               '</span> 個</td><td><span class="mono">' +
@@ -6059,7 +6122,7 @@
       })
       .catch(function (e) {
         if (e && e.adminSessionHandled) return;
-        setTbodyError("view-payout-methods-tbody", e.message, 5);
+        setTbodyError("view-payout-methods-tbody", e.message, 6);
       });
   }
 
@@ -6403,6 +6466,18 @@
     return String(p.display_name || "").trim() === "大老板";
   }
 
+  function currentAdminIsSuper() {
+    var p = currentAdminProfile() || {};
+    if (currentAdminIsRoot()) return true;
+    return Array.isArray(p.role_codes) && p.role_codes.indexOf("super_admin") >= 0;
+  }
+
+  function currentAdminId() {
+    var p = currentAdminProfile() || {};
+    var id = Number(p.id != null ? p.id : p.admin_user_id);
+    return Number.isFinite(id) && id > 0 ? Math.floor(id) : 0;
+  }
+
   function currentAdminCanGrantGroupGlobal() {
     var p = currentAdminProfile() || {};
     return currentAdminIsRoot() || p.can_view_group_global_data === true;
@@ -6423,11 +6498,12 @@
   }
 
   function adminGroupLabelZh(u) {
-    var name = String((u && u.admin_group_name) || "").trim();
-    var code = String((u && u.admin_group_code) || "").trim();
-    if (!name && !code) return "—";
-    if (name && code && name !== code) return name + "（" + code + "）";
-    return name || code;
+    var name = String((u && (u.admin_group_name || u.name)) || "").trim();
+    var code = String((u && (u.admin_group_code || u.code)) || "").trim();
+    var cachedName = adminGroupNameByCode(code);
+    if (cachedName) return cachedName;
+    if (name && name !== code) return name;
+    return name || code || "—";
   }
 
   function currentAdminModuleGrant(mk) {
@@ -6900,6 +6976,9 @@
 
   function renderAdminUserRow(it) {
     var base = roleCodesSummaryZh(it.role_codes, it.is_super_admin, it.role_template);
+    var canDelete = currentAdminIsSuper() && Number(it.id) !== currentAdminId() && it.role_template !== "big_boss";
+    var canRestore = currentAdminIsRoot() && Number(it.id) !== currentAdminId();
+    var ipAllowlistCount = Array.isArray(it.login_ip_allowlist) ? it.login_ip_allowlist.length : 0;
     return (
       '<tr data-admin-id="' +
       esc(it.id) +
@@ -6917,6 +6996,8 @@
       esc(roleTemplateLabelZh(it.role_template)) +
       "</td><td>" +
       badge(it.status, adminStatusLabelZh(it.status)) +
+      "</td><td>" +
+      (it.login_ip_allowlist_enabled ? badge("active", "已啟用 " + ipAllowlistCount) : badge("disabled", "未啟用")) +
       "</td><td class=\"mono\">" +
       esc(base) +
       "</td><td class=\"mono\">" +
@@ -6972,7 +7053,35 @@
               esc(it.id) +
               '"',
             label: "重置密碼"
-          })
+          }) +
+          (canRestore
+            ? adminBtn({
+                variant: "success",
+                sm: true,
+                attrs:
+                  'data-admin-restore-operator="' +
+                  esc(it.id) +
+                  '" data-admin-operator-account="' +
+                  esc(it.account || "") +
+                  '"',
+                label: "恢復",
+                title: "大老板可恢復帳號狀態並清除登入失敗與限流"
+              })
+            : "") +
+          (canDelete
+            ? adminBtn({
+                variant: "danger",
+                sm: true,
+                attrs:
+                  'data-admin-delete-operator="' +
+                  esc(it.id) +
+                  '" data-admin-operator-account="' +
+                  esc(it.account || "") +
+                  '"',
+                label: "刪除",
+                title: "只有超級管理員可刪除管理員"
+              })
+            : "")
       ) +
       "</td></tr>"
     );
@@ -7013,6 +7122,79 @@
     });
   }
 
+  function deleteAdminUserById(id, account) {
+    if (!currentAdminIsSuper()) {
+      adminNotifyError("只有超級管理員可以刪除管理員。");
+      return;
+    }
+    var label = String(account || id || "").trim();
+    adminConfirm({
+      title: "刪除管理員",
+      message: "確定要刪除管理員「" + label + "」嗎？只會刪除該管理員帳號；其名下會員與下級管理員不會被刪除，系統會改掛到可用的上級管理員。",
+      confirmText: "繼續",
+      cancelText: "取消",
+      danger: true
+    })
+      .then(function (ok) {
+        if (!ok) return null;
+        return adminPrompt({
+          title: "二次確認",
+          message: "請輸入管理員帳號「" + label + "」以確認刪除：",
+          defaultValue: ""
+        });
+      })
+      .then(function (typed) {
+        if (typed == null) return;
+        if (String(typed).trim() !== label) {
+          adminNotifyError("輸入的帳號不一致，已取消刪除。");
+          return;
+        }
+        return api()
+          .requestJson("/api/admin/admin-users/" + encodeURIComponent(id), {
+            method: "DELETE",
+            fallbackMessage: "刪除管理員失敗"
+          })
+          .then(function () {
+            adminNotifySuccess("管理員已刪除。");
+            loadViewAdminUsers();
+          });
+      })
+      .catch(function (err) {
+        if (err && err.adminSessionHandled) return;
+        adminNotifyError((err && err.message) || "刪除管理員失敗");
+      });
+  }
+
+  function restoreAdminUserById(id, account) {
+    if (!currentAdminIsRoot()) {
+      adminNotifyError("只有大老板可以恢復管理員。");
+      return;
+    }
+    var label = String(account || id || "").trim();
+    adminConfirm({
+      title: "恢復管理員",
+      message: "確定恢復管理員「" + label + "」？此操作會把帳號狀態恢復為正常，並清除登入失敗、臨時鎖定、永久鎖定與登入限流記錄。",
+      confirmText: "恢復",
+      cancelText: "取消"
+    })
+      .then(function (ok) {
+        if (!ok) return;
+        return api()
+          .requestJson("/api/admin/admin-users/" + encodeURIComponent(id) + "/unlock", {
+            method: "PATCH",
+            fallbackMessage: "恢復管理員失敗"
+          })
+          .then(function () {
+            adminNotifySuccess("管理員已恢復。");
+            loadViewAdminUsers();
+          });
+      })
+      .catch(function (err) {
+        if (err && err.adminSessionHandled) return;
+        adminNotifyError((err && err.message) || "恢復管理員失敗");
+      });
+  }
+
   function loadViewAdminUsers() {
     if (!api()) return Promise.resolve();
     fillAdminRoleTemplateSelects(null);
@@ -7025,7 +7207,7 @@
       encodeURIComponent(String(_adminUsersPageSize));
     if (kw && kw.value.trim()) q += "&keyword=" + encodeURIComponent(kw.value.trim());
     if (st && st.value) q += "&status=" + encodeURIComponent(st.value);
-    setTbodyLoading("view-admin-users-tbody", 11);
+    setTbodyLoading("view-admin-users-tbody", 12);
     var countEl = document.getElementById("view-admin-users-count");
     return api()
       .requestJson(q, { fallbackMessage: "載入後台管理員失敗" })
@@ -7044,7 +7226,7 @@
           if (!items.length) {
             tb.innerHTML =
               tableEmptyRow(
-                11,
+                12,
                 "此頁尚無管理員資料",
                 "可能尚無符合篩選的帳號，或需超管權限才能載入列表。"
               );
@@ -7062,7 +7244,7 @@
         _adminCatalogCache = null;
         _adminGroupCache = [];
         _adminUserRowsById = {};
-        setTbodyError("view-admin-users-tbody", e.message, 11);
+        setTbodyError("view-admin-users-tbody", e.message, 12);
         if (countEl) countEl.textContent = "載入失敗";
         var info = document.getElementById("view-admin-users-page-info");
         if (info) info.textContent = "";
@@ -7108,8 +7290,19 @@
   function adminGroupOptionLabel(group) {
     var name = String((group && group.group_name) || "").trim();
     var code = String((group && group.group_code) || "").trim();
-    if (name && code && name !== code) return name + "（" + code + "）";
-    return name || code || "未命名分組";
+    return name || adminGroupNameByCode(code) || "未命名分組";
+  }
+
+  function adminGroupNameByCode(code) {
+    code = String(code || "").trim();
+    if (!code || !Array.isArray(_adminGroupCache)) return "";
+    for (var i = 0; i < _adminGroupCache.length; i++) {
+      var group = _adminGroupCache[i] || {};
+      if (String(group.group_code || "").trim() === code) {
+        return String(group.group_name || "").trim();
+      }
+    }
+    return "";
   }
 
   function fillAdminGroupSelects(groups) {
@@ -7189,6 +7382,25 @@
       size._adminBound = true;
       size.addEventListener("click", promptAdminUsersPageSize);
     }
+    var tbody = document.getElementById("view-admin-users-tbody");
+    if (tbody && !tbody._adminDeleteBound) {
+      tbody._adminDeleteBound = true;
+      tbody.addEventListener("click", function (e) {
+        var restoreBtn = e.target.closest && e.target.closest("[data-admin-restore-operator]");
+        if (restoreBtn) {
+          var restoreId = restoreBtn.getAttribute("data-admin-restore-operator");
+          var restoreAccount = restoreBtn.getAttribute("data-admin-operator-account") || "";
+          if (restoreId) restoreAdminUserById(restoreId, restoreAccount || restoreId);
+          return;
+        }
+        var btn = e.target.closest && e.target.closest("[data-admin-delete-operator]");
+        if (!btn) return;
+        var id = btn.getAttribute("data-admin-delete-operator");
+        var account = btn.getAttribute("data-admin-operator-account") || "";
+        if (!id) return;
+        deleteAdminUserById(id, account || id);
+      });
+    }
   }
 
   function setAdminScopeControls(mode, values) {
@@ -7203,8 +7415,9 @@
       var codeEl = document.getElementById("view-admin-edit-group-code");
       if (scope) scope.hidden = false;
       if (nameEl) {
-        nameEl.value = values.admin_group_name || "";
-        nameEl.readOnly = !root;
+        nameEl.value = adminGroupNameByCode(values.admin_group_code) || values.admin_group_name || "";
+        nameEl.readOnly = true;
+        nameEl.title = "組別名稱由組別設定帶入，不可在管理員資料中修改";
       }
       if (codeEl) {
         codeEl.value = values.admin_group_code || "";
@@ -7455,6 +7668,11 @@
                 "<div><dt>組全局資料</dt><dd>" +
                 (u.can_view_group_global_data ? "可查看" : "僅下級鏈路") +
                 "</dd></div>" +
+                "<div><dt>登入 IP 白名單</dt><dd>" +
+                (u.login_ip_allowlist_enabled
+                  ? esc((Array.isArray(u.login_ip_allowlist) ? u.login_ip_allowlist : []).join("、") || "已啟用，未填規則")
+                  : "未啟用") +
+                "</dd></div>" +
                 "<div><dt>組超管</dt><dd>" +
                 (u.is_super_admin ? "是" : "否") +
                 "</dd></div></dl>";
@@ -7475,6 +7693,10 @@
               document.getElementById("view-admin-edit-display").value = u.display_name || "";
               document.getElementById("view-admin-edit-invite").value = u.staff_invite_code || "";
               document.getElementById("view-admin-edit-status").value = u.status || "normal";
+              var ipEnabled = document.getElementById("view-admin-edit-ip-allowlist-enabled");
+              var ipRules = document.getElementById("view-admin-edit-ip-allowlist");
+              if (ipEnabled) ipEnabled.checked = !!u.login_ip_allowlist_enabled;
+              if (ipRules) ipRules.value = (Array.isArray(u.login_ip_allowlist) ? u.login_ip_allowlist : []).join("\n");
               var editSuper = document.getElementById("view-admin-edit-super");
               if (editSuper) {
                 editSuper.checked = !!u.is_super_admin;
@@ -7710,6 +7932,8 @@
       var editGroupName = document.getElementById("view-admin-edit-group-name");
       var editGroupCode = document.getElementById("view-admin-edit-group-code");
       var editGroupGlobal = document.getElementById("view-admin-edit-group-global");
+      var ipEnabled = document.getElementById("view-admin-edit-ip-allowlist-enabled");
+      var ipRules = document.getElementById("view-admin-edit-ip-allowlist");
       var body = {
         account: document.getElementById("view-admin-edit-account").value.trim(),
         display_name: document.getElementById("view-admin-edit-display").value.trim(),
@@ -7717,8 +7941,9 @@
         status: document.getElementById("view-admin-edit-status").value,
         is_super_admin: currentAdminIsRoot() && editSuper && editSuper.checked,
         role_template: document.getElementById("view-admin-edit-role-template").value,
-        admin_group_name: editGroupName ? editGroupName.value.trim() : "",
-        admin_group_code: editGroupCode ? editGroupCode.value.trim() : ""
+        admin_group_code: editGroupCode ? editGroupCode.value.trim() : "",
+        login_ip_allowlist_enabled: !!(ipEnabled && ipEnabled.checked),
+        login_ip_allowlist: ipRules && ipRules.value.trim() ? ipRules.value.trim().split(/[\s,;]+/) : []
       };
       if (editGroupGlobal && !editGroupGlobal.disabled) {
         body.can_view_group_global_data = editGroupGlobal.checked;
@@ -8010,7 +8235,7 @@
       else if (target.hasAttribute("data-admin-auth-event-detail")) openAuthEventDetail(target.getAttribute("data-admin-auth-event-detail"));
     });
     window.addEventListener("hashchange", reloadCurrentView);
-    window.addEventListener("eurnyse-admin-api-token-ready", reloadCurrentView);
+    window.addEventListener("eurforex-admin-api-token-ready", reloadCurrentView);
     function start() {
       initTradeFeedForms();
       initHomeBannerForms();

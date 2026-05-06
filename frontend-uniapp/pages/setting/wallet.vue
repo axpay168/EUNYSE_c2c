@@ -23,7 +23,7 @@
           <button type="button" class="glass-panel rounded-[24px] p-4 sm:p-5 text-center w-full font-body border-0 cursor-pointer appearance-none text-on-surface" title="法幣充值" @click="openFiatRechargeModal"><span class="material-symbols-outlined text-primary text-[1.85rem] leading-none sm:text-4xl">savings</span><div class="font-semibold mt-2 sm:mt-2.5 text-base sm:text-lg leading-snug">法幣充值</div></button>
         </div>
         <div class="grid grid-cols-3 gap-2 sm:gap-3">
-          <a class="glass-panel rounded-[24px] p-4 sm:p-5 text-center" href="#/pages/setting/withdrawUsdt" title="USDT 鏈上提領"><span class="material-symbols-outlined text-primary text-[1.85rem] leading-none sm:text-4xl">currency_bitcoin</span><div class="font-semibold mt-2 sm:mt-2.5 text-[15px] sm:text-lg leading-snug">USDT 提領</div></a>
+          <button type="button" class="glass-panel rounded-[24px] p-4 sm:p-5 text-center w-full font-body border-0 cursor-pointer appearance-none text-on-surface" :title="$t('phrases.USDT 鏈上提領')" @click="openUsdtWithdrawModal"><span class="material-symbols-outlined text-primary text-[1.85rem] leading-none sm:text-4xl">currency_bitcoin</span><div class="font-semibold mt-2 sm:mt-2.5 text-[15px] sm:text-lg leading-snug">USDT 提領</div></button>
           <a class="glass-panel rounded-[24px] p-4 sm:p-5 text-center" href="#/pages/setting/withdraw" title="法幣提現"><span class="material-symbols-outlined text-primary text-[1.85rem] leading-none sm:text-4xl">payments</span><div class="font-semibold mt-2 sm:mt-2.5 text-[15px] sm:text-lg leading-snug">法幣提現</div></a>
           <a class="glass-panel rounded-[24px] p-4 sm:p-5 text-center ring-1 ring-primary/20" href="#/pages/setting/eurSwapWithdraw" title="EUR 換 USDT 提領"><span class="material-symbols-outlined text-primary text-[1.85rem] leading-none sm:text-4xl">currency_exchange</span><div class="font-semibold mt-2 sm:mt-2.5 text-[15px] sm:text-lg leading-snug">換匯提領</div></a>
         </div>
@@ -43,6 +43,24 @@
           <button type="button" class="mt-6 w-full rounded-full border border-primary/25 bg-primary-container/60 py-3 text-sm font-bold text-primary-dim transition-colors hover:bg-primary-container" @click="closeFiatRechargeModal">知道了</button>
         </div>
       </div>
+      <div id="usdt-withdraw-limit-modal" class="fixed inset-0 z-[120] items-center justify-center bg-black/45 p-4" :class="usdtWithdrawModalOpen ? 'flex' : 'hidden'" role="dialog" aria-modal="true" aria-labelledby="usdt-withdraw-limit-title" @click.self="closeUsdtWithdrawModal">
+        <div class="relative w-full max-w-sm rounded-2xl border border-primary/10 bg-white p-5 pt-6 shadow-[0_12px_40px_rgba(33,79,131,0.12)]" @click.stop>
+          <button
+            type="button"
+            class="absolute right-2 top-2 rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low"
+            aria-label="關閉"
+            @click="closeUsdtWithdrawModal"
+          >
+            <span class="material-symbols-outlined text-[22px] leading-none">close</span>
+          </button>
+          <h2 id="usdt-withdraw-limit-title" class="sr-only">{{ $t('phrases.usdtWithdrawLimitTitle') }}</h2>
+          <p class="mt-3 px-4 text-center text-base font-semibold leading-relaxed text-on-surface">
+            <span class="block">{{ $t('phrases.usdtWithdrawLimitLine1') }}</span>
+            <span class="block">{{ $t('phrases.usdtWithdrawLimitLine2') }}</span>
+          </p>
+          <button type="button" class="mt-6 w-full rounded-full border border-primary/25 bg-primary-container/60 py-3 text-sm font-bold text-primary-dim transition-colors hover:bg-primary-container" @click="closeUsdtWithdrawModal">{{ $t('phrases.知道了') }}</button>
+        </div>
+      </div>
       <section class="glass-panel rounded-[24px] p-5">
         <div class="flex items-center justify-between mb-4"><h2 class="font-headline text-xl">資產分布</h2><a class="text-sm text-primary-dim font-semibold" href="#/pages/setting/fundRecord" @click="openFundRecords">資金明細</a></div>
         <div class="space-y-3">
@@ -53,7 +71,7 @@
             </div>
             <div class="mt-3 grid grid-cols-2 gap-2">
               <a class="wallet-asset-action flex h-11 items-center justify-center rounded-xl border border-primary/25 bg-primary-container/50 text-base font-bold text-primary-dim transition-colors hover:bg-primary-container" href="#/pages/setting/mixrecharge">充值</a>
-              <a class="wallet-asset-action wallet-asset-action--secondary flex h-11 items-center justify-center rounded-xl text-base font-bold transition-all" href="#/pages/setting/withdrawUsdt">提領</a>
+              <button type="button" class="wallet-asset-action wallet-asset-action--secondary flex h-11 items-center justify-center rounded-xl text-base font-bold transition-all border-0 cursor-pointer font-body" @click="openUsdtWithdrawModal">提領</button>
             </div>
           </div>
           <div class="rounded-2xl bg-surface-bright px-4 py-4">
@@ -77,7 +95,7 @@
 import { userApi } from '@/utils/api'
 
 /**
- * EURNYSE - 我的資產 (純 H5 Vue2 Options API)
+ * EURFOREX - 我的資產 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/wallet.html 為唯一基準逐字遷移
  * 原稿無內聯 JS，僅外部 marble-bg.js、back-nav.js
  */
@@ -97,6 +115,7 @@ export default {
   data: function () {
     return {
       fiatRechargeModalOpen: false,
+      usdtWithdrawModalOpen: false,
       walletLoading: false,
       walletError: "",
       walletMap: {},
@@ -118,8 +137,8 @@ export default {
       document.body.setAttribute("data-nc2c-page", "wallet");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurnyseMarbleBgJs");
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurforexMarbleBgJs");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
     this.fetchWallets();
   },
   beforeDestroy: function () {
@@ -133,9 +152,9 @@ export default {
   },
   methods: {
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     },
     openFiatRechargeModal: function () {
@@ -143,6 +162,12 @@ export default {
     },
     closeFiatRechargeModal: function () {
       this.fiatRechargeModalOpen = false;
+    },
+    openUsdtWithdrawModal: function () {
+      this.usdtWithdrawModalOpen = true;
+    },
+    closeUsdtWithdrawModal: function () {
+      this.usdtWithdrawModalOpen = false;
     },
     openFundRecords: function (event) {
       if (event && event.preventDefault) event.preventDefault();

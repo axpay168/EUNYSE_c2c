@@ -21,18 +21,18 @@
 
           <div>
             <div class="mb-2 font-semibold text-on-surface">收款地址</div>
-            <div class="eurnyse-empty-card eurnyse-empty-card--compact">
-              <div class="eurnyse-empty-illustration" aria-hidden="true">
-                <span class="eurnyse-empty-illustration__cube eurnyse-empty-illustration__cube--one"></span>
-                <span class="eurnyse-empty-illustration__cube eurnyse-empty-illustration__cube--two"></span>
-                <span class="eurnyse-empty-illustration__cube eurnyse-empty-illustration__cube--three"></span>
-                <span class="eurnyse-empty-illustration__box"></span>
+            <div class="eurforex-empty-card eurforex-empty-card--compact">
+              <div class="eurforex-empty-illustration" aria-hidden="true">
+                <span class="eurforex-empty-illustration__cube eurforex-empty-illustration__cube--one"></span>
+                <span class="eurforex-empty-illustration__cube eurforex-empty-illustration__cube--two"></span>
+                <span class="eurforex-empty-illustration__cube eurforex-empty-illustration__cube--three"></span>
+                <span class="eurforex-empty-illustration__box"></span>
               </div>
-              <h2 class="eurnyse-empty-title">暫未設置入金資訊</h2>
-              <p class="eurnyse-empty-sub">SEPA 入金資訊需由客服確認後提供。</p>
-              <div class="eurnyse-empty-actions">
-                <a class="eurnyse-empty-btn" href="#/pages/index/serviceCenter">聯繫客服</a>
-                <a class="eurnyse-empty-btn-soft" href="#/pages/setting/wallet">返回資產</a>
+              <h2 class="eurforex-empty-title">暫未設置入金資訊</h2>
+              <p class="eurforex-empty-sub">SEPA 入金資訊需由客服確認後提供。</p>
+              <div class="eurforex-empty-actions">
+                <a class="eurforex-empty-btn" href="#/pages/index/serviceCenter">聯繫客服</a>
+                <a class="eurforex-empty-btn-soft" href="#/pages/setting/wallet">返回資產</a>
               </div>
             </div>
           </div>
@@ -94,7 +94,7 @@
 import { userApi } from '@/utils/api'
 
 /**
- * EURNYSE - EUR 充值 (純 H5 Vue2 Options API)
+ * EURFOREX - EUR 充值 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/eur-deposit.html 為唯一基準逐字遷移
  * 外部腳本：../shared/marble-bg.js、../shared/back-nav.js、../shared/eur-deposit-modal.js（動態注入）
  * 原稿內聯 IIFE：
@@ -140,9 +140,9 @@ export default {
       document.body.setAttribute("data-nc2c-page", "eur-deposit");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurnyseMarbleBgJs");
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
-    this.loadSharedScript("/static/previews/shared/eur-deposit-modal.js", "eurnyseEurDepositModal");
+    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurforexMarbleBgJs");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
+    this.loadSharedScript("/static/previews/shared/eur-deposit-modal.js", "eurforexEurDepositModal");
   },
   beforeDestroy: function () {
     try {
@@ -155,9 +155,9 @@ export default {
   },
   methods: {
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     },
     handleProofChange: function (e) {

@@ -3,7 +3,7 @@
  * 使用 inline style，避免 Tailwind CDN 未掃描外部 JS 造成樣式缺失。
  */
 (function () {
-  var MODAL_ID = "eurnyse-eur-deposit-modal";
+  var MODAL_ID = "eurforex-eur-deposit-modal";
 
   function ensureModal() {
     var existing = document.getElementById(MODAL_ID);

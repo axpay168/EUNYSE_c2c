@@ -23,7 +23,7 @@
 
 <script>
 /**
- * EURNYSE - 重設密碼 (純 H5 Vue2 Options API)
+ * EURFOREX - 重設密碼 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/reset-password.html 為唯一基準逐字遷移
  * 樣式直接 @import preview-entry.css
  * 外部腳本：../shared/back-nav.js（動態注入）
@@ -48,7 +48,7 @@ export default {
       document.body.setAttribute("data-nc2c-page", "reset-password");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
   },
   beforeDestroy: function () {
     try {

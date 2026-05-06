@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 $rootDir = dirname(__DIR__);
-$confirm = getenv('EUNYSE_CONFIRM_FULL_RESET') === 'yes-delete-business-data';
-$preserveBossAccount = getenv('EUNYSE_RESET_PRESERVE_BOSS') !== '0';
+$confirm = getenv('EURFOREX_CONFIRM_FULL_RESET') === 'yes-delete-business-data';
+$preserveBossAccount = getenv('EURFOREX_RESET_PRESERVE_BOSS') !== '0';
 
 function load_env_file(string $path): void
 {
@@ -53,9 +53,9 @@ $pdo = new PDO(
         'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
         env_string('DB_HOST', '127.0.0.1'),
         env_string('DB_PORT', '3306'),
-        env_string('DB_NAME', 'eurnyse_c2c')
+        env_string('DB_NAME', 'eurforex_c2c')
     ),
-    env_string('DB_USER', 'eurnyse_c2c'),
+    env_string('DB_USER', 'eurforex_c2c'),
     env_string('DB_PASSWORD', ''),
     [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -120,7 +120,7 @@ if (!$confirm) {
     echo json_encode([
         'ok' => true,
         'dry_run' => true,
-        'message' => 'No data was deleted. Set EUNYSE_CONFIRM_FULL_RESET=yes-delete-business-data to execute.',
+        'message' => 'No data was deleted. Set EURFOREX_CONFIRM_FULL_RESET=yes-delete-business-data to execute.',
         'preserve_system_configs' => true,
         'preserve_boss_account' => $preserveBossAccount,
         'table_counts' => $before,

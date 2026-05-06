@@ -3,7 +3,7 @@
     <!-- TopAppBar -->
     <header class="fixed top-0 w-full border-b border-primary/10 bg-white/75 backdrop-blur-3xl shadow-[0_12px_32px_rgba(33,79,131,0.08)] flex justify-between items-center px-6 h-14 w-full z-50">
       <div class="leading_type flex items-center">
-        <img alt="EURNYSE" width="40" height="40" decoding="async" class="h-10 w-10 shrink-0 object-contain block" :src="logoSrc" />
+        <img alt="EURFOREX" width="40" height="40" decoding="async" class="h-10 w-10 shrink-0 object-contain block" :src="logoSrc" />
       </div>
       <div class="font-headline text-lg font-bold text-on-surface">個人中心</div>
       <div class="trailing_type text-primary-dim hover:bg-primary/10 transition-colors scale-95 active:duration-150 p-2 rounded-full cursor-pointer flex items-center justify-center">
@@ -32,8 +32,17 @@
               @click="openAvatarPicker"
             >
               <img alt="使用者大頭照" class="w-24 h-24 md:w-28 md:h-28 rounded-[1.5rem] object-cover border border-white/70 shadow-[0_18px_36px_rgba(40,88,142,0.14)] transition-transform group-hover:scale-[1.02]" :src="avatarSrc" />
-              <span class="absolute inset-x-2 bottom-2 rounded-full bg-on-surface/58 px-2 py-1 text-[11px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">更換頭像</span>
+              <span class="absolute inset-x-2 bottom-2 rounded-full bg-on-surface/58 px-2 py-1 text-[11px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">{{ avatarUploading ? '上傳中' : '上傳照片' }}</span>
             </button>
+            <input
+              ref="avatarFileInput"
+              class="eurforex-avatar-file-input"
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              aria-hidden="true"
+              tabindex="-1"
+              @change="handleAvatarFileChange"
+            />
             <div class="absolute -bottom-2 -right-2 z-20 bg-white/85 px-3 py-1 rounded-full border border-white/70 shadow-[0_10px_20px_rgba(33,79,131,0.12)]">
               <span class="font-headline text-[11px] text-primary-dim tracking-[0.18em] font-bold">{{ tierLevelLabel }}</span>
             </div>
@@ -89,7 +98,7 @@
                 <div class="flex items-center justify-between">
                   <span class="font-body text-xs text-primary-dim">法幣</span>
                 </div>
-                <div class="font-headline text-3xl md:text-4xl text-on-surface mt-0.5 pr-12 leading-none tabular-nums">{{ eurBalanceParts.main }}<span class="text-on-surface-variant/50 text-[0.62em] font-headline align-baseline">.{{ eurBalanceParts.decimal }}</span></div>
+                <div ref="eurBalanceAmount" class="eurforex-user-balance-amount font-headline text-on-surface mt-0.5 leading-none tabular-nums">{{ eurBalanceParts.main }}<span class="text-on-surface-variant/50 text-[0.62em] font-headline align-baseline">.{{ eurBalanceParts.decimal }}</span></div>
                 <div class="mt-0.5 flex justify-end">
                   <span class="font-body text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">EUR</span>
                 </div>
@@ -98,7 +107,7 @@
                 <div class="flex items-center justify-between">
                   <span class="font-body text-xs text-primary-dim">加密資產</span>
                 </div>
-                <div class="font-headline text-3xl md:text-4xl text-on-surface mt-0.5 pr-12 leading-none tabular-nums">{{ usdtBalanceParts.main }}<span class="text-on-surface-variant/50 text-[0.62em] font-headline align-baseline">.{{ usdtBalanceParts.decimal }}</span></div>
+                <div ref="usdtBalanceAmount" class="eurforex-user-balance-amount font-headline text-on-surface mt-0.5 leading-none tabular-nums">{{ usdtBalanceParts.main }}<span class="text-on-surface-variant/50 text-[0.62em] font-headline align-baseline">.{{ usdtBalanceParts.decimal }}</span></div>
                 <div class="mt-0.5 flex justify-end">
                   <span class="font-body text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">USDT</span>
                 </div>
@@ -112,7 +121,7 @@
         <div class="mb-3 px-1">
           <h4 class="font-headline text-sm md:text-label-md text-on-surface-variant uppercase tracking-widest">帳戶功能</h4>
         </div>
-        <div class="glass-panel-high eurnyse-user-account-menu rounded-[24px] p-2 md:p-3">
+        <div class="glass-panel-high eurforex-user-account-menu rounded-[24px] p-2 md:p-3">
           <LanguageSelector button-id="userLanguageButton" variant="menu-row" />
           <a class="flex items-center justify-between gap-4 px-3 py-3.5 cursor-pointer hover:bg-surface-bright/45 rounded-2xl transition-colors group" href="#/pages/setting/fundRecord">
             <div class="flex items-center gap-4 min-w-0">
@@ -204,60 +213,14 @@
       </section>
     </main>
 
-    <div v-if="avatarPickerOpen" class="eurnyse-avatar-picker" role="dialog" aria-modal="true" aria-label="選擇頭像" @click.self="closeAvatarPicker">
-      <section class="eurnyse-avatar-picker__panel">
-        <div class="eurnyse-avatar-picker__header">
-          <div>
-            <p class="eurnyse-avatar-picker__eyebrow">Avatar</p>
-            <h3>選擇你的頭像</h3>
-          </div>
-          <button type="button" class="eurnyse-avatar-picker__close" aria-label="關閉頭像選擇" @click="closeAvatarPicker">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div class="eurnyse-avatar-picker__section">
-          <div class="eurnyse-avatar-picker__section-title">男生</div>
-          <div class="eurnyse-avatar-picker__grid">
-            <button
-              v-for="item in maleAvatarOptions"
-              :key="item.id"
-              type="button"
-              class="eurnyse-avatar-option"
-              :class="{ 'is-active': item.id === selectedAvatarId }"
-              @click="selectAvatar(item.id)"
-            >
-              <img :src="item.src" :alt="item.label" />
-              <span>{{ item.label }}</span>
-            </button>
-          </div>
-        </div>
-        <div class="eurnyse-avatar-picker__section">
-          <div class="eurnyse-avatar-picker__section-title">女生</div>
-          <div class="eurnyse-avatar-picker__grid">
-            <button
-              v-for="item in femaleAvatarOptions"
-              :key="item.id"
-              type="button"
-              class="eurnyse-avatar-option"
-              :class="{ 'is-active': item.id === selectedAvatarId }"
-              @click="selectAvatar(item.id)"
-            >
-              <img :src="item.src" :alt="item.label" />
-              <span>{{ item.label }}</span>
-            </button>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- BottomNavBar：須含 eurnyse-home-bottom-nav，H5 fixed 才相對視口（見 eurnyse-style-refresh.css） -->
+    <!-- BottomNavBar：須含 eurforex-home-bottom-nav，H5 fixed 才相對視口（見 eurforex-style-refresh.css） -->
     <nav
-      class="eurnyse-home-bottom-nav fixed bottom-0 left-0 w-full z-50 rounded-t-2xl bg-white/78 backdrop-blur-lg shadow-[0px_-8px_24px_rgba(33,79,131,0.08)] font-['Manrope']"
+      class="eurforex-home-bottom-nav fixed bottom-0 left-0 w-full z-50 rounded-t-2xl bg-white/78 backdrop-blur-lg shadow-[0px_-8px_24px_rgba(33,79,131,0.08)] font-['Manrope']"
       aria-label="主頁底部導航"
     >
       <div class="flex justify-around items-center h-20 px-4 pb-safe">
         <a class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary-dim transition-all" href="#/pages/index/index">
-          <span class="material-symbols-outlined">home</span>
+          <img class="eurforex-nav-brand-icon" :src="homeNavLogoSrc" alt="EURFOREX 主頁" />
           <span class="text-[11px] font-semibold tracking-wide mt-0.5">主頁</span>
         </a>
         <a class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary-dim transition-all" href="#/pages/index/hall">
@@ -278,13 +241,13 @@
 </template>
 
 <script>
-import { avatar as avatarImage, brandLogo } from '@/assets/images'
-import { getAvatarOptions, getOrCreateUserAvatar, setUserAvatar } from '@/common/avatarPool'
-import { me, userApi } from '@/utils/api'
+import { avatar as avatarImage, brandMarkLogo } from '@/assets/images'
+import { getOrCreateUserAvatar } from '@/common/avatarPool'
+import { logout, me, userApi } from '@/utils/api'
 import { getStoredUser } from '@/utils/session'
 
 /**
- * EURNYSE - 個人中心 (純 H5 Vue2 Options API)
+ * EURFOREX - 個人中心 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/user.html 為唯一基準逐字遷移
  * 外部腳本：../shared/marble-bg.js（動態注入）
  * 原稿內聯 <script>（登出按鈕寫入「last.mode / last.account」並清掉 remember.*）
@@ -306,7 +269,8 @@ export default {
   name: "UserH5",
   data: function () {
     return {
-      logoSrc: brandLogo,
+      logoSrc: brandMarkLogo,
+      homeNavLogoSrc: brandMarkLogo,
       avatarSrc: avatarImage,
       userId: "",
       realName: "",
@@ -316,9 +280,8 @@ export default {
       tierLevel: 1,
       fiatAvailableBalance: 0,
       usdtAvailableBalance: 0,
-      avatarPickerOpen: false,
-      selectedAvatarId: "",
-      avatarOptions: getAvatarOptions(),
+      avatarUploading: false,
+      fitBalanceResizeHandler: null,
       currentUserProfile: null
     };
   },
@@ -331,12 +294,6 @@ export default {
     },
     usdtBalanceParts: function () {
       return this.splitMoney(this.usdtAvailableBalance);
-    },
-    maleAvatarOptions: function () {
-      return this.avatarOptions.filter(function (item) { return item.gender === "male"; });
-    },
-    femaleAvatarOptions: function () {
-      return this.avatarOptions.filter(function (item) { return item.gender === "female"; });
     }
   },
   mounted: function () {
@@ -347,9 +304,20 @@ export default {
       document.body.setAttribute("data-nc2c-page", "user");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurnyseMarbleBgJs");
+    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurforexMarbleBgJs");
     this.applyUserProfile(getStoredUser());
     this.loadUserProfile();
+    this.$nextTick(this.fitBalanceAmounts);
+    var self = this;
+    this.fitBalanceResizeHandler = function () {
+      self.fitBalanceAmounts();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", this.fitBalanceResizeHandler);
+    }
+  },
+  updated: function () {
+    this.$nextTick(this.fitBalanceAmounts);
   },
   beforeDestroy: function () {
     try {
@@ -359,6 +327,9 @@ export default {
       document.body.removeAttribute("data-nc2c-page");
       document.body.removeAttribute("data-nc2c-locked");
     } catch (e) {}
+    if (typeof window !== "undefined" && this.fitBalanceResizeHandler) {
+      window.removeEventListener("resize", this.fitBalanceResizeHandler);
+    }
   },
   methods: {
     applyUserProfile: function (user) {
@@ -372,9 +343,13 @@ export default {
       this.emailLabel = String(user.email || "").trim() || "尚未綁定 Email";
       this.creditScore = user.tier && typeof user.tier.score !== "undefined" ? Number(user.tier.score) || 0 : 0;
       this.tierLevel = user.tier && typeof user.tier.level !== "undefined" ? Number(user.tier.level) || 1 : this.tierLevel;
-      var avatar = getOrCreateUserAvatar(user);
-      this.avatarSrc = avatar.src || avatarImage;
-      this.selectedAvatarId = avatar.id || "";
+      var avatarUrl = String(user.avatar_url || "").trim();
+      if (avatarUrl) {
+        this.avatarSrc = avatarUrl;
+      } else {
+        var avatar = getOrCreateUserAvatar(user);
+        this.avatarSrc = avatar.src || avatarImage;
+      }
     },
     splitMoney: function (value) {
       var n = Number(value || 0);
@@ -391,6 +366,27 @@ export default {
       this.usdtAvailableBalance = Number(usdt.available_balance || 0) || 0;
       if (tier.level != null) this.tierLevel = Number(tier.level) || 1;
       if (tier.score != null) this.creditScore = Number(tier.score) || 0;
+      this.$nextTick(this.fitBalanceAmounts);
+    },
+    fitBalanceAmounts: function () {
+      if (typeof window === "undefined") return;
+      var refs = [this.$refs.eurBalanceAmount, this.$refs.usdtBalanceAmount];
+      refs.forEach(function (el) {
+        if (!el) return;
+        el.style.fontSize = "";
+        el.style.letterSpacing = "";
+        var size = parseFloat(window.getComputedStyle(el).fontSize) || 32;
+        var minSize = 14;
+        var availableWidth = el.clientWidth;
+        if (!availableWidth) return;
+        while (size > minSize && el.scrollWidth > availableWidth + 1) {
+          size -= 1;
+          el.style.fontSize = size + "px";
+        }
+        if (el.scrollWidth > availableWidth + 1) {
+          el.style.letterSpacing = "-0.04em";
+        }
+      });
     },
     loadUserProfile: function () {
       var self = this;
@@ -408,28 +404,60 @@ export default {
     },
     openAvatarPicker: function () {
       if (!this.currentUserProfile) this.applyUserProfile(getStoredUser());
-      this.avatarPickerOpen = true;
+      if (this.avatarUploading) return;
+      var input = this.$refs.avatarFileInput;
+      if (input && typeof input.click === "function") {
+        input.click();
+      }
     },
-    closeAvatarPicker: function () {
-      this.avatarPickerOpen = false;
-    },
-    selectAvatar: function (avatarId) {
+    handleAvatarFileChange: function (event) {
+      var input = event && event.target;
+      var file = input && input.files && input.files[0];
+      if (!file) return;
+      if (!/^image\//i.test(file.type || "")) {
+        if (typeof uni !== "undefined" && uni.showToast) {
+          uni.showToast({ title: "請選擇圖片檔案", icon: "none" });
+        }
+        input.value = "";
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        if (typeof uni !== "undefined" && uni.showToast) {
+          uni.showToast({ title: "圖片大小不能超過 5MB", icon: "none" });
+        }
+        input.value = "";
+        return;
+      }
       var self = this;
-      var target = this.currentUserProfile || getStoredUser() || this.userId;
-      var avatar = setUserAvatar(target, avatarId);
-      this.avatarSrc = avatar.src || avatarImage;
-      this.selectedAvatarId = avatar.id || avatarId;
-      this.avatarPickerOpen = false;
+      this.avatarUploading = true;
+      if (typeof URL !== "undefined" && URL.createObjectURL) {
+        this.avatarSrc = URL.createObjectURL(file);
+      }
       if (typeof uni !== "undefined" && uni.showToast) {
-        uni.showToast({ title: "頭像已更新", icon: "success", duration: 1400 });
+        uni.showToast({ title: "正在上傳頭像", icon: "none", duration: 1200 });
       }
-      if (this.currentUserProfile) {
-        userApi.updateAvatar(this.selectedAvatarId)
-          .then(function (user) {
-            if (user) self.applyUserProfile(user);
-          })
-          .catch(function () {});
-      }
+      userApi.uploadFile(file, "avatar")
+        .then(function (upload) {
+          var avatarUrl = upload.url || upload.public_url || "";
+          if (!avatarUrl) throw new Error("頭像上傳失敗");
+          return userApi.updateAvatarUrl(avatarUrl);
+        })
+        .then(function (user) {
+          if (user) self.applyUserProfile(user);
+          if (typeof uni !== "undefined" && uni.showToast) {
+            uni.showToast({ title: "頭像已更新", icon: "success", duration: 1400 });
+          }
+        })
+        .catch(function (error) {
+          self.applyUserProfile(self.currentUserProfile || getStoredUser());
+          if (typeof uni !== "undefined" && uni.showToast) {
+            uni.showToast({ title: (error && error.message) || "頭像上傳失敗", icon: "none", duration: 1800 });
+          }
+        })
+        .finally(function () {
+          self.avatarUploading = false;
+          if (input) input.value = "";
+        });
     },
     copyUserId: function () {
       var text = String(this.userId || "").trim();
@@ -480,18 +508,20 @@ export default {
     },
     handleSignOut: function () {
       try {
-        var rememberMode = localStorage.getItem("eurnyse.remember.mode") || localStorage.getItem("eurnyse.last.mode") || "phone";
-        var rememberAccount = localStorage.getItem("eurnyse.remember.account") || localStorage.getItem("eurnyse.last.account") || "";
+        var rememberMode = localStorage.getItem("eurforex.remember.mode") || localStorage.getItem("eurforex.last.mode") || "phone";
+        var rememberAccount = localStorage.getItem("eurforex.remember.account") || localStorage.getItem("eurforex.last.account") || "";
         if (rememberAccount) {
-          localStorage.setItem("eurnyse.last.mode", rememberMode);
-          localStorage.setItem("eurnyse.last.account", rememberAccount);
+          localStorage.setItem("eurforex.last.mode", rememberMode);
+          localStorage.setItem("eurforex.last.account", rememberAccount);
         }
-        localStorage.removeItem("eurnyse.remember.enabled");
-        localStorage.removeItem("eurnyse.remember.mode");
-        localStorage.removeItem("eurnyse.remember.account");
-        localStorage.removeItem("eurnyse.remember.secret");
+        localStorage.removeItem("eurforex.remember.enabled");
+        localStorage.removeItem("eurforex.remember.mode");
+        localStorage.removeItem("eurforex.remember.account");
+        localStorage.removeItem("eurforex.remember.secret");
       } catch (e) {}
-      window.location.href = "#/pages/common/login";
+      logout().catch(function () {}).then(function () {
+        window.location.href = "#/pages/common/login";
+      });
     }
   }
 };
@@ -501,115 +531,26 @@ export default {
 @import url("../../static/previews/shared/marble-bg.css");
 @import url("../../static/previews/nc2c/css/preview-entry.css");
 
-.eurnyse-avatar-picker {
+.eurforex-avatar-file-input {
   position: fixed;
-  inset: 0;
-  z-index: 80;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 22px;
-  background: rgba(18, 31, 48, 0.38);
-  backdrop-filter: blur(16px);
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.eurnyse-avatar-picker__panel {
-  width: min(92vw, 430px);
-  max-height: min(78vh, 620px);
-  overflow: auto;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 28px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(235, 249, 255, 0.88));
-  box-shadow: 0 24px 60px rgba(29, 70, 116, 0.22);
-  padding: 20px;
+.eurforex-user-balance-amount {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 2rem;
 }
 
-.eurnyse-avatar-picker__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.eurnyse-avatar-picker__eyebrow {
-  margin: 0 0 4px;
-  color: #3b82d6;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-}
-
-.eurnyse-avatar-picker__header h3 {
-  margin: 0;
-  color: #172033;
-  font-size: 20px;
-  font-weight: 800;
-}
-
-.eurnyse-avatar-picker__close {
-  display: inline-flex;
-  width: 38px;
-  height: 38px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(94, 151, 207, 0.22);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.72);
-  color: #355779;
-}
-
-.eurnyse-avatar-picker__section + .eurnyse-avatar-picker__section {
-  margin-top: 18px;
-}
-
-.eurnyse-avatar-picker__section-title {
-  margin-bottom: 10px;
-  color: #5c728b;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.eurnyse-avatar-picker__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.eurnyse-avatar-option {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid rgba(94, 151, 207, 0.18);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.62);
-  padding: 10px 8px;
-  color: #37536f;
-  font-size: 11px;
-  font-weight: 700;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
-}
-
-.eurnyse-avatar-option img {
-  width: 66px;
-  height: 66px;
-  border-radius: 18px;
-  object-fit: cover;
-  box-shadow: 0 10px 20px rgba(33, 79, 131, 0.12);
-}
-
-.eurnyse-avatar-option.is-active {
-  border-color: rgba(43, 126, 214, 0.72);
-  background: rgba(235, 247, 255, 0.92);
-  box-shadow: 0 12px 26px rgba(43, 126, 214, 0.16);
-  color: #1f65b7;
-}
-
-.eurnyse-avatar-option:hover {
-  transform: translateY(-1px);
-  border-color: rgba(43, 126, 214, 0.48);
+@media (min-width: 768px) {
+  .eurforex-user-balance-amount {
+    font-size: 2.25rem;
+  }
 }
 </style>

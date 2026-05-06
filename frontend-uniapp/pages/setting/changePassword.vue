@@ -38,11 +38,11 @@
 import { changePassword } from '@/utils/api'
 
 /**
- * EURNYSE - 更換密碼 (純 H5 Vue2 Options API)
+ * EURFOREX - 更換密碼 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/change-password.html 為唯一基準逐字遷移
  * 外部腳本：../shared/marble-bg.js、../shared/back-nav.js（動態注入）
  * 原稿的 onsubmit="return false;" → Vue 的 @submit.prevent
- * 原稿的 onclick="return EurnyseBack.go(...)" → @click 調用 backGo 方法（載入後呼叫 window.EurnyseBack.go）
+ * 原稿的 onclick="return EurforexBack.go(...)" → @click 調用 backGo 方法（載入後呼叫 window.EurforexBack.go）
  */
 var BODY_CLASSES = [
   "nc2c-page",
@@ -73,8 +73,8 @@ export default {
       document.body.setAttribute("data-nc2c-page", "change-password");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurnyseMarbleBgJs");
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurforexMarbleBgJs");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
   },
   beforeDestroy: function () {
     try {
@@ -87,9 +87,9 @@ export default {
   },
   methods: {
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     },
     handleChangePassword: function () {

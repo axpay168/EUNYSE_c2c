@@ -6,7 +6,7 @@
     var config = window.__ADMIN_RUNTIME_CONFIG__ || {};
     return String(config.apiBaseUrl || "http://127.0.0.1:8000").replace(/\/$/, "");
   }
-  var tokenKey = "eurnyse_admin_token";
+  var tokenKey = "eurforex_admin_token";
   var token = window.localStorage.getItem(tokenKey) || "";
   var debugEnabled = /(?:\?|&)debugApi=1(?:&|$)/.test(window.location.search);
   var ADMIN_ERROR_MESSAGES = {

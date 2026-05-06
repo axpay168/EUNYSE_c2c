@@ -68,9 +68,9 @@ $pdo = new PDO(
         'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
         env_string('DB_HOST', '127.0.0.1'),
         env_string('DB_PORT', '3306'),
-        env_string('DB_NAME', 'eurnyse_c2c')
+        env_string('DB_NAME', 'eurforex_c2c')
     ),
-    env_string('DB_USER', 'eurnyse_c2c'),
+    env_string('DB_USER', 'eurforex_c2c'),
     env_string('DB_PASSWORD', ''),
     [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

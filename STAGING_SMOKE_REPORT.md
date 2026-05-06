@@ -6,7 +6,7 @@
 
 - 完整前台 + 後台 + API + 餘額帳本冒煙測試已通過。
 - 已修復先前缺口：KYC 前台提交/補傳/狀態展示、錢包真實餘額展示、C2C 買入 EUR 凍結/退回/成交入帳、C2C 賣出頁真實下單、交易/充值/提現詳情頁真實資料。
-- `eurnyse_c2c` 資料庫已改用 `DB_USER=eurnyse_c2c`，並新增 `backend-api/database/eurnyse_c2c` 作為資料庫資產資料夾，避免與 `new_c2c` 混用。
+- `eurforex_c2c` 資料庫已改用 `DB_USER=eurforex_c2c`，並新增 `backend-api/database/eurforex_c2c` 作為資料庫資產資料夾，避免與 `new_c2c` 混用。
 - 新增 Playwright 規格：`frontend-uniapp/e2e/staging-full-smoke.spec.ts`。
 - 後續補強：後台寫入 smoke 已擴充首頁內容、橫幅、換匯提現設定、交易動態、理財產品；另新增 staging 測試資料清理腳本。
 
@@ -27,9 +27,9 @@
 ## 執行結果
 
 - `SMOKE_ADMIN_ACCOUNT=<staging-admin> SMOKE_ADMIN_PASSWORD=<staging-password> npm test`：通過。
-- `EURNYSE_E2E_INVITE=<valid-invite-code> npx playwright test register-and-api.spec.ts --reporter=list`：通過。
-- `EURNYSE_E2E_INVITE=<valid-invite-code> EURNYSE_ADMIN_ACCOUNT=<staging-admin> EURNYSE_ADMIN_PASSWORD=<staging-password> npx playwright test staging-full-smoke.spec.ts --reporter=list`：通過。
-- `EURNYSE_E2E_INVITE=<valid-invite-code> EURNYSE_ADMIN_ACCOUNT=<staging-admin> EURNYSE_ADMIN_PASSWORD=<staging-password> npx playwright test staging-full-smoke.spec.ts register-and-api.spec.ts admin-console.spec.ts --reporter=list`：6 passed。
+- `EURFOREX_E2E_INVITE=<valid-invite-code> npx playwright test register-and-api.spec.ts --reporter=list`：通過。
+- `EURFOREX_E2E_INVITE=<valid-invite-code> EURFOREX_ADMIN_ACCOUNT=<staging-admin> EURFOREX_ADMIN_PASSWORD=<staging-password> npx playwright test staging-full-smoke.spec.ts --reporter=list`：通過。
+- `EURFOREX_E2E_INVITE=<valid-invite-code> EURFOREX_ADMIN_ACCOUNT=<staging-admin> EURFOREX_ADMIN_PASSWORD=<staging-password> npx playwright test staging-full-smoke.spec.ts register-and-api.spec.ts admin-console.spec.ts --reporter=list`：6 passed。
 - `npm run build:h5`：通過，僅保留既有大型靜態資產警告。
 - `php -l scripts/smoke.php && php -l scripts/cleanup-staging-smoke.php && php -l public/index.php`：通過。
 
@@ -38,30 +38,30 @@
 - 後端 smoke 不再內建管理員測試帳密，需由環境變數提供 staging 管理員帳密。
 - `register-and-api.spec.ts` 需由環境變數提供有效邀請碼。
 - C2C 完整測試仍會把測試用戶提升到可跑多筆賣單的等級，否則會被每日賣出限制擋住；這是業務限制，不是錯誤。
-- 專案內已不再以 `new_c2c` 作為後端 DB_USER；本機已建立 `eurnyse_c2c` MySQL 使用者並授權 `eurnyse_c2c` 資料庫。
+- 專案內已不再以 `new_c2c` 作為後端 DB_USER；本機已建立 `eurforex_c2c` MySQL 使用者並授權 `eurforex_c2c` 資料庫。
 
 ## 重跑方式
 
 ```bash
-cd "/home/openclaw/桌面/Project /EURNYSE_C2C/frontend-uniapp"
-EURNYSE_E2E_INVITE=<valid-invite-code> \
-EURNYSE_ADMIN_ACCOUNT=<staging-admin> \
-EURNYSE_ADMIN_PASSWORD=<staging-password> \
+cd "/home/openclaw/桌面/Project /EURFOREX_C2C/frontend-uniapp"
+EURFOREX_E2E_INVITE=<valid-invite-code> \
+EURFOREX_ADMIN_ACCOUNT=<staging-admin> \
+EURFOREX_ADMIN_PASSWORD=<staging-password> \
 npx playwright test staging-full-smoke.spec.ts --reporter=list
 ```
 
 若要改成外部 staging，請額外帶入：
 
 ```bash
-EURNYSE_API_BASE=https://api.example.test \
-EURNYSE_FRONTEND_BASE=https://h5.example.test \
-EURNYSE_ADMIN_BASE=https://admin.example.test
+EURFOREX_API_BASE=https://api.example.test \
+EURFOREX_FRONTEND_BASE=https://h5.example.test \
+EURFOREX_ADMIN_BASE=https://admin.example.test
 ```
 
 清理 staging smoke 測試資料：
 
 ```bash
-cd "/home/openclaw/桌面/Project /EURNYSE_C2C/backend-api"
+cd "/home/openclaw/桌面/Project /EURFOREX_C2C/backend-api"
 SMOKE_EMAIL_LIKE='e2e.smoke-%@test.local' \
 SMOKE_LISTING_LIKE='smoke-%' \
 SMOKE_FINANCIAL_PRODUCT_LIKE='smoke_%' \

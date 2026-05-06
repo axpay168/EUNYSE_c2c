@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
-const ADMIN_ACCOUNT = process.env.EURNYSE_ADMIN_ACCOUNT
-const ADMIN_PASSWORD = process.env.EURNYSE_ADMIN_PASSWORD
+const ADMIN_ACCOUNT = process.env.EURFOREX_ADMIN_ACCOUNT
+const ADMIN_PASSWORD = process.env.EURFOREX_ADMIN_PASSWORD
 const adminTest = ADMIN_ACCOUNT && ADMIN_PASSWORD ? test : test.skip
 
 /**
@@ -10,8 +10,8 @@ const adminTest = ADMIN_ACCOUNT && ADMIN_PASSWORD ? test : test.skip
  * - 切換數個側欄模組，確認表格由 API 載入且無「驗收原型」全域 toast。
  *
  * 需要環境變數：
- * - EURNYSE_ADMIN_ACCOUNT
- * - EURNYSE_ADMIN_PASSWORD
+ * - EURFOREX_ADMIN_ACCOUNT
+ * - EURFOREX_ADMIN_PASSWORD
  */
 
 test.use({

@@ -156,45 +156,15 @@
       z-index: 2;
       display: flex;
       justify-content: center;
-      margin-bottom: 10px;
+      margin-bottom: 28px;
     }
 
     .logo-image img {
       width: 100%;
-      max-width: 210px;
+      max-width: 300px;
       height: auto;
       display: block;
       object-fit: contain;
-    }
-
-    .brand-copy {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-      margin-bottom: 18px;
-      line-height: 1;
-    }
-
-    .brand-title {
-      font-family: "Space Grotesk", "Manrope", sans-serif;
-      font-size: 34px;
-      font-weight: 800;
-      letter-spacing: 0.22em;
-      color: #000000;
-      text-transform: uppercase;
-      text-shadow: none;
-    }
-
-    .brand-subtitle {
-      margin-top: 8px;
-      font-family: "Space Grotesk", "Manrope", sans-serif;
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: 0.42em;
-      color: #000000;
-      text-transform: uppercase;
-      padding-left: 0.42em;
-      text-shadow: 0 8px 18px rgba(8, 31, 44, 0.22);
     }
 
     .status {
@@ -596,18 +566,7 @@
       }
 
       .logo-image img {
-        max-width: 180px;
-      }
-
-      .brand-title {
-        font-size: 28px;
-        letter-spacing: 0.18em;
-      }
-
-      .brand-subtitle {
-        font-size: 16px;
-        letter-spacing: 0.34em;
-        padding-left: 0.34em;
+        max-width: 250px;
       }
 
       .field input,

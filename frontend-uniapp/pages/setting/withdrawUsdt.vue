@@ -151,7 +151,7 @@ import { userApi } from '@/utils/api'
 import { filterUsdtPayoutItems, usdtPayoutRowTitle, payoutMethodStatusLabel } from '@/utils/payoutUsdt'
 
 /**
- * EURNYSE - USDT 提現 (純 H5 Vue2 Options API)
+ * EURFOREX - USDT 提現 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/withdraw-usdt.html 為唯一基準逐字遷移
  */
 var BODY_CLASSES = [
@@ -221,8 +221,8 @@ export default {
       document.body.setAttribute("data-nc2c-page", "withdraw-usdt");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurnyseMarbleBgJs");
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurforexMarbleBgJs");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
     this.loadOverviewBalance();
   },
   beforeDestroy: function () {
@@ -239,9 +239,9 @@ export default {
   },
   methods: {
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     },
     payoutRowTitle: usdtPayoutRowTitle,

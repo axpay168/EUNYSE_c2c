@@ -2,7 +2,7 @@ import { FALLBACK_LANG } from './langs'
 
 const ORIGINAL_TEXT = new WeakMap()
 const LAST_TRANSLATED_TEXT = new WeakMap()
-const ORIGINAL_ATTR_PREFIX = 'data-eurnyse-i18n-original-'
+const ORIGINAL_ATTR_PREFIX = 'data-eurforex-i18n-original-'
 const ATTRS = ['placeholder', 'aria-label', 'title', 'alt']
 const SKIP_TAGS = { SCRIPT: true, STYLE: true, NOSCRIPT: true, SVG: true, PATH: true }
 

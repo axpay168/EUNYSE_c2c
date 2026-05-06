@@ -2,7 +2,7 @@
 
 ## 原則
 
-- **視覺不可變**：定稿頁依賴凍結樣式表 `css/draft-pixel-frozen.css`（內容與歷史 `../shared/eurnyse.utilities.css` 同位元組級一致），包含原子 class 規則（如 `flex`、`text-on-surface` 等）。**不再使用 Tailwind CLI 或建置流程**；此檔為唯一「像素鎖」來源。
+- **視覺不可變**：定稿頁依賴凍結樣式表 `css/draft-pixel-frozen.css`（內容與歷史 `../shared/eurforex.utilities.css` 同位元組級一致），包含原子 class 規則（如 `flex`、`text-on-surface` 等）。**不再使用 Tailwind CLI 或建置流程**；此檔為唯一「像素鎖」來源。
 - **語義掛鉤**：每頁 `<body>` 帶 `nc2c-page nc2c-page--<檔名>`，便於腳本／截圖／後續重構對照，**不加上任何覆寫型規則**（見 `css/nc2c-shell.css`）。
 - **SCSS**：`scss/_tokens.scss` 備妥色票變數，與主題對照檔一致；若日後要改為「純 SCSS 輸出 CSS」，須另行建立編譯流程並做像素迴歸。
 

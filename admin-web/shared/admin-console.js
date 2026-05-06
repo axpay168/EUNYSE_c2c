@@ -1,5 +1,5 @@
 /**
- * EURNYSE 後台：模組切換、hash 同步、側欄狀態
+ * EURFOREX 後台：模組切換、hash 同步、側欄狀態
  */
 (function (window, document) {
   if (typeof window.__ADMIN_RESOLVE_API_BASE__ !== "function") {
@@ -33,10 +33,10 @@
     };
   }
 
-  var ADMIN_AUTH_KEY = "eurnyse_admin_frontend_auth";
-  var ADMIN_PROFILE_KEY = "eurnyse_admin_profile";
-  var ADMIN_LAST_ACCOUNT_KEY = "eurnyse_admin_last_account";
-  var ADMIN_NOTIFY_KEY = "eurnyse_admin_deposit_alert_settings";
+  var ADMIN_AUTH_KEY = "eurforex_admin_frontend_auth";
+  var ADMIN_PROFILE_KEY = "eurforex_admin_profile";
+  var ADMIN_LAST_ACCOUNT_KEY = "eurforex_admin_last_account";
+  var ADMIN_NOTIFY_KEY = "eurforex_admin_deposit_alert_settings";
   var MODULE_IDS = [
     "dashboard",
     "users",
@@ -105,7 +105,7 @@
     var crumb = document.getElementById("admin-crumb-active");
     if (crumb) crumb.textContent = LABELS[viewId] || viewId;
 
-    document.title = "EURNYSE 後台 — " + (LABELS[viewId] || viewId);
+    document.title = "EURFOREX 後台 — " + (LABELS[viewId] || viewId);
   }
 
   function closeMobileNav() {
@@ -277,21 +277,21 @@
   }
 
   function clearAdminSessionPayload() {
-    adminStorageRemove("eurnyse_admin_token");
+    adminStorageRemove("eurforex_admin_token");
     adminStorageRemove(ADMIN_AUTH_KEY);
     adminStorageRemove(ADMIN_PROFILE_KEY);
     adminStorageRemove(ADMIN_LAST_ACCOUNT_KEY);
   }
 
   function persistAdminSession(token, admin, typedAccount) {
-    if (token) adminStorageSet("eurnyse_admin_token", token);
+    if (token) adminStorageSet("eurforex_admin_token", token);
     adminStorageSet(ADMIN_AUTH_KEY, "1");
     if (typedAccount) adminStorageSet(ADMIN_LAST_ACCOUNT_KEY, typedAccount);
     if (admin && typeof admin === "object") {
       adminStorageSet(ADMIN_PROFILE_KEY, JSON.stringify(admin));
     }
     updateTopbarFromProfile(admin && typeof admin === "object" ? admin : readCachedAdminProfile());
-    window.dispatchEvent(new CustomEvent("eurnyse-admin-api-token-ready"));
+    window.dispatchEvent(new CustomEvent("eurforex-admin-api-token-ready"));
   }
 
   function adminApiBaseUrl() {
@@ -365,7 +365,7 @@
     options = options || {};
     var headers = options.headers || {};
     headers["Content-Type"] = "application/json";
-    var token = adminStorageGet("eurnyse_admin_token");
+    var token = adminStorageGet("eurforex_admin_token");
     if (token) headers.Authorization = "Bearer " + token;
     return fetch(adminApiBaseUrl() + path, {
       method: options.method || "GET",
@@ -411,7 +411,7 @@
 
   /** @returns {Promise<boolean>} */
   function refreshAdminProfileFromServer() {
-    var token = adminStorageGet("eurnyse_admin_token");
+    var token = adminStorageGet("eurforex_admin_token");
     if (!token) return Promise.resolve(false);
     return fetch(adminApiBaseUrl() + "/api/admin/auth/me", {
       method: "GET",
@@ -489,7 +489,7 @@
     tryRecoverSession: tryRecoverAdminSession,
     forceReloginUi: forceAdminReloginUi,
     getApiToken: function () {
-      return adminStorageGet("eurnyse_admin_token") || "";
+      return adminStorageGet("eurforex_admin_token") || "";
     },
     getAdminProfile: function () {
       return readCachedAdminProfile();
@@ -498,7 +498,7 @@
 
   function performAdminLogout() {
     stopDepositAlertMonitor();
-    var token = adminStorageGet("eurnyse_admin_token");
+    var token = adminStorageGet("eurforex_admin_token");
     if (!token) {
       forceAdminReloginUi("已登出後台。");
       return;
@@ -588,7 +588,7 @@
 
   function checkDepositAlerts() {
     var settings = readDepositAlertSettings();
-    if (!settings.enabled || !adminStorageGet("eurnyse_admin_token")) return;
+    if (!settings.enabled || !adminStorageGet("eurforex_admin_token")) return;
     adminApiFetchJson("/api/admin/deposit-requests?status=pending&page=1&page_size=1")
       .then(function (data) {
         var item = data.items && data.items[0];
@@ -703,7 +703,7 @@
     var account = document.getElementById("admin-login-account");
     var password = document.getElementById("admin-login-password");
     var error = document.getElementById("admin-login-error");
-    var token = adminStorageGet("eurnyse_admin_token");
+    var token = adminStorageGet("eurforex_admin_token");
     var isAuthed = Boolean(token);
 
     if (!token && adminStorageGet(ADMIN_AUTH_KEY) === "1") {
@@ -823,7 +823,7 @@
     window.showAdminToast = showActionNotice;
   }
 
-  /** 與前台 eurnyse-empty-card 結構對齊的表格空狀態（單列 colspan） */
+  /** 與前台 eurforex-empty-card 結構對齊的表格空狀態（單列 colspan） */
   function escapeAdminHtml(s) {
     return String(s == null ? "" : s)
       .replace(/&/g, "&amp;")

@@ -1,7 +1,7 @@
 {
   "name": "backend-api",
   "version": "1.0.0",
-  "description": "PHP backend for EURNYSE_C2C auth, user, and admin APIs",
+  "description": "PHP backend for EURFOREX_C2C auth, user, and admin APIs",
   "scripts": {
     "test": "npm run smoke",
     "start": "php -S 0.0.0.0:8000 router.php",

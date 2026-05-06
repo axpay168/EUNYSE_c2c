@@ -27,7 +27,7 @@
 
 <script>
 /**
- * EURNYSE - 內嵌視窗 (純 H5 Vue2 Options API)
+ * EURFOREX - 內嵌視窗 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/webview.html 為唯一基準逐字遷移
  * 原稿無內聯 JS，僅外部 back-nav.js
  */
@@ -51,7 +51,7 @@ export default {
       document.body.setAttribute("data-nc2c-page", "webview");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
   },
   beforeDestroy: function () {
     try {
@@ -64,9 +64,9 @@ export default {
   },
   methods: {
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     }
   }

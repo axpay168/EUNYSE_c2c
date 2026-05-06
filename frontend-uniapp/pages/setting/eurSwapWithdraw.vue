@@ -148,7 +148,7 @@
 import { userApi } from '@/utils/api'
 
 /**
- * EURNYSE - 換匯提領 (純 H5 Vue2 Options API)
+ * EURFOREX - 換匯提領 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/eur-swap-withdraw.html 為唯一基準逐字遷移
  */
 var BODY_CLASSES = [
@@ -212,8 +212,8 @@ export default {
       document.body.setAttribute("data-nc2c-page", "eur-swap-withdraw");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurnyseMarbleBgJs");
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/marble-bg.js", "eurforexMarbleBgJs");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
     this.loadPageData();
   },
   beforeDestroy: function () {
@@ -230,9 +230,9 @@ export default {
   },
   methods: {
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     },
     fillMax: function () {

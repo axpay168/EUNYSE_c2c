@@ -1,9 +1,13 @@
 import avatar from './avatar.png'
-import brandLogo from './brand-logo.png'
+import brandLoginLogo from './brand-login-logo.png'
+import brandMarkLogo from './brand-mark.png'
+import brandWordmarkLogo from './brand-wordmark.png'
 import hallCertifiedBadge from './hall-certified-badge.png'
 
 export {
   avatar,
-  brandLogo,
+  brandLoginLogo,
+  brandMarkLogo,
+  brandWordmarkLogo,
   hallCertifiedBadge
 }

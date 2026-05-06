@@ -1,26 +1,34 @@
 <template>
-  <div class="eurnyse-shell">
+  <div class="eurforex-shell">
     <component :is="currentView" />
     <nav
       v-if="showMainNav"
-      class="eurnyse-home-bottom-nav eurnyse-shell-tabbar"
+      class="eurforex-home-bottom-nav eurforex-shell-tabbar"
       aria-label="主頁底部導航"
     >
       <a
         v-for="item in mainNavItems"
         :key="item.path"
-        class="eurnyse-shell-tabbar__item"
-        :class="{ 'eurnyse-shell-tabbar__item--active': activeMainNavPath === item.path }"
+        class="eurforex-shell-tabbar__item"
+        :class="{ 'eurforex-shell-tabbar__item--active': activeMainNavPath === item.path }"
         :href="item.path"
         :aria-current="activeMainNavPath === item.path ? 'page' : null"
         @click.prevent="navigate(item.path, false)"
       >
+        <img
+          v-if="item.brandIcon"
+          class="eurforex-shell-tabbar__brand-icon"
+          :src="item.brandIcon"
+          alt=""
+          aria-hidden="true"
+        />
         <span
-          class="material-symbols-outlined eurnyse-shell-tabbar__icon"
+          v-else
+          class="material-symbols-outlined eurforex-shell-tabbar__icon"
           :style="activeMainNavPath === item.path ? iconFillStyle : null"
           aria-hidden="true"
         >{{ item.icon }}</span>
-        <span class="eurnyse-shell-tabbar__label">{{ $phrase(item.label, item.label) }}</span>
+        <span class="eurforex-shell-tabbar__label">{{ $phrase(item.label, item.label) }}</span>
       </a>
     </nav>
   </div>
@@ -28,6 +36,7 @@
 
 <script>
 import { hasSession } from '@/utils/session'
+import { brandMarkLogo } from '@/assets/images'
 import RouteChunkLoading from './components/RouteChunkLoading.vue'
 
 function createRouteLoadingComponent() {
@@ -49,6 +58,7 @@ function defineAsyncPage(importFn) {
 
 const DEFAULT_ROUTE = '#/pages/common/login'
 const AUTH_ROUTE = '#/pages/common/login'
+const HOME_ROUTE = '#/pages/index/index'
 
 const ROUTE_COMPONENTS = {
   '#/pages/common/login': defineAsyncPage(() => import(/* webpackChunkName: "page-login" */ './pages/common/login.vue')),
@@ -95,8 +105,13 @@ const PUBLIC_ROUTES = {
   '#/pages/common/resetpwd': true
 }
 
+const AUTH_ENTRY_ROUTES = {
+  '#/pages/common/login': true,
+  '#/pages/common/register': true
+}
+
 const MAIN_NAV_ITEMS = [
-  { path: '#/pages/index/index', label: '主頁', icon: 'home' },
+  { path: '#/pages/index/index', label: '主頁', brandIcon: brandMarkLogo },
   { path: '#/pages/index/hall', label: '交易大廳', icon: 'swap_horizontal_circle' },
   { path: '#/pages/setting/myTask', label: '訂單', icon: 'receipt_long' },
   { path: '#/pages/setting/user', label: '個人中心', icon: 'person' }
@@ -165,11 +180,16 @@ export default {
   },
   methods: {
     ensureDefaultRoute() {
-      if (!window.location.hash) window.location.hash = DEFAULT_ROUTE
+      if (!window.location.hash) window.location.hash = hasSession() ? HOME_ROUTE : DEFAULT_ROUTE
     },
     syncRoute() {
       const nextRoute = normalizeHash(window.location.hash)
       const path = routePath(nextRoute)
+      if (AUTH_ENTRY_ROUTES[path] && hasSession()) {
+        this.currentRoute = HOME_ROUTE
+        if (window.location.hash !== HOME_ROUTE) window.location.hash = HOME_ROUTE
+        return
+      }
       if (!PUBLIC_ROUTES[path] && !hasSession()) {
         this.currentRoute = AUTH_ROUTE
         if (window.location.hash !== AUTH_ROUTE) window.location.hash = AUTH_ROUTE
@@ -206,13 +226,13 @@ export default {
 </script>
 
 <style>
-.eurnyse-shell {
-  --eurnyse-tabbar-core-h: clamp(3.75rem, 8.6dvh, 5rem);
-  --eurnyse-tabbar-pad-x: clamp(0.625rem, 3.7vw, 1rem);
-  --eurnyse-tabbar-pad-y: clamp(0.25rem, 0.9dvh, 0.5rem);
-  --eurnyse-tabbar-icon: clamp(1.25rem, 3.9dvh, 1.5rem);
-  --eurnyse-tabbar-label: clamp(0.625rem, 1.45dvh, 0.6875rem);
-  --eurnyse-tabbar-item-x: clamp(0.5rem, 2.8vw, 0.75rem);
+.eurforex-shell {
+  --eurforex-tabbar-core-h: clamp(3.75rem, 8.6dvh, 5rem);
+  --eurforex-tabbar-pad-x: clamp(0.625rem, 3.7vw, 1rem);
+  --eurforex-tabbar-pad-y: clamp(0.25rem, 0.9dvh, 0.5rem);
+  --eurforex-tabbar-icon: clamp(1.25rem, 3.9dvh, 1.5rem);
+  --eurforex-tabbar-label: clamp(0.625rem, 1.45dvh, 0.6875rem);
+  --eurforex-tabbar-item-x: clamp(0.5rem, 2.8vw, 0.75rem);
   min-height: 100vh;
   min-height: 100dvh;
 }
@@ -221,11 +241,11 @@ export default {
  * 真正上線用的主導航底欄只允許 RootShell 渲染一份。
  * 舊頁面內複製的底欄保留在模板中也不顯示，避免某頁 class / mounted / import 順序造成缺失。
  */
-.eurnyse-shell nav.eurnyse-home-bottom-nav:not(.eurnyse-shell-tabbar) {
+.eurforex-shell nav.eurforex-home-bottom-nav:not(.eurforex-shell-tabbar) {
   display: none !important;
 }
 
-.eurnyse-shell-tabbar {
+.eurforex-shell-tabbar {
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
@@ -236,8 +256,8 @@ export default {
   justify-content: space-around;
   align-items: center;
   width: 100%;
-  min-height: calc(var(--eurnyse-tabbar-core-h) + env(safe-area-inset-bottom, 0px));
-  padding: var(--eurnyse-tabbar-pad-y) var(--eurnyse-tabbar-pad-x) calc(var(--eurnyse-tabbar-pad-y) + env(safe-area-inset-bottom, 0px));
+  min-height: calc(var(--eurforex-tabbar-core-h) + env(safe-area-inset-bottom, 0px));
+  padding: var(--eurforex-tabbar-pad-y) var(--eurforex-tabbar-pad-x) calc(var(--eurforex-tabbar-pad-y) + env(safe-area-inset-bottom, 0px));
   border-radius: 1rem 1rem 0 0;
   border-top: 1px solid rgba(86, 142, 196, 0.16);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(243, 250, 255, 0.76));
@@ -247,7 +267,7 @@ export default {
   font-family: "Manrope", "PingFang TC", "Microsoft JhengHei", sans-serif;
 }
 
-.eurnyse-shell-tabbar__item {
+.eurforex-shell-tabbar__item {
   display: flex;
   min-width: clamp(3.25rem, 18vw, 4rem);
   flex-direction: column;
@@ -255,46 +275,53 @@ export default {
   justify-content: center;
   gap: clamp(0rem, 0.35dvh, 0.125rem);
   border-radius: 0.75rem;
-  padding: clamp(0.1875rem, 0.5dvh, 0.25rem) var(--eurnyse-tabbar-item-x);
+  padding: clamp(0.1875rem, 0.5dvh, 0.25rem) var(--eurforex-tabbar-item-x);
   color: #617588;
   text-decoration: none;
   transition: color 0.16s ease, background-color 0.16s ease, transform 0.16s ease;
 }
 
-.eurnyse-shell-tabbar__item--active {
+.eurforex-shell-tabbar__item--active {
   color: #2764ac;
   background: rgba(191, 220, 252, 0.62);
 }
 
-.eurnyse-shell-tabbar__item:active {
+.eurforex-shell-tabbar__item:active {
   transform: scale(0.96);
 }
 
-.eurnyse-shell-tabbar__icon {
-  font-size: var(--eurnyse-tabbar-icon);
+.eurforex-shell-tabbar__icon {
+  font-size: var(--eurforex-tabbar-icon);
   line-height: 1;
 }
 
-.eurnyse-shell-tabbar__label {
+.eurforex-shell-tabbar__brand-icon {
+  display: block;
+  width: var(--eurforex-tabbar-icon);
+  height: var(--eurforex-tabbar-icon);
+  object-fit: contain;
+}
+
+.eurforex-shell-tabbar__label {
   margin-top: clamp(0rem, 0.3dvh, 0.125rem);
-  font-size: var(--eurnyse-tabbar-label);
+  font-size: var(--eurforex-tabbar-label);
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.02em;
 }
 
 @media (max-height: 700px) {
-  .eurnyse-shell {
-    --eurnyse-tabbar-core-h: clamp(3.5rem, 9dvh, 4rem);
-    --eurnyse-tabbar-pad-y: 0.1875rem;
+  .eurforex-shell {
+    --eurforex-tabbar-core-h: clamp(3.5rem, 9dvh, 4rem);
+    --eurforex-tabbar-pad-y: 0.1875rem;
   }
 }
 
 @media (max-height: 560px) {
-  .eurnyse-shell {
-    --eurnyse-tabbar-core-h: 3.25rem;
-    --eurnyse-tabbar-icon: 1.125rem;
-    --eurnyse-tabbar-label: 0.5625rem;
+  .eurforex-shell {
+    --eurforex-tabbar-core-h: 3.25rem;
+    --eurforex-tabbar-icon: 1.125rem;
+    --eurforex-tabbar-label: 0.5625rem;
   }
 }
 </style>

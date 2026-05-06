@@ -22,12 +22,12 @@ test.describe('H5：已登入狀態下全 pages.json 路由', () => {
         await expect(page).toHaveURL(new RegExp(escapeHashForUrlRegex(pathOnly)))
         return
       }
-      await page.waitForFunction(() => document.querySelector('.eurnyse-shell'))
+      await page.waitForFunction(() => document.querySelector('.eurforex-shell'))
       const expectHash = expectedHashAfterNavigation(hash)
       await expect(page).toHaveURL(new RegExp(escapeHashForUrlRegex(expectHash)))
-      await expect(page.locator('.eurnyse-shell')).toBeVisible()
+      await expect(page.locator('.eurforex-shell')).toBeVisible()
       if (hasMainTabbar(expectHash)) {
-        await expect(page.locator('.eurnyse-shell-tabbar')).toBeVisible()
+        await expect(page.locator('.eurforex-shell-tabbar')).toBeVisible()
       }
     })
   }
@@ -40,7 +40,7 @@ test.describe('H5：底欄四入口點擊與 URL', () => {
 
   test('主頁 → 大廳 → 訂單 → 個人 → 主頁', async ({ page }) => {
     await page.goto(h5Url('#/pages/index/index'))
-    await page.waitForSelector('.eurnyse-shell-tabbar')
+    await page.waitForSelector('.eurforex-shell-tabbar')
 
     await page.getByRole('navigation', { name: '主頁底部導航' }).getByRole('link', { name: '交易大廳' }).click()
     await expect(page).toHaveURL(/#\/pages\/index\/hall/)

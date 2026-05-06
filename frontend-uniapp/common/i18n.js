@@ -83,7 +83,7 @@ export const i18nReady = ensureLocale(initialLocale).then(messages => {
 })
 
 if (typeof window !== 'undefined') {
-  window.EurnyseI18n = {
+  window.EurforexI18n = {
     setLocale,
     currentLocale,
     translate: scheduleTranslate,

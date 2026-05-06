@@ -15,12 +15,12 @@ type Wallet = {
   reserved_balance: string
 }
 
-const API_BASE = (process.env.EURNYSE_API_BASE || 'http://127.0.0.1:8000').replace(/\/$/, '')
-const H5_BASE = (process.env.EURNYSE_FRONTEND_BASE || 'http://127.0.0.1:8094').replace(/\/$/, '')
-const ADMIN_BASE = (process.env.EURNYSE_ADMIN_BASE || 'http://127.0.0.1:8095').replace(/\/$/, '')
-const INVITE = (process.env.EURNYSE_E2E_INVITE || '847392').toUpperCase()
-const ADMIN_ACCOUNT = process.env.EURNYSE_ADMIN_ACCOUNT
-const ADMIN_PASSWORD = process.env.EURNYSE_ADMIN_PASSWORD
+const API_BASE = (process.env.EURFOREX_API_BASE || 'http://127.0.0.1:8000').replace(/\/$/, '')
+const H5_BASE = (process.env.EURFOREX_FRONTEND_BASE || 'http://127.0.0.1:8094').replace(/\/$/, '')
+const ADMIN_BASE = (process.env.EURFOREX_ADMIN_BASE || 'http://127.0.0.1:8095').replace(/\/$/, '')
+const INVITE = (process.env.EURFOREX_E2E_INVITE || '847392').toUpperCase()
+const ADMIN_ACCOUNT = process.env.EURFOREX_ADMIN_ACCOUNT
+const ADMIN_PASSWORD = process.env.EURFOREX_ADMIN_PASSWORD
 const TEST_RUN = `smoke-${Date.now()}`
 const TEST_EMAIL = `e2e.${TEST_RUN}@test.local`
 const TEST_PASSWORD = 'E2eSmoke!99'
@@ -70,8 +70,8 @@ async function loginUser(request: APIRequestContext, account: string, password: 
 }
 
 async function loginAdmin(request: APIRequestContext): Promise<string> {
-  expect(ADMIN_ACCOUNT, 'EURNYSE_ADMIN_ACCOUNT is required for admin smoke tests').toBeTruthy()
-  expect(ADMIN_PASSWORD, 'EURNYSE_ADMIN_PASSWORD is required for admin smoke tests').toBeTruthy()
+  expect(ADMIN_ACCOUNT, 'EURFOREX_ADMIN_ACCOUNT is required for admin smoke tests').toBeTruthy()
+  expect(ADMIN_PASSWORD, 'EURFOREX_ADMIN_PASSWORD is required for admin smoke tests').toBeTruthy()
   const payload = await api<{ token?: string, admin?: { password_must_change?: boolean } }>(request, 'POST', '/api/admin/auth/login', {
     data: { account: ADMIN_ACCOUNT as string, password: ADMIN_PASSWORD as string }
   })
@@ -93,8 +93,8 @@ async function loginAdminInBrowser(page: Page): Promise<void> {
 async function loadUserSession(page: Page, token: string, email: string): Promise<void> {
   await page.goto(h5Url('#/pages/index/index'))
   await page.evaluate(([savedToken, savedEmail]) => {
-    window.localStorage.setItem('eurnyse_user_token', String(savedToken))
-    window.localStorage.setItem('eurnyse_user_profile', JSON.stringify({ email: savedEmail }))
+    window.localStorage.setItem('eurforex_user_token', String(savedToken))
+    window.localStorage.setItem('eurforex_user_profile', JSON.stringify({ email: savedEmail }))
   }, [token, email])
 }
 
@@ -145,15 +145,17 @@ test.describe('staging 真實互動冒煙測試', () => {
       await page.locator('#registerForm').evaluate(form => (form as HTMLFormElement).requestSubmit())
       await expect(page.locator('#postRegisterModal')).toHaveClass(/open/)
       await page.locator('#bindLaterBtn').click()
-      await expect(page).toHaveURL(/#\/pages\/common\/login/)
+      await expect(page).toHaveURL(/#\/pages\/index\/index/)
     })
 
-    await test.step('前台登入與後端使用者資料驗證', async () => {
-      await page.locator('#tabAccount').click()
-      await page.locator('#account').fill(TEST_EMAIL)
-      await page.locator('#password').fill(TEST_PASSWORD)
-      await page.locator('#loginForm').evaluate(form => (form as HTMLFormElement).requestSubmit())
+    await test.step('前台註冊後自動登入與本地登入態驗證', async () => {
       await expect(page).toHaveURL(/#\/pages\/index\/index/)
+      const browserSession = await page.evaluate(() => ({
+        token: window.localStorage.getItem('eurforex_user_token') || '',
+        profile: window.localStorage.getItem('eurforex_user_profile') || ''
+      }))
+      expect(browserSession.token, 'registered browser session should have token').toBeTruthy()
+      expect(browserSession.profile, 'registered browser session should have profile').toBeTruthy()
     })
 
     const userToken = await loginUser(request, TEST_EMAIL, TEST_PASSWORD)

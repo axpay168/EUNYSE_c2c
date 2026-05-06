@@ -4,11 +4,7 @@
       <LanguageSelector button-id="loginLanguageButton" />
     </div>
     <div class="logo-image">
-      <img :src="logoSrc" alt="EURNYSE Logo" />
-    </div>
-    <div class="brand-copy">
-      <div class="brand-title">EURNYSE</div>
-      <div class="brand-subtitle">C2C</div>
+      <img :src="logoSrc" alt="EURFOREX Logo" />
     </div>
 
     <div class="login-card">
@@ -95,7 +91,9 @@
           <a class="ghost-btn" href="#/pages/common/register">註冊帳戶</a>
           <a class="ghost-btn" href="javascript:void(0)" @click="openChatwoot($event)">聯繫客服</a>
         </div>
+
       </form>
+
 
       <div class="safe-bar">
         <div class="safe-item"><span class="safe-dot"></span> 資金安全</div>
@@ -115,21 +113,22 @@
 
 <script>
 import { login } from '@/utils/api'
-import { brandLogo } from '@/assets/images'
+import { hasSession } from '@/utils/session'
+import { brandLoginLogo } from '@/assets/images'
 
 /**
- * EURNYSE 平台登入 — 純 H5 Vue2 Options API 版
+ * EURFOREX 平台登入 — 純 H5 Vue2 Options API 版
  * 以 docs/previews/nnn/login.html 為唯一基準逐字遷移
  * 樣式直接 @import 原稿 preview-entry.css + page-login.css
  * 區碼選擇直接載入原稿 ../shared/area-picker.js
  */
 var STORAGE_KEYS = {
-  rememberEnabled: "eurnyse.remember.enabled",
-  rememberMode: "eurnyse.remember.mode",
-  rememberAccount: "eurnyse.remember.account",
-  rememberSecret: "eurnyse.remember.secret",
-  lastMode: "eurnyse.last.mode",
-  lastAccount: "eurnyse.last.account"
+  rememberEnabled: "eurforex.remember.enabled",
+  rememberMode: "eurforex.remember.mode",
+  rememberAccount: "eurforex.remember.account",
+  rememberSecret: "eurforex.remember.secret",
+  lastMode: "eurforex.last.mode",
+  lastAccount: "eurforex.last.account"
 };
 
 function encodeSecret(value) {
@@ -140,27 +139,18 @@ function decodeSecret(value) {
   try { return decodeURIComponent(escape(atob(value))); } catch (e) { return value || ""; }
 }
 
-var LOGIN_ERROR_TEXTS = {
-  AUTH_INVALID_PARAMS: "請輸入帳號與密碼",
-  AUTH_ACCOUNT_INCORRECT: "帳號不存在或輸入錯誤",
-  AUTH_ACCOUNT_LOCKED: "帳號已被鎖定，請聯繫客服",
-  AUTH_PASSWORD_INCORRECT: "密碼錯誤",
-  AUTH_TOKEN_INVALID: "登入狀態已失效，請重新登入",
-  AUTH_TOKEN_EXPIRED: "登入狀態已過期，請重新登入",
-  AUTH_UNAUTHORIZED: "請先登入"
-};
-
-function localizedLoginError(error) {
+function localizedLoginError(vm, error) {
   var code = error && error.payload && error.payload.error_code;
-  if (code && LOGIN_ERROR_TEXTS[code]) return LOGIN_ERROR_TEXTS[code];
-  return "登入失敗，請確認帳號密碼。";
+  if (code) return vm.$t("apiErrors." + code);
+  return vm.$t("phrases.登入失敗，請確認帳號密碼。");
 }
+
 
 export default {
   name: "LoginH5",
   data: function () {
     return {
-      logoSrc: brandLogo,
+      logoSrc: brandLoginLogo,
       currentMode: "account",
       countryCode: "+84",
       accountValue: "",
@@ -175,6 +165,11 @@ export default {
     };
   },
   mounted: function () {
+    if (hasSession()) {
+      window.location.hash = "#/pages/index/index";
+      return;
+    }
+
     // body / html 的 class 與 data-* 與 login.html 對齊（page-login.css / preview-entry.css 皆以 body 選擇器命中）
     try {
       document.body.classList.add("nc2c-page", "nc2c-page--login");
@@ -185,10 +180,10 @@ export default {
     // area-picker.js：與 login.html 完全一致的原稿腳本
     this.loadAreaPickerScript();
 
-    // 區碼選擇回呼：和原稿一致的 window.__eurnyseAreaPickerOnSelect
+    // 區碼選擇回呼：和原稿一致的 window.__eurforexAreaPickerOnSelect
     var self = this;
-    this.__prevAreaPickerOnSelect = window.__eurnyseAreaPickerOnSelect;
-    window.__eurnyseAreaPickerOnSelect = function (code) {
+    this.__prevAreaPickerOnSelect = window.__eurforexAreaPickerOnSelect;
+    window.__eurforexAreaPickerOnSelect = function (code) {
       self.countryCode = code;
     };
 
@@ -196,8 +191,9 @@ export default {
     this.switchMode("account");
     this.hydrateRemembered();
 
-    // 與 login.html 的 window.EurnyseAuth 暴露對齊
-    window.EurnyseAuth = { clearRememberedPassword: this.clearRememberedPassword };
+    // 與 login.html 的 window.EurforexAuth 暴露對齊
+    window.EurforexAuth = { clearRememberedPassword: this.clearRememberedPassword };
+
   },
   beforeDestroy: function () {
     try {
@@ -205,17 +201,17 @@ export default {
       document.body.removeAttribute("data-nc2c-page");
       document.body.removeAttribute("data-nc2c-locked");
     } catch (e) {}
-    if (window.__eurnyseAreaPickerOnSelect && this.__prevAreaPickerOnSelect !== undefined) {
-      window.__eurnyseAreaPickerOnSelect = this.__prevAreaPickerOnSelect;
+    if (window.__eurforexAreaPickerOnSelect && this.__prevAreaPickerOnSelect !== undefined) {
+      window.__eurforexAreaPickerOnSelect = this.__prevAreaPickerOnSelect;
     }
-    if (window.EurnyseAuth && window.EurnyseAuth.clearRememberedPassword === this.clearRememberedPassword) {
-      try { delete window.EurnyseAuth; } catch (e) { window.EurnyseAuth = undefined; }
+    if (window.EurforexAuth && window.EurforexAuth.clearRememberedPassword === this.clearRememberedPassword) {
+      try { delete window.EurforexAuth; } catch (e) { window.EurforexAuth = undefined; }
     }
   },
   methods: {
     loadAreaPickerScript: function () {
-      if (window.EurnyseAreaPicker) return;
-      if (document.querySelector('script[data-eurnyse-area-picker]')) return;
+      if (window.EurforexAreaPicker) return;
+      if (document.querySelector('script[data-eurforex-area-picker]')) return;
       var pathname = window.location && window.location.pathname ? window.location.pathname : "";
       var isH5Path = /^\/h5(?:\/|$)/.test(pathname);
       var candidates = isH5Path
@@ -226,10 +222,10 @@ export default {
           "/h5/static/previews/shared/area-picker.js"
         ];
       var loadNext = function (index) {
-        if (index >= candidates.length || window.EurnyseAreaPicker) return;
+        if (index >= candidates.length || window.EurforexAreaPicker) return;
         var s = document.createElement("script");
         s.src = candidates[index];
-        s.setAttribute("data-eurnyse-area-picker", "1");
+        s.setAttribute("data-eurforex-area-picker", "1");
         s.async = false;
         s.onerror = function () {
           if (s.parentNode) s.parentNode.removeChild(s);
@@ -240,16 +236,16 @@ export default {
       loadNext(0);
     },
     openAreaPicker: function () {
-      if (window.EurnyseAreaPicker && typeof window.EurnyseAreaPicker.open === "function") {
-        window.EurnyseAreaPicker.open();
+      if (window.EurforexAreaPicker && typeof window.EurforexAreaPicker.open === "function") {
+        window.EurforexAreaPicker.open();
       } else {
         // 腳本可能還沒載入完成，延遲一幀再試一次
         var self = this;
         setTimeout(function () {
-          if (window.EurnyseAreaPicker && typeof window.EurnyseAreaPicker.open === "function") {
-            window.EurnyseAreaPicker.open();
+          if (window.EurforexAreaPicker && typeof window.EurforexAreaPicker.open === "function") {
+            window.EurforexAreaPicker.open();
           } else {
-            self.showError("區碼選擇器尚未載入完成，請稍後再試。");
+            self.showError(self.$t("phrases.區碼選擇器尚未載入完成，請稍後再試。"));
           }
         }, 160);
       }
@@ -326,7 +322,7 @@ export default {
           this.accountValue = rememberedAccount;
         }
         this.passwordValue = decodeSecret(rememberedSecret);
-        this.showSuccess("已自動回填最近儲存的登入資訊。");
+        this.showSuccess(this.$t("phrases.loginAutoFilledRecent"));
         return;
       }
 
@@ -346,8 +342,8 @@ export default {
     },
     openChatwoot: function (event) {
       if (event && event.preventDefault) event.preventDefault();
-      if (window.EurnyseOpenChatwoot && typeof window.EurnyseOpenChatwoot === "function") {
-        window.EurnyseOpenChatwoot();
+      if (window.EurforexOpenChatwoot && typeof window.EurforexOpenChatwoot === "function") {
+        window.EurforexOpenChatwoot();
       }
     },
     handleLogin: function () {
@@ -360,11 +356,11 @@ export default {
         var account = (this.accountValue || "").trim();
 
         if (!account) {
-          this.showError("請輸入郵箱或用戶名");
+          this.showError(this.$t("phrases.請輸入郵箱或用戶名"));
           return;
         }
         if (!password) {
-          this.showError("請輸入密碼");
+          this.showError(this.$t("phrases.請輸入密碼"));
           return;
         }
 
@@ -384,11 +380,11 @@ export default {
         var phone = (this.phoneValue || "").trim();
 
         if (!phone) {
-          this.showError("請輸入手機號");
+          this.showError(this.$t("phrases.請輸入手機號"));
           return;
         }
         if (!password) {
-          this.showError("請輸入密碼");
+          this.showError(this.$t("phrases.請輸入密碼"));
           return;
         }
 
@@ -410,11 +406,11 @@ export default {
 
       var loginAccount = this.currentMode === "account" ? account : fullPhone;
       var self = this;
-      this.showSuccess("登入提交中，正在進入首頁...");
+      this.showSuccess(this.$phrase("loginSubmittingHome", "登入提交中，正在進入首頁..."));
       login(loginAccount, password).then(function () {
         window.location.hash = "#/pages/index/index";
       }).catch(function (error) {
-        self.showError(localizedLoginError(error));
+        self.showError(localizedLoginError(self, error));
       });
     }
   }
@@ -438,4 +434,5 @@ export default {
   right: 1rem;
   z-index: 20;
 }
+
 </style>

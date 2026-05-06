@@ -118,7 +118,9 @@
               <path d="M13 6l6 6-6 6"/>
             </svg>
           </button>
+
         </form>
+
 
         <div class="bottom-link">
           {{ texts.bottomLink }}<a href="#/pages/common/login">{{ texts.bottomLogin }}</a>
@@ -148,6 +150,7 @@
       </div>
     </div>
 
+
     <div class="overlay" :class="{ open: showLangOverlay }" id="langOverlay" @click.self="showLangOverlay = false">
       <div class="sheet">
         <div style="text-align:center;font-size:20px;font-weight:700;" id="languageTitle">{{ texts.languageTitle }}</div>
@@ -165,22 +168,23 @@
 <script>
 import { assignRandomAvatarForUser } from '@/common/avatarPool'
 import { register as registerAccount } from '@/utils/api'
+import { hasSession } from '@/utils/session'
 import { getStoredLang } from '@/common/langStorage'
 import { setLocale } from '@/common/i18n'
 
 /**
- * EURNYSE 平台註冊 — 純 H5 Vue2 Options API 版
+ * EURFOREX 平台註冊 — 純 H5 Vue2 Options API 版
  * 以 docs/previews/nnn/register.html 為唯一基準逐字遷移
  * 樣式直接 @import 原稿 preview-entry.css + page-register.css
  * 區碼選擇直接載入原稿 ../shared/area-picker.js
  * 本檔策略與 login-h5.vue 保持一致（STORAGE / 區碼腳本注入 / body class / beforeDestroy 清理）
  */
 var STORAGE_KEYS = {
-  lastMode: "eurnyse.last.mode",
-  lastAccount: "eurnyse.last.account",
-  biometricEnabled: "eurnyse.biometric.enabled",
-  biometricMode: "eurnyse.biometric.mode",
-  biometricAccount: "eurnyse.biometric.account"
+  lastMode: "eurforex.last.mode",
+  lastAccount: "eurforex.last.account",
+  biometricEnabled: "eurforex.biometric.enabled",
+  biometricMode: "eurforex.biometric.mode",
+  biometricAccount: "eurforex.biometric.account"
 };
 
 var LANGS = [
@@ -364,6 +368,7 @@ function localizedRegisterError(error, lang, fallback) {
   return fallback || (TEXTS[currentLang] && TEXTS[currentLang].registerFailed) || "註冊失敗，請稍後再試。";
 }
 
+
 function supportsBiometric() {
   return typeof PublicKeyCredential !== "undefined" || /Android|iPhone|iPad|Mac/i.test(navigator.userAgent);
 }
@@ -413,6 +418,11 @@ export default {
     }
   },
   mounted: function () {
+    if (hasSession()) {
+      window.location.hash = "#/pages/index/index";
+      return;
+    }
+
     // body / html 的 class 與 data-* 與 register.html 對齊
     // page-register.css 的 body.nc2c-page.nc2c-page--register::before/::after 必須靠這組 class 命中
     try {
@@ -435,10 +445,10 @@ export default {
     // area-picker.js：與 register.html 完全一致的原稿腳本
     this.loadAreaPickerScript();
 
-    // 區碼選擇回呼：和原稿一致的 window.__eurnyseAreaPickerOnSelect
+    // 區碼選擇回呼：和原稿一致的 window.__eurforexAreaPickerOnSelect
     var self = this;
-    this.__prevAreaPickerOnSelect = window.__eurnyseAreaPickerOnSelect;
-    window.__eurnyseAreaPickerOnSelect = function (code) {
+    this.__prevAreaPickerOnSelect = window.__eurforexAreaPickerOnSelect;
+    window.__eurforexAreaPickerOnSelect = function (code) {
       self.currentAreaCode = code;
     };
 
@@ -456,15 +466,15 @@ export default {
       document.body.removeAttribute("data-nc2c-page");
       document.body.removeAttribute("data-nc2c-locked");
     } catch (e) {}
-    if (window.__eurnyseAreaPickerOnSelect && this.__prevAreaPickerOnSelect !== undefined) {
-      window.__eurnyseAreaPickerOnSelect = this.__prevAreaPickerOnSelect;
+    if (window.__eurforexAreaPickerOnSelect && this.__prevAreaPickerOnSelect !== undefined) {
+      window.__eurforexAreaPickerOnSelect = this.__prevAreaPickerOnSelect;
     }
     if (this.__onLangChange) window.removeEventListener("app:langchange", this.__onLangChange);
   },
   methods: {
     loadAreaPickerScript: function () {
-      if (window.EurnyseAreaPicker) return;
-      if (document.querySelector('script[data-eurnyse-area-picker]')) return;
+      if (window.EurforexAreaPicker) return;
+      if (document.querySelector('script[data-eurforex-area-picker]')) return;
       var pathname = window.location && window.location.pathname ? window.location.pathname : "";
       var isH5Path = /^\/h5(?:\/|$)/.test(pathname);
       var candidates = isH5Path
@@ -475,10 +485,10 @@ export default {
           "/h5/static/previews/shared/area-picker.js"
         ];
       var loadNext = function (index) {
-        if (index >= candidates.length || window.EurnyseAreaPicker) return;
+        if (index >= candidates.length || window.EurforexAreaPicker) return;
         var s = document.createElement("script");
         s.src = candidates[index];
-        s.setAttribute("data-eurnyse-area-picker", "1");
+        s.setAttribute("data-eurforex-area-picker", "1");
         s.async = false;
         s.onerror = function () {
           if (s.parentNode) s.parentNode.removeChild(s);
@@ -489,13 +499,13 @@ export default {
       loadNext(0);
     },
     openAreaPicker: function () {
-      if (window.EurnyseAreaPicker && typeof window.EurnyseAreaPicker.open === "function") {
-        window.EurnyseAreaPicker.open();
+      if (window.EurforexAreaPicker && typeof window.EurforexAreaPicker.open === "function") {
+        window.EurforexAreaPicker.open();
       } else {
         var self = this;
         setTimeout(function () {
-          if (window.EurnyseAreaPicker && typeof window.EurnyseAreaPicker.open === "function") {
-            window.EurnyseAreaPicker.open();
+          if (window.EurforexAreaPicker && typeof window.EurforexAreaPicker.open === "function") {
+            window.EurforexAreaPicker.open();
           } else {
             self.showError("區碼選擇器尚未載入完成，請稍後再試。");
           }
@@ -546,8 +556,7 @@ export default {
     },
     finalizeRegister: function () {
       setTimeout(function () {
-        // 註冊 API 未下發 token；首頁需登入後才能進入，改導向登入以免被 RootShell 重導造成閃跳
-        window.location.href = "#/pages/common/login";
+        window.location.href = "#/pages/index/index";
       }, 500);
     },
     handleRegister: function () {
@@ -641,4 +650,5 @@ export default {
 <style>
 @import url("../../static/previews/nc2c/css/preview-entry.css");
 @import url("../../static/previews/nc2c/css/page-register.css");
+
 </style>

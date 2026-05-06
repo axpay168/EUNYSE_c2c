@@ -159,12 +159,12 @@
     </main>
 
     <nav
-      class="eurnyse-home-bottom-nav fixed bottom-0 left-0 w-full z-50 rounded-t-2xl bg-white/78 backdrop-blur-lg shadow-[0px_-8px_24px_rgba(33,79,131,0.08)] font-['Manrope']"
+      class="eurforex-home-bottom-nav fixed bottom-0 left-0 w-full z-50 rounded-t-2xl bg-white/78 backdrop-blur-lg shadow-[0px_-8px_24px_rgba(33,79,131,0.08)] font-['Manrope']"
       aria-label="主頁底部導航"
     >
       <div class="flex justify-around items-center h-20 px-4 pb-safe">
         <a class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary-dim transition-all" href="#/pages/index/index">
-          <span class="material-symbols-outlined">home</span>
+          <img class="eurforex-nav-brand-icon" :src="homeNavLogoSrc" alt="EURFOREX 主頁" />
           <span class="text-[11px] font-semibold tracking-wide mt-0.5">主頁</span>
         </a>
         <a class="flex flex-col items-center justify-center text-primary-dim bg-primary-container/60 rounded-xl px-3 py-1 transition-all active:scale-90" href="#/pages/index/hall">
@@ -186,9 +186,9 @@
 
 <script>
 import { userApi } from '@/utils/api'
-import { hallCertifiedBadge } from '@/assets/images'
+import { brandMarkLogo, hallCertifiedBadge } from '@/assets/images'
 /**
- * EURNYSE - 交易大廳 (純 H5 Vue2 Options API)
+ * EURFOREX - 交易大廳 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/lody.html 為唯一基準逐字遷移
  * 原稿 IIFE：sell/buy 雙列切換 + aria-selected + class toggle，改以 Vue data.mode + :class 等價呈現
  * 供應商列表：GET /api/user/listings（需登入）；「賣出」分頁 = side sell，「買入」分頁 = side buy
@@ -209,6 +209,7 @@ export default {
   name: "LodyH5",
   data: function () {
     return {
+      homeNavLogoSrc: brandMarkLogo,
       mode: "sell",
       listings: [],
       listingsLoading: false,
@@ -264,7 +265,7 @@ export default {
       document.body.setAttribute("data-nc2c-page", "lody");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
     this.fetchHallData();
     window.addEventListener("scroll", this.handleListingScroll, { passive: true });
   },

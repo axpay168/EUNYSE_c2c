@@ -46,7 +46,7 @@
 import { userApi } from '@/utils/api'
 
 /**
- * EURNYSE - 商家認證 (純 H5 Vue2 Options API)
+ * EURFOREX - 商家認證 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/merchant-auth.html 為唯一基準逐字遷移
  * 外部腳本：../shared/back-nav.js（動態注入）
  * 步驟狀態由使用者總覽 API 載入，避免商戶認證流程顯示假狀態。
@@ -76,7 +76,7 @@ export default {
       document.body.setAttribute("data-nc2c-page", "merchant-auth");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
     this.fetchMerchantSteps();
   },
   beforeDestroy: function () {
@@ -90,9 +90,9 @@ export default {
   },
   methods: {
     backGo: function (event, fallback) {
-      if (window.EurnyseBack && typeof window.EurnyseBack.go === "function") {
+      if (window.EurforexBack && typeof window.EurforexBack.go === "function") {
         if (event && event.preventDefault) event.preventDefault();
-        window.EurnyseBack.go(fallback);
+        window.EurforexBack.go(fallback);
       }
     },
     fetchMerchantSteps: function () {

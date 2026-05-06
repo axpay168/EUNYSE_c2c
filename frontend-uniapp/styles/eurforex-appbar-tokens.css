@@ -1,0 +1,11 @@
+/**
+ * 頂部導航單一尺寸來源（H5 全站 + preview-entry 聯動）
+ * 修改此處一處，design-system 與 eurforex-style-refresh 都會讀到。
+ */
+:root {
+  /* 與個人中心 user.vue 頂欄 h-14（3.5rem）一致 */
+  --eurforex-appbar-h: 3.5rem;
+  --eurforex-appbar-px: 0.5rem 1rem;
+  --eurforex-main-offset-pt-24: calc(var(--eurforex-appbar-h) + 2rem);
+  --eurforex-main-offset-pt-20: calc(var(--eurforex-appbar-h) + 1.5rem);
+}

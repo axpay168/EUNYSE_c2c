@@ -1,37 +1,37 @@
 <template>
   <div>
     <!-- TopAppBar (from JSON) -->
-    <header class="eurnyse-top-bar eurnyse-top-bar--home">
-      <div class="eurnyse-top-bar__title-wrap eurnyse-top-bar__title-wrap--home">
+    <header class="eurforex-top-bar eurforex-top-bar--home">
+      <div class="eurforex-top-bar__title-wrap eurforex-top-bar__title-wrap--home">
         <div class="flex items-center gap-3">
-          <img alt="EURNYSE 商標" class="h-10 w-auto max-w-[76px] shrink-0 object-contain" :src="logoSrc" />
-          <span class="eurnyse-top-bar__title eurnyse-top-bar__title--home">EURNYSE</span>
+          <img alt="EURFOREX 商標" class="h-10 w-auto max-w-[76px] shrink-0 object-contain" :src="logoSrc" />
+          <span class="eurforex-top-bar__title eurforex-top-bar__title--home">EURFOREX</span>
         </div>
       </div>
     </header>
-    <main class="eurnyse-page-home__main eurnyse-page-home__main--with-tab">
+    <main class="eurforex-page-home__main eurforex-page-home__main--with-tab">
       <!-- Asset Card -->
       <!-- Service Grid：左側理財中心占 2×2；右側 2×2 為邀請／客服／綁定／更多 -->
-      <section class="eurnyse-page-home__shortcut-grid" aria-label="首頁快捷功能">
-        <a class="home-fin-card eurnyse-page-home__fin-card" href="#/pages/index/financial" :aria-label="'理財中心，參考年化 ' + homeFinancialApr">
-          <div class="eurnyse-page-home__fin-inner">
-            <div class="eurnyse-page-home__fin-head">
-              <span class="eurnyse-page-home__fin-symbol" style="color:#26a17e">₮</span>
-              <div class="eurnyse-page-home__fin-head-text">
+      <section class="eurforex-page-home__shortcut-grid" aria-label="首頁快捷功能">
+        <a class="home-fin-card eurforex-page-home__fin-card" href="#/pages/index/financial" :aria-label="'理財中心，參考年化 ' + homeFinancialApr">
+          <div class="eurforex-page-home__fin-inner">
+            <div class="eurforex-page-home__fin-head">
+              <span class="eurforex-page-home__fin-symbol" style="color:#26a17e">₮</span>
+              <div class="eurforex-page-home__fin-head-text">
                 <p class="home-fin-title">EARN · 定期</p>
                 <p class="home-fin-subtitle">理財中心精選</p>
               </div>
             </div>
-            <div class="eurnyse-page-home__fin-rate-block">
+            <div class="eurforex-page-home__fin-rate-block">
               <p class="home-fin-rate font-headline font-bold leading-none tracking-tight">{{ homeFinancialApr }}</p>
-              <p class="home-fin-rate-note eurnyse-page-home__fin-rate-note-line">參考年化 APR</p>
+              <p class="home-fin-rate-note eurforex-page-home__fin-rate-note-line">參考年化 APR</p>
             </div>
-            <div class="eurnyse-page-home__fin-foot-row">
-              <span class="home-fin-footnote eurnyse-page-home__fin-footnote">USDT · 約定期限 · 到期贖回</span>
-              <span class="home-fin-cta eurnyse-page-home__fin-cta">前往<span class="material-symbols-outlined text-[15px] leading-none">arrow_forward</span></span>
+            <div class="eurforex-page-home__fin-foot-row">
+              <span class="home-fin-footnote eurforex-page-home__fin-footnote">USDT · 約定期限 · 到期贖回</span>
+              <span class="home-fin-cta eurforex-page-home__fin-cta">前往<span class="material-symbols-outlined text-[15px] leading-none">arrow_forward</span></span>
             </div>
           </div>
-          <svg class="eurnyse-page-home__fin-deco" viewBox="0 0 130 110" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <svg class="eurforex-page-home__fin-deco" viewBox="0 0 130 110" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <rect x="38" y="36" width="62" height="44" rx="9" fill="currentColor" opacity="0.35" transform="rotate(-10 69 58)"/>
             <rect x="48" y="44" width="62" height="44" rx="9" fill="currentColor" opacity="0.45" transform="rotate(-4 79 66)"/>
             <rect x="56" y="52" width="62" height="44" rx="9" fill="currentColor" opacity="0.55"/>
@@ -39,104 +39,104 @@
             <circle cx="114" cy="62" r="7" fill="currentColor" opacity="0.35"/>
           </svg>
         </a>
-        <a class="group eurnyse-page-home__shortcut eurnyse-page-home__shortcut--p31" href="#/pages/setting/inviteTeam">
-          <div class="home-shortcut-icon eurnyse-page-home__shortcut-icon-wrap">
-            <span class="material-symbols-outlined eurnyse-page-home__shortcut-icon--primary">group_add</span>
+        <a class="group eurforex-page-home__shortcut eurforex-page-home__shortcut--p31" href="#/pages/setting/inviteTeam">
+          <div class="home-shortcut-icon eurforex-page-home__shortcut-icon-wrap">
+            <span class="material-symbols-outlined eurforex-page-home__shortcut-icon--primary">group_add</span>
           </div>
-          <span class="eurnyse-page-home__shortcut-label">邀請團隊</span>
+          <span class="eurforex-page-home__shortcut-label">邀請團隊</span>
         </a>
-        <a class="group eurnyse-page-home__shortcut eurnyse-page-home__shortcut--p41" href="#/pages/index/serviceCenter">
-          <div class="home-shortcut-icon eurnyse-page-home__shortcut-icon-wrap">
-            <span class="material-symbols-outlined eurnyse-page-home__shortcut-icon--primary">support_agent</span>
+        <a class="group eurforex-page-home__shortcut eurforex-page-home__shortcut--p41" href="#/pages/index/serviceCenter">
+          <div class="home-shortcut-icon eurforex-page-home__shortcut-icon-wrap">
+            <span class="material-symbols-outlined eurforex-page-home__shortcut-icon--primary">support_agent</span>
           </div>
-          <span class="eurnyse-page-home__shortcut-label">線上客服</span>
+          <span class="eurforex-page-home__shortcut-label">線上客服</span>
         </a>
-        <a class="group eurnyse-page-home__shortcut eurnyse-page-home__shortcut--p32" href="#/pages/setting/bindinfo">
-          <div class="home-shortcut-icon eurnyse-page-home__shortcut-icon-wrap">
-            <span class="material-symbols-outlined eurnyse-page-home__shortcut-icon--primary">link</span>
+        <a class="group eurforex-page-home__shortcut eurforex-page-home__shortcut--p32" href="#/pages/setting/bindinfo">
+          <div class="home-shortcut-icon eurforex-page-home__shortcut-icon-wrap">
+            <span class="material-symbols-outlined eurforex-page-home__shortcut-icon--primary">link</span>
           </div>
-          <span class="eurnyse-page-home__shortcut-label">帳號綁定</span>
+          <span class="eurforex-page-home__shortcut-label">帳號綁定</span>
         </a>
-        <a class="group eurnyse-page-home__shortcut eurnyse-page-home__shortcut--p42" href="#/pages/index/more">
-          <div class="home-shortcut-icon eurnyse-page-home__shortcut-icon-wrap">
-            <span class="material-symbols-outlined eurnyse-page-home__shortcut-icon--dim">apps</span>
+        <a class="group eurforex-page-home__shortcut eurforex-page-home__shortcut--p42" href="#/pages/index/more">
+          <div class="home-shortcut-icon eurforex-page-home__shortcut-icon-wrap">
+            <span class="material-symbols-outlined eurforex-page-home__shortcut-icon--dim">apps</span>
           </div>
-          <span class="eurnyse-page-home__shortcut-label">更多</span>
+          <span class="eurforex-page-home__shortcut-label">更多</span>
         </a>
       </section>
       <!-- 行情：快捷入口下方先「交易動態」（與交易大廳同源），再「幣價」 -->
-      <section class="eurnyse-page-home__section-feed" aria-label="行情與動態">
-        <div class="eurnyse-page-home__feed-card">
-          <div class="eurnyse-page-home__feed-head">
-            <div class="eurnyse-page-home__feed-title-row">
-              <span class="eurnyse-page-home__feed-dot" aria-hidden="true"></span>
-              <h2 class="eurnyse-page-home__feed-h2">交易動態</h2>
+      <section class="eurforex-page-home__section-feed" aria-label="行情與動態">
+        <div class="eurforex-page-home__feed-card">
+          <div class="eurforex-page-home__feed-head">
+            <div class="eurforex-page-home__feed-title-row">
+              <span class="eurforex-page-home__feed-dot" aria-hidden="true"></span>
+              <h2 class="eurforex-page-home__feed-h2">交易動態</h2>
             </div>
-            <a class="eurnyse-page-home__feed-hall" href="#/pages/index/hall">前往大廳</a>
+            <a class="eurforex-page-home__feed-hall" href="#/pages/index/hall">前往大廳</a>
           </div>
           <LoadingInlineSpinner v-if="feedLoading" aria-label="交易動態載入" />
           <div
             v-else
-            class="eurnyse-page-home__feed-marquee"
+            class="eurforex-page-home__feed-marquee"
             role="region"
             aria-label="交易動態"
           >
-            <div class="eurnyse-page-home__feed-marquee-track" aria-hidden="true">
+            <div class="eurforex-page-home__feed-marquee-track" aria-hidden="true">
               <div
                 v-for="(item, idx) in feedItemsDoubled"
                 :key="'feed-' + item.rowKey + '-' + idx"
-                class="eurnyse-page-home__feed-row"
-                :class="item.muted ? 'eurnyse-page-home__feed-row--muted' : 'eurnyse-page-home__feed-row--bordered'"
+                class="eurforex-page-home__feed-row"
+                :class="item.muted ? 'eurforex-page-home__feed-row--muted' : 'eurforex-page-home__feed-row--bordered'"
               >
                 <template v-if="item.kind === 'trade'">
-                  <span class="eurnyse-page-home__feed-user">{{ item.maskedActor }}</span>
-                  <span class="eurnyse-page-home__feed-action">
+                  <span class="eurforex-page-home__feed-user">{{ item.maskedActor }}</span>
+                  <span class="eurforex-page-home__feed-action">
                     {{ item.feedSide === 'buy' ? $t('phrases.feedTradeBought') : $t('phrases.feedTradeSold') }}
-                    <span class="eurnyse-page-home__feed-strong"> {{ item.amount }} {{ item.asset }}</span>
+                    <span class="eurforex-page-home__feed-strong"> {{ item.amount }} {{ item.asset }}</span>
                   </span>
                 </template>
                 <template v-else>
-                  <span class="eurnyse-page-home__feed-user">{{ item.name }}</span>
-                  <span class="eurnyse-page-home__feed-action">{{ item.quoteHint }}</span>
+                  <span class="eurforex-page-home__feed-user">{{ item.name }}</span>
+                  <span class="eurforex-page-home__feed-action">{{ item.quoteHint }}</span>
                 </template>
               </div>
             </div>
           </div>
         </div>
         <div>
-          <h2 class="eurnyse-page-home__market-heading">即時行情</h2>
+          <h2 class="eurforex-page-home__market-heading">即時行情</h2>
           <LoadingInlineSpinner v-if="marketLoading" aria-label="行情載入" />
-          <div v-else class="eurnyse-page-home__market-list">
+          <div v-else class="eurforex-page-home__market-list">
             <div
               v-for="row in marketRows"
               :key="row.cgId"
-              class="eurnyse-page-home__market-row"
+              class="eurforex-page-home__market-row"
             >
-              <div class="eurnyse-page-home__market-row-inner">
+              <div class="eurforex-page-home__market-row-inner">
                 <div
-                  class="eurnyse-page-home__market-icon-wrap"
-                  :class="'eurnyse-page-home__market-icon-wrap--' + row.iconIndex"
+                  class="eurforex-page-home__market-icon-wrap"
+                  :class="'eurforex-page-home__market-icon-wrap--' + row.iconIndex"
                 >
                   <span
-                    class="eurnyse-page-home__market-badge-text"
+                    class="eurforex-page-home__market-badge-text"
                     :class="
                       row.iconIndex === 2
-                        ? 'eurnyse-page-home__market-badge-text--secondary'
-                        : 'eurnyse-page-home__market-badge-text--primary'
+                        ? 'eurforex-page-home__market-badge-text--secondary'
+                        : 'eurforex-page-home__market-badge-text--primary'
                     "
                     >{{ row.glyph }}</span
                   >
                 </div>
                 <div>
-                  <div class="eurnyse-page-home__market-pair">
-                    {{ row.base }} <span class="eurnyse-page-home__market-pair-suffix">/ USDT</span>
+                  <div class="eurforex-page-home__market-pair">
+                    {{ row.base }} <span class="eurforex-page-home__market-pair-suffix">/ USDT</span>
                   </div>
-                  <div class="eurnyse-page-home__market-vol">成交量 {{ row.volLabel }}</div>
+                  <div class="eurforex-page-home__market-vol">成交量 {{ row.volLabel }}</div>
                 </div>
               </div>
-              <div class="eurnyse-page-home__market-spark-wrap">
+              <div class="eurforex-page-home__market-spark-wrap">
                 <svg
-                  class="eurnyse-page-home__market-spark-svg home-market-sparkline"
+                  class="eurforex-page-home__market-spark-svg home-market-sparkline"
                   :class="row.up ? 'up' : 'down'"
                   fill="none"
                   stroke-width="2"
@@ -147,20 +147,20 @@
                   aria-hidden="true"
                 >
                   <defs>
-                    <clipPath :id="'eurnyse-home-spark-clip-' + row.cgId">
+                    <clipPath :id="'eurforex-home-spark-clip-' + row.cgId">
                       <rect x="0.75" y="0.75" width="98.5" height="28.5" rx="1" />
                     </clipPath>
                   </defs>
                   <path
-                    :clip-path="'url(#eurnyse-home-spark-clip-' + row.cgId + ')'"
+                    :clip-path="'url(#eurforex-home-spark-clip-' + row.cgId + ')'"
                     :d="row.pathD"
                   />
                 </svg>
               </div>
-              <div class="eurnyse-page-home__market-price-col">
-                <div class="eurnyse-page-home__market-price">{{ row.priceLabel }}</div>
+              <div class="eurforex-page-home__market-price-col">
+                <div class="eurforex-page-home__market-price">{{ row.priceLabel }}</div>
                 <div
-                  class="eurnyse-page-home__market-change home-market-change"
+                  class="eurforex-page-home__market-change home-market-change"
                   :class="row.up ? 'up' : 'down'"
                 >
                   {{ row.changeLabel }}
@@ -171,37 +171,37 @@
         </div>
       </section>
       <!-- Campaign Banner -->
-      <a class="eurnyse-page-home__promo" href="#/pages/index/financial">
-        <div class="eurnyse-page-home__promo-inner">
-          <span class="eurnyse-page-home__promo-badge">{{ $t('phrases.活動') }}</span>
-          <h3 class="eurnyse-page-home__promo-h3">{{ $t('phrases.平台公告與活動') }}</h3>
-          <p class="eurnyse-page-home__promo-desc">{{ $t('phrases.最新活動以公告與理財產品配置為準。') }}</p>
+      <a class="eurforex-page-home__promo" href="#/pages/index/financial">
+        <div class="eurforex-page-home__promo-inner">
+          <span class="eurforex-page-home__promo-badge">{{ $t('phrases.活動') }}</span>
+          <h3 class="eurforex-page-home__promo-h3">{{ $t('phrases.平台公告與活動') }}</h3>
+          <p class="eurforex-page-home__promo-desc">{{ $t('phrases.最新活動以公告與理財產品配置為準。') }}</p>
         </div>
-        <div class="eurnyse-page-home__promo-art" data-alt="abstract glowing blue and purple digital geometric shapes representing cryptocurrency"></div>
+        <div class="eurforex-page-home__promo-art" data-alt="abstract glowing blue and purple digital geometric shapes representing cryptocurrency"></div>
       </a>
       <!-- 最新消息（CoinDesk 中文站，後端快取約 6 小時） -->
-      <section class="eurnyse-page-home__news-section">
-        <div class="eurnyse-page-home__news-head">
-          <h2 class="eurnyse-page-home__news-h2">最新消息</h2>
+      <section class="eurforex-page-home__news-section">
+        <div class="eurforex-page-home__news-head">
+          <h2 class="eurforex-page-home__news-h2">最新消息</h2>
         </div>
-        <div class="eurnyse-page-home__news-card">
+        <div class="eurforex-page-home__news-card">
           <LoadingInlineSpinner v-if="coindeskNewsLoading" aria-label="新聞載入" />
-          <p v-else-if="coindeskNewsError" class="eurnyse-page-home__news-empty">{{ coindeskNewsError }}</p>
-          <p v-else-if="!coindeskNews.length" class="eurnyse-page-home__news-empty">暫無新聞（請稍後再試或確認後端可連線 CoinDesk）</p>
-          <div v-else class="eurnyse-page-home__news-stack">
+          <p v-else-if="coindeskNewsError" class="eurforex-page-home__news-empty">{{ coindeskNewsError }}</p>
+          <p v-else-if="!coindeskNews.length" class="eurforex-page-home__news-empty">暫無新聞（請稍後再試或確認後端可連線 CoinDesk）</p>
+          <div v-else class="eurforex-page-home__news-stack">
             <div
               v-for="(article, idx) in coindeskNews"
               :key="article.url || 'coindesk-news-' + idx"
             >
               <a
-                class="group eurnyse-page-home__news-link"
+                class="group eurforex-page-home__news-link"
                 :href="article.url"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <div class="eurnyse-page-home__news-thumb">
+                <div class="eurforex-page-home__news-thumb">
                   <img
-                    class="eurnyse-page-home__news-img"
+                    class="eurforex-page-home__news-img"
                     :src="article.image_url"
                     :alt="article.title"
                     loading="lazy"
@@ -209,29 +209,29 @@
                     referrerpolicy="no-referrer-when-downgrade"
                   />
                 </div>
-                <div class="eurnyse-page-home__news-body">
-                  <h4 class="eurnyse-page-home__news-title">{{ article.title }}</h4>
-                  <span class="eurnyse-page-home__news-meta">{{ article.time_label || 'CoinDesk' }}</span>
+                <div class="eurforex-page-home__news-body">
+                  <h4 class="eurforex-page-home__news-title">{{ article.title }}</h4>
+                  <span class="eurforex-page-home__news-meta">{{ article.time_label || 'CoinDesk' }}</span>
                 </div>
               </a>
               <div
                 v-if="idx < coindeskNews.length - 1"
-                class="eurnyse-page-home__news-divider"
+                class="eurforex-page-home__news-divider"
               ></div>
             </div>
           </div>
         </div>
       </section>
     </main>
-    <!-- BottomNavBar（與交易大廳、訂單等頁一致：選中項 bg-primary-container/60，由 eurnyse-style-refresh 轉為反白漸層） -->
+    <!-- BottomNavBar（與交易大廳、訂單等頁一致：選中項 bg-primary-container/60，由 eurforex-style-refresh 轉為反白漸層） -->
     <nav
-      class="eurnyse-home-bottom-nav fixed bottom-0 left-0 w-full z-50 rounded-t-2xl bg-white/78 backdrop-blur-lg shadow-[0px_-8px_24px_rgba(33,79,131,0.08)] font-['Manrope']"
+      class="eurforex-home-bottom-nav fixed bottom-0 left-0 w-full z-50 rounded-t-2xl bg-white/78 backdrop-blur-lg shadow-[0px_-8px_24px_rgba(33,79,131,0.08)] font-['Manrope']"
       role="navigation"
       aria-label="主頁底部導航"
     >
       <div class="flex justify-around items-center h-20 px-4 pb-safe">
         <a class="flex flex-col items-center justify-center text-primary-dim bg-primary-container/60 rounded-xl px-3 py-1 transition-all active:scale-90" href="#/pages/index/index">
-          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+          <img class="eurforex-nav-brand-icon" :src="homeNavLogoSrc" alt="EURFOREX 主頁" />
           <span class="text-[11px] font-semibold tracking-wide mt-0.5">主頁</span>
         </a>
         <a class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary-dim transition-all" href="#/pages/index/hall">
@@ -252,13 +252,13 @@
 </template>
 
 <script>
-import { brandLogo } from '@/assets/images'
+import { brandMarkLogo } from '@/assets/images'
 import { getStoredLang, LANG_CHANGE_EVENT } from '@/common/langStorage'
 import { userApi } from '@/utils/api'
 import { pricesToSparkPathD } from '../../utils/coingeckoMarkets'
 
 /**
- * EURNYSE - 首頁 (純 H5 Vue2 Options API)
+ * EURFOREX - 首頁 (純 H5 Vue2 Options API)
  * 以 docs/previews/nnn/home.html 為唯一基準逐字遷移
  * 原稿無內聯 JS，僅外部 back-nav.js
  * 商標 LOGO 使用 :src 綁定避開建置期資產 URL 轉換問題（比照 login-h5.vue 策略）
@@ -268,7 +268,7 @@ import { pricesToSparkPathD } from '../../utils/coingeckoMarkets'
 var BODY_CLASSES = [
   "nc2c-page",
   "nc2c-page--home",
-  "eurnyse-page-home"
+  "eurforex-page-home"
 ]
 
 function defaultSparkPathD() {
@@ -392,7 +392,8 @@ export default {
   name: "HomeH5",
   data: function () {
     return {
-      logoSrc: brandLogo,
+      logoSrc: brandMarkLogo,
+      homeNavLogoSrc: brandMarkLogo,
       feedItems: [],
       feedLoading: false,
       feedPage: 1,
@@ -583,7 +584,7 @@ export default {
       document.body.setAttribute("data-nc2c-page", "home");
       document.body.setAttribute("data-nc2c-locked", "true");
     } catch (e) {}
-    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurnyseBackNav");
+    this.loadSharedScript("/static/previews/shared/back-nav.js", "eurforexBackNav");
     this.loadHomeMarkets();
     this.loadTradeFeed();
     this.scheduleDeferredHomeLoads();
@@ -625,8 +626,15 @@ export default {
 <style>
 @import url("../../static/previews/nc2c/css/preview-entry.css");
 
+.eurforex-nav-brand-icon {
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
 /* 交易動態標題旁：綠色發光圓點 */
-.eurnyse-page-home__feed-dot {
+.eurforex-page-home__feed-dot {
   display: inline-block;
   flex-shrink: 0;
   width: 0.5rem;
@@ -637,10 +645,10 @@ export default {
   box-shadow:
     0 0 0 0 rgba(34, 197, 94, 0.55),
     0 0 10px 2px rgba(34, 197, 94, 0.45);
-  animation: eurnyse-feed-dot-live 2.2s ease-in-out infinite;
+  animation: eurforex-feed-dot-live 2.2s ease-in-out infinite;
 }
 
-@keyframes eurnyse-feed-dot-live {
+@keyframes eurforex-feed-dot-live {
   0%,
   100% {
     box-shadow:
@@ -657,13 +665,13 @@ export default {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .eurnyse-page-home__feed-dot {
+  .eurforex-page-home__feed-dot {
     animation: none;
     box-shadow: 0 0 8px 2px rgba(34, 197, 94, 0.5);
   }
 }
 
-.eurnyse-page-home__news-empty {
+.eurforex-page-home__news-empty {
   margin: 0;
   padding: 1rem 1.25rem;
   font-size: 0.85rem;
@@ -671,7 +679,7 @@ export default {
   color: var(--ac-text-3, #6b7c90);
 }
 
-.eurnyse-page-home__feed-marquee .eurnyse-page-home__feed-user {
+.eurforex-page-home__feed-marquee .eurforex-page-home__feed-user {
   min-width: 0;
   flex: 0 1 46%;
   max-width: 46%;
@@ -681,7 +689,7 @@ export default {
   font-weight: 600;
 }
 
-.eurnyse-page-home__feed-marquee .eurnyse-page-home__feed-action {
+.eurforex-page-home__feed-marquee .eurforex-page-home__feed-action {
   min-width: 0;
   flex: 1 1 auto;
   text-align: right;
@@ -691,24 +699,24 @@ export default {
 }
 
 /* 交易動態列表：垂直跑馬燈，由上往下無接縫滾動（軌跡以 reverse 實作） */
-.eurnyse-page-home__feed-marquee {
-  --eurnyse-feed-item-h: 2.75rem;
-  max-height: calc(3 * var(--eurnyse-feed-item-h));
+.eurforex-page-home__feed-marquee {
+  --eurforex-feed-item-h: 2.75rem;
+  max-height: calc(3 * var(--eurforex-feed-item-h));
   overflow: hidden;
   position: relative;
 }
 
-.eurnyse-page-home__feed-marquee-track {
+.eurforex-page-home__feed-marquee-track {
   display: flex;
   flex-direction: column;
   width: 100%;
   will-change: transform;
   /* reverse：列表由上往下無接縫滾動 */
-  animation: eurnyse-home-feed-ticker-down 14s linear infinite reverse;
+  animation: eurforex-home-feed-ticker-down 14s linear infinite reverse;
 }
 
-.eurnyse-page-home__feed-marquee .eurnyse-page-home__feed-row {
-  min-height: var(--eurnyse-feed-item-h);
+.eurforex-page-home__feed-marquee .eurforex-page-home__feed-row {
+  min-height: var(--eurforex-feed-item-h);
   flex: 0 0 auto;
   box-sizing: border-box;
   display: flex;
@@ -718,12 +726,12 @@ export default {
   width: 100%;
 }
 
-.eurnyse-page-home__feed-marquee:hover .eurnyse-page-home__feed-marquee-track {
+.eurforex-page-home__feed-marquee:hover .eurforex-page-home__feed-marquee-track {
   animation-play-state: paused;
 }
 
 /* 0→-50% 往上移；reverse ＝ 由上往下滑入的視覺 */
-@keyframes eurnyse-home-feed-ticker-down {
+@keyframes eurforex-home-feed-ticker-down {
   0% {
     transform: translateY(0);
   }
@@ -733,21 +741,66 @@ export default {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .eurnyse-page-home__feed-marquee .eurnyse-page-home__feed-marquee-track {
+  .eurforex-page-home__feed-marquee .eurforex-page-home__feed-marquee-track {
     animation: none;
   }
 }
 
 /* 走勢線：裁切筆畫與路徑，避免超出欄位（設計寬 5rem × 高 2rem） */
-.eurnyse-page-home__market-spark-wrap {
+.eurforex-page-home__market-spark-wrap {
   overflow: hidden;
   position: relative;
   flex-shrink: 0;
 }
 
-.eurnyse-page-home__market-spark-svg {
+.eurforex-page-home__market-spark-svg {
   display: block;
   overflow: hidden;
   vector-effect: non-scaling-stroke;
+}
+
+/* 多語系文字較長時允許在欄位內換行，避免葡文/德文等直接撐出版面。 */
+body[data-nc2c-page="home"] :is(
+  .eurforex-page-home__shortcut,
+  .eurforex-page-home__fin-head-text,
+  .eurforex-page-home__feed-title-row,
+  .eurforex-page-home__market-row-inner,
+  .eurforex-home-bottom-nav a
+) {
+  min-width: 0;
+}
+
+body[data-nc2c-page="home"] :is(
+  .eurforex-page-home__shortcut-label,
+  .home-fin-title,
+  .home-fin-subtitle,
+  .home-fin-rate-note,
+  .eurforex-page-home__feed-h2,
+  .eurforex-page-home__feed-hall,
+  .eurforex-page-home__market-heading,
+  .eurforex-home-bottom-nav span
+) {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+}
+
+body[data-nc2c-page="home"] .eurforex-page-home__shortcut-label {
+  display: block;
+  width: 100%;
+  text-align: center;
+  line-height: 1.18;
+}
+
+body[data-nc2c-page="home"] .eurforex-page-home__feed-hall {
+  flex-shrink: 1;
+  line-height: 1.15;
+  text-align: center;
+}
+
+body[data-nc2c-page="home"] .eurforex-home-bottom-nav a {
+  text-align: center;
 }
 </style>

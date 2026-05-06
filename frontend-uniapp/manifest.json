@@ -1,7 +1,7 @@
 {
-  "name": "EURNYSE C2C",
-  "appid": "__UNI__EURNYSEC2C",
-  "description": "EURNYSE C2C H5 glass design pages",
+  "name": "EURFOREX C2C",
+  "appid": "__UNI__EURFOREXC2C",
+  "description": "EURFOREX C2C H5 glass design pages",
   "versionName": "0.1.0",
   "versionCode": 1,
   "transformPx": false,
@@ -11,7 +11,7 @@
       "mode": "hash",
       "base": "h5/"
     },
-    "title": "EURNYSE C2C",
+    "title": "EURFOREX C2C",
     "devServer": {
       "https": false
     }
