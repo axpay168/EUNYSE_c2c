@@ -2,6 +2,18 @@ import { getApiBaseUrl } from '@/config/runtime'
 import { getStoredLang } from '@/common/langStorage'
 import { clearSession, getToken, setStoredUser, setToken } from '@/utils/session'
 
+function getDeviceTimezone() {
+  try {
+    if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      return typeof timezone === 'string' ? timezone.trim() : ''
+    }
+  } catch (error) {
+    void error
+  }
+  return ''
+}
+
 function buildUrl(path) {
   if (/^https?:\/\//i.test(path)) return path
   return getApiBaseUrl() + (path.charAt(0) === '/' ? path : '/' + path)
@@ -33,6 +45,7 @@ const API_ERROR_MESSAGES = {
     AUTH_KYC_REQUIRED: '請先完成實名認證',
     AUTH_INVALID_FILE: '上傳檔案不正確',
     AUTH_ORDER_CREATE_FAILED: '建立訂單失敗，請稍後再試',
+    AUTH_TIER_DAILY_SELL_LIMIT_REACHED: '日賣出訂單次數已達目前等級限制',
     AUTH_FINANCIAL_SUBSCRIBE_FAILED: '理財申購失敗，請稍後再試'
   },
   'zh-Hans': {
@@ -60,6 +73,7 @@ const API_ERROR_MESSAGES = {
     AUTH_KYC_REQUIRED: '请先完成实名认证',
     AUTH_INVALID_FILE: '上传文件不正确',
     AUTH_ORDER_CREATE_FAILED: '建立订单失败，请稍后再试',
+    AUTH_TIER_DAILY_SELL_LIMIT_REACHED: '日卖出订单次数已达当前等级限制',
     AUTH_FINANCIAL_SUBSCRIBE_FAILED: '理财申购失败，请稍后再试'
   },
   eng: {
@@ -87,6 +101,7 @@ const API_ERROR_MESSAGES = {
     AUTH_KYC_REQUIRED: 'Please complete KYC verification first',
     AUTH_INVALID_FILE: 'Invalid uploaded file',
     AUTH_ORDER_CREATE_FAILED: 'Failed to create order. Please try again later',
+    AUTH_TIER_DAILY_SELL_LIMIT_REACHED: 'Daily sell order count has reached the limit for your current tier',
     AUTH_FINANCIAL_SUBSCRIBE_FAILED: 'Financial subscription failed. Please try again later'
   }
 }
@@ -122,6 +137,8 @@ export function apiRequest(path, options = {}) {
     'Content-Type': 'application/json',
     ...(options.headers || {})
   }
+  const timezone = getDeviceTimezone()
+  if (timezone && !headers['X-Timezone'] && !headers['x-timezone']) headers['X-Timezone'] = timezone
   const token = getToken()
   if (token) headers.Authorization = 'Bearer ' + token
 

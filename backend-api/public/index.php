@@ -1974,7 +1974,9 @@ function pdo(): PDO
     backfill_withdrawal_request_order_numbers($pdo);
     backfill_c2c_order_numbers($pdo);
     backfill_listing_admin_group_codes($pdo);
+    approve_bank_payout_methods($pdo);
     migrate_legacy_eur_wallet_code($pdo);
+    backfill_missing_user_defaults($pdo);
     migrate_trade_feed_action_types($pdo);
     cleanup_legacy_global_deposit_addresses($pdo);
     seed_data($pdo);
@@ -2079,6 +2081,22 @@ function backfill_listing_admin_group_codes(PDO $pdo): void
         SET l.admin_group_code = u.admin_group_code
         WHERE (l.admin_group_code IS NULL OR l.admin_group_code = "")
           AND COALESCE(u.admin_group_code, "") <> ""');
+}
+
+function approve_bank_payout_methods(PDO $pdo): void
+{
+    if (!db_table_has_column($pdo, 'user_payout_methods', 'status')) {
+        return;
+    }
+
+    $now = now_iso();
+    $pdo->prepare('UPDATE user_payout_methods
+        SET status = "approved", review_note = null, reviewed_at = COALESCE(reviewed_at, :reviewed_at), updated_at = :updated_at
+        WHERE channel_type = "bank" AND status = "pending"')
+        ->execute([
+            ':reviewed_at' => $now,
+            ':updated_at' => $now,
+        ]);
 }
 
 function normalize_tier_level(mixed $value, int $default = 1): int
@@ -3228,6 +3246,1384 @@ function is_email_account(string $value): bool
     return str_contains($value, '@');
 }
 
+function admin_module_catalog(): array
+{
+    return [
+        'users' => ['label' => '用户管理', 'permissions' => ['users.read', 'users.write']],
+        'invitations' => ['label' => '邀请管理', 'permissions' => ['invitations.read', 'invitations.write']],
+        'wallets' => ['label' => '资金钱包', 'permissions' => ['wallets.read', 'wallets.write']],
+        'tiers' => ['label' => '等级与限额', 'permissions' => ['tiers.read', 'tiers.write']],
+        'deposits' => ['label' => '充值审核', 'permissions' => ['deposits.read', 'deposits.write']],
+        'deposit-addresses' => ['label' => '充值地址管理', 'permissions' => ['deposit_addresses.read', 'deposit_addresses.write']],
+        'withdrawals' => ['label' => '提现审核', 'permissions' => ['withdrawals.read', 'withdrawals.write']],
+        'orders' => ['label' => '订单中心', 'permissions' => ['orders.read', 'orders.write']],
+        'financial-products' => ['label' => '理财配置', 'permissions' => ['financial_products.read', 'financial_products.write']],
+        'financial-orders' => ['label' => '理财订单', 'permissions' => ['financial_orders.read', 'financial_orders.write']],
+        'listings' => ['label' => '商户挂单', 'permissions' => ['listings.read', 'listings.write']],
+        'trade-feed' => ['label' => '成交播报', 'permissions' => ['trade_feed.read', 'trade_feed.write']],
+        'home-content' => ['label' => '运营配置', 'permissions' => ['home_content.read', 'home_content.write']],
+        'kyc' => ['label' => '实名 / KYC', 'permissions' => ['kyc.read', 'kyc.write']],
+        'payout-methods' => ['label' => '收款方式', 'permissions' => ['payout_methods.read', 'payout_methods.write']],
+        'auth-events' => ['label' => '认证事件', 'permissions' => ['auth.read']],
+        'system-config' => ['label' => '系统配置', 'permissions' => ['system.read', 'system.write']],
+        'admin-users' => ['label' => '后台管理员', 'permissions' => ['admins.read', 'admins.write']],
+    ];
+}
+
+function admin_role_template_catalog(): array
+{
+    return [
+        'big_boss' => [
+            'label' => '大老板',
+            'module_access' => array_fill_keys(array_keys(admin_module_catalog()), 'write'),
+        ],
+        'customer_service' => [
+            'label' => '客服',
+            'module_access' => [
+                'users' => 'read',
+                'invitations' => 'read',
+                'orders' => 'read',
+                'auth-events' => 'read',
+            ],
+        ],
+        'reviewer' => [
+            'label' => '审核员',
+            'module_access' => [
+                'invitations' => 'write',
+                'deposits' => 'write',
+                'deposit-addresses' => 'read',
+                'withdrawals' => 'write',
+                'kyc' => 'write',
+                'payout-methods' => 'write',
+                'auth-events' => 'read',
+            ],
+        ],
+        'finance_ops' => [
+            'label' => '财务',
+            'module_access' => [
+                'wallets' => 'write',
+                'deposits' => 'write',
+                'deposit-addresses' => 'write',
+                'withdrawals' => 'write',
+                'orders' => 'read',
+                'financial-products' => 'write',
+                'financial-orders' => 'write',
+            ],
+        ],
+    ];
+}
+
+/** 內建 + 不可被自訂覆寫的模版鍵 */
+function admin_role_template_reserved_keys(): array
+{
+    return ['big_boss', 'super_admin', 'custom', 'customer_service', 'reviewer', 'finance_ops'];
+}
+
+/** 資料庫自訂管理員角色模版（template_key => 列資料） */
+function admin_custom_role_templates_rows(PDO $pdo, ?array $admin = null): array
+{
+    if ($admin !== null) {
+        if (admin_is_root_admin($admin)) {
+            $stmt = $pdo->prepare('SELECT template_key, label, module_access_json, created_by_admin_id, created_at, updated_at FROM admin_role_templates WHERE created_by_admin_id = :admin_id OR created_by_admin_id IS NULL ORDER BY template_key ASC');
+        } else {
+            $stmt = $pdo->prepare('SELECT template_key, label, module_access_json, created_by_admin_id, created_at, updated_at FROM admin_role_templates WHERE created_by_admin_id = :admin_id ORDER BY template_key ASC');
+        }
+        $stmt->execute([':admin_id' => (int) $admin['admin_user_id']]);
+    } else {
+        $stmt = $pdo->query('SELECT template_key, label, module_access_json, created_by_admin_id, created_at, updated_at FROM admin_role_templates ORDER BY template_key ASC');
+        if ($stmt === false) {
+            return [];
+        }
+    }
+    $out = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $key = trim((string) ($row['template_key'] ?? ''));
+        if ($key === '') {
+            continue;
+        }
+        $mod = json_decode((string) ($row['module_access_json'] ?? ''), true);
+        if (!is_array($mod)) {
+            $mod = [];
+        }
+        $out[$key] = [
+            'label' => (string) ($row['label'] ?? $key),
+            'module_access' => normalize_admin_module_access($mod),
+            'created_by_admin_id' => isset($row['created_by_admin_id']) && $row['created_by_admin_id'] !== null && $row['created_by_admin_id'] !== ''
+                ? (int) $row['created_by_admin_id']
+                : null,
+            'created_at' => (string) ($row['created_at'] ?? ''),
+            'updated_at' => (string) ($row['updated_at'] ?? ''),
+        ];
+    }
+
+    return $out;
+}
+
+/** 內建 catalog 合併 DB 自訂模版（DB 鍵不得覆寫內建） */
+function admin_role_template_all(PDO $pdo): array
+{
+    $merged = admin_role_template_catalog();
+    foreach (admin_custom_role_templates_rows($pdo) as $k => $row) {
+        if (isset($merged[$k])) {
+            continue;
+        }
+        $merged[$k] = [
+            'label' => $row['label'],
+            'module_access' => $row['module_access'],
+        ];
+    }
+
+    return $merged;
+}
+
+function admin_role_template_all_for_admin(PDO $pdo, array $admin): array
+{
+    $merged = [];
+    foreach (admin_role_template_catalog() as $key => $row) {
+        $access = normalize_admin_module_access($row['module_access'] ?? []);
+        if (admin_module_access_within_admin_grant($admin, $access)) {
+            $merged[$key] = $row;
+        }
+    }
+    foreach (admin_custom_role_templates_rows($pdo, $admin) as $k => $row) {
+        if (isset($merged[$k])) {
+            continue;
+        }
+        $merged[$k] = [
+            'label' => $row['label'],
+            'module_access' => $row['module_access'],
+            'created_by_admin_id' => $row['created_by_admin_id'],
+        ];
+    }
+
+    return $merged;
+}
+
+function admin_role_template_key_in_use(PDO $pdo, string $key): bool
+{
+    $stmt = $pdo->query('SELECT role_codes FROM admin_users');
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        if (in_array($key, admin_role_codes($row), true)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function normalize_admin_role_template_key(string $raw): string
+{
+    $key = trim($raw);
+    if ($key === '' || !preg_match('/^[a-z][a-z0-9_]{1,62}$/', $key)) {
+        failure('ADMIN_ROLE_TEMPLATE_KEY_INVALID', 'Invalid template key (use lowercase snake_case)');
+    }
+    if (in_array($key, admin_role_template_reserved_keys(), true)) {
+        failure('ADMIN_ROLE_TEMPLATE_KEY_RESERVED', 'This template key is reserved');
+    }
+
+    return $key;
+}
+
+function admin_account_email(string $account): string
+{
+    $account = trim($account);
+    if ($account !== '' && filter_var($account, FILTER_VALIDATE_EMAIL)) {
+        return mb_strtolower($account);
+    }
+
+    $local = preg_replace('/[^a-z0-9._+-]+/i', '.', $account);
+    $local = trim((string) $local, '.-_+');
+    if ($local === '') {
+        $local = 'admin';
+    }
+    $local = substr($local, 0, 48);
+
+    return mb_strtolower($local) . '@eurforex.admin';
+}
+
+function admin_json_array(mixed $value): array
+{
+    if (is_array($value)) {
+        return array_values(array_filter($value, static fn ($item) => is_scalar($item) && trim((string) $item) !== ''));
+    }
+    if (!is_string($value) || trim($value) === '') {
+        return [];
+    }
+    $decoded = json_decode($value, true);
+    if (!is_array($decoded)) {
+        return [];
+    }
+    return array_values(array_filter($decoded, static fn ($item) => is_scalar($item) && trim((string) $item) !== ''));
+}
+
+function admin_role_codes(array $admin): array
+{
+    return admin_json_array($admin['role_codes'] ?? []);
+}
+
+function admin_role_template(array $admin, ?PDO $pdo = null): string
+{
+    if (admin_is_root_admin($admin)) {
+        return 'big_boss';
+    }
+    if (admin_is_super_admin($admin)) {
+        return 'super_admin';
+    }
+    $templates = $pdo ? admin_role_template_all($pdo) : admin_role_template_catalog();
+    foreach (admin_role_codes($admin) as $roleCode) {
+        if (isset($templates[$roleCode])) {
+            return $roleCode;
+        }
+    }
+    return 'custom';
+}
+
+function admin_permissions(array $admin): array
+{
+    $permissions = admin_json_array($admin['permissions'] ?? []);
+    if (!admin_is_super_admin($admin)) {
+        return $permissions;
+    }
+
+    $catalogPermissions = [];
+    foreach (admin_module_catalog() as $module) {
+        foreach (($module['permissions'] ?? []) as $permission) {
+            $catalogPermissions[] = (string) $permission;
+        }
+    }
+
+    return array_values(array_unique(array_merge($permissions, $catalogPermissions)));
+}
+
+function admin_is_super_admin(array $admin): bool
+{
+    return in_array('super_admin', admin_role_codes($admin), true);
+}
+
+function admin_is_root_admin(array $admin): bool
+{
+    if (in_array('big_boss', admin_role_codes($admin), true)) {
+        return true;
+    }
+    return trim((string) ($admin['display_name'] ?? '')) === '大老板';
+}
+
+function normalize_admin_group_code(mixed $raw): string
+{
+    $code = mb_strtolower(trim((string) $raw));
+    $code = preg_replace('/[^a-z0-9_-]+/', '-', $code) ?? '';
+    $code = trim($code, '-_');
+    return mb_substr($code, 0, 64);
+}
+
+function normalize_admin_group_name(mixed $raw): string
+{
+    return mb_substr(trim((string) $raw), 0, 64);
+}
+
+function admin_group_code(array $admin): string
+{
+    return normalize_admin_group_code($admin['admin_group_code'] ?? '');
+}
+
+function admin_group_name(array $admin): string
+{
+    $name = normalize_admin_group_name($admin['admin_group_name'] ?? '');
+    return $name !== '' ? $name : admin_group_code($admin);
+}
+
+function admin_group_rows_for_admin(PDO $pdo, array $admin): array
+{
+    if (admin_is_root_admin($admin)) {
+        $stmt = $pdo->query('SELECT id, group_name, group_code, created_by_admin_id, created_at, updated_at FROM admin_groups ORDER BY id ASC');
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+    }
+
+    $stmt = $pdo->prepare('SELECT id, group_name, group_code, created_by_admin_id, created_at, updated_at
+        FROM admin_groups
+        WHERE created_by_admin_id = :admin_id
+        ORDER BY id ASC');
+    $stmt->execute([':admin_id' => (int) ($admin['admin_user_id'] ?? $admin['id'] ?? 0)]);
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function serialize_admin_group(array $row): array
+{
+    return [
+        'id' => (int) $row['id'],
+        'group_name' => (string) $row['group_name'],
+        'group_code' => (string) $row['group_code'],
+        'created_by_admin_id' => isset($row['created_by_admin_id']) && $row['created_by_admin_id'] !== null && $row['created_by_admin_id'] !== ''
+            ? (int) $row['created_by_admin_id']
+            : null,
+        'created_at' => $row['created_at'] ?? null,
+        'updated_at' => $row['updated_at'] ?? null,
+    ];
+}
+
+function admin_can_view_group_global_data(array $admin): bool
+{
+    return admin_is_root_admin($admin) || !empty($admin['can_view_group_global_data']);
+}
+
+function user_admin_group_code(array $user): string
+{
+    return normalize_admin_group_code($user['admin_group_code'] ?? '');
+}
+
+function admin_group_name_from_code(?string $groupCode): string
+{
+    $code = normalize_admin_group_code($groupCode ?? '');
+    if ($code === '') {
+        return '';
+    }
+
+    static $cache = [];
+    if (array_key_exists($code, $cache)) {
+        return $cache[$code];
+    }
+
+    try {
+        $stmt = pdo()->prepare('SELECT group_name FROM admin_groups WHERE group_code = :group_code LIMIT 1');
+        $stmt->execute([':group_code' => $code]);
+        $name = normalize_admin_group_name((string) ($stmt->fetchColumn() ?: ''));
+        $cache[$code] = $name;
+        return $name;
+    } catch (Throwable $exception) {
+        $cache[$code] = '';
+        return '';
+    }
+}
+
+function group_label_from_code(?string $groupCode, ?string $groupName = null): ?array
+{
+    $code = normalize_admin_group_code($groupCode ?? '');
+    $name = normalize_admin_group_name($groupName ?? '') ?: admin_group_name_from_code($code);
+    if ($code === '' && $name === '') {
+        return null;
+    }
+    return [
+        'code' => $code !== '' ? $code : null,
+        'name' => $name !== '' ? $name : null,
+    ];
+}
+
+function current_admin_group_required(array $admin): string
+{
+    $groupCode = admin_group_code($admin);
+    if ($groupCode === '') {
+        failure('ADMIN_GROUP_REQUIRED', 'Admin group is required');
+    }
+    return $groupCode;
+}
+
+function admin_group_filter_sql(array $admin, string $column, string $paramName = 'scope_group_code'): array
+{
+    if (admin_is_root_admin($admin)) {
+        return ['sql' => '', 'params' => []];
+    }
+    $groupCode = current_admin_group_required($admin);
+    return [
+        'sql' => "COALESCE({$column}, '') = :{$paramName}",
+        'params' => [':' . $paramName => $groupCode],
+    ];
+}
+
+function admin_can_access_group(array $admin, ?string $groupCode): bool
+{
+    if (admin_is_root_admin($admin)) {
+        return true;
+    }
+    $targetGroup = normalize_admin_group_code($groupCode ?? '');
+    return $targetGroup !== '' && $targetGroup === admin_group_code($admin);
+}
+
+function require_admin_can_access_group(array $admin, ?string $groupCode): void
+{
+    if (admin_can_access_group($admin, $groupCode)) {
+        return;
+    }
+    failure('ADMIN_NOT_FOUND', 'Resource not found');
+}
+
+function user_group_code_by_id(PDO $pdo, int $userId): string
+{
+    if ($userId <= 0) {
+        return '';
+    }
+    $stmt = $pdo->prepare('SELECT admin_group_code FROM users WHERE id = :id LIMIT 1');
+    $stmt->execute([':id' => $userId]);
+    $row = $stmt->fetch();
+    return $row ? normalize_admin_group_code($row['admin_group_code'] ?? '') : '';
+}
+
+function group_code_for_owned_resource(PDO $pdo, array $admin, int $ownerUserId): string
+{
+    if ($ownerUserId > 0) {
+        $groupCode = user_group_code_by_id($pdo, $ownerUserId);
+        if ($groupCode === '') {
+            failure('ADMIN_GROUP_REQUIRED', 'Owner user has no admin group');
+        }
+        require_admin_can_access_group($admin, $groupCode);
+        return $groupCode;
+    }
+
+    return current_admin_group_required($admin);
+}
+
+function admin_request_group_code(PDO $pdo, array $admin, array $source = []): string
+{
+    if (!admin_is_root_admin($admin)) {
+        return current_admin_group_required($admin);
+    }
+    $raw = $source['admin_group_code'] ?? ($_GET['admin_group_code'] ?? '');
+    $groupCode = normalize_admin_group_code($raw);
+    if ($groupCode === '') {
+        return current_admin_group_required($admin);
+    }
+    $stmt = $pdo->prepare('SELECT group_code FROM admin_groups WHERE group_code = :group_code LIMIT 1');
+    $stmt->execute([':group_code' => $groupCode]);
+    if (!$stmt->fetch()) {
+        failure('ADMIN_GROUP_NOT_FOUND', 'Admin group not found');
+    }
+    return $groupCode;
+}
+
+function require_super_admin(array $admin): void
+{
+    if (!admin_is_super_admin($admin)) {
+        failure('ADMIN_FORBIDDEN', 'Super admin required');
+    }
+}
+
+function require_root_admin(array $admin): void
+{
+    if (!admin_is_root_admin($admin)) {
+        failure('ADMIN_ROOT_REQUIRED', 'Root admin required');
+    }
+}
+
+function admin_select_columns(string $alias = ''): string
+{
+    $p = $alias !== '' ? $alias . '.' : '';
+    return $p . 'id, ' .
+        $p . 'name, ' .
+        $p . 'email, ' .
+        $p . 'display_name, ' .
+        $p . 'staff_invite_code, ' .
+        $p . 'admin_group_code, ' .
+        $p . 'admin_group_name, ' .
+        $p . 'can_view_group_global_data, ' .
+        $p . 'login_ip_allowlist_enabled, ' .
+        $p . 'login_ip_allowlist, ' .
+        $p . 'status, ' .
+        $p . 'login_failure_count, ' .
+        $p . 'login_first_failure_at, ' .
+        $p . 'login_last_failure_at, ' .
+        $p . 'login_locked_until, ' .
+        $p . 'login_lock_level, ' .
+        $p . 'login_permanent_locked_at, ' .
+        $p . 'role_codes, ' .
+        $p . 'permissions, ' .
+        $p . 'created_by_admin_id, ' .
+        $p . 'parent_admin_id, ' .
+        $p . 'password_must_change, ' .
+        $p . 'created_at, ' .
+        $p . 'updated_at';
+}
+
+function normalize_admin_account(string $account): string
+{
+    return mb_strtolower(trim($account));
+}
+
+function validate_admin_account(string $account): void
+{
+    if (!preg_match('/^[a-z0-9][a-z0-9_.-]{2,31}$/', $account)) {
+        failure('ADMIN_ACCOUNT_INVALID', 'Admin account must use 3-32 letters, numbers, _, . or -');
+    }
+}
+
+function admin_login_limit_max_attempts(): int
+{
+    return max(3, (int) env_string('ADMIN_LOGIN_MAX_ATTEMPTS', '5'));
+}
+
+function admin_login_limit_window_seconds(): int
+{
+    return max(60, (int) env_string('ADMIN_LOGIN_WINDOW_SECONDS', '900'));
+}
+
+function admin_login_limit_block_seconds(): int
+{
+    return max(60, (int) env_string('ADMIN_LOGIN_BLOCK_SECONDS', '900'));
+}
+
+function admin_login_rate_limit_keys(string $account, string $ip): array
+{
+    $normalizedAccount = normalize_admin_account($account);
+    return [
+        'ip:' . $ip,
+        'account_ip:' . $normalizedAccount . '|' . $ip,
+    ];
+}
+
+function admin_login_throttle_row(PDO $pdo, string $rateKey): ?array
+{
+    $stmt = $pdo->prepare('SELECT * FROM admin_login_rate_limits WHERE rate_key = :rate_key LIMIT 1');
+    $stmt->execute([':rate_key' => $rateKey]);
+    $row = $stmt->fetch();
+    return $row ?: null;
+}
+
+function admin_login_assert_not_limited(PDO $pdo, string $account, string $ip): void
+{
+    foreach (admin_login_rate_limit_keys($account, $ip) as $rateKey) {
+        $row = admin_login_throttle_row($pdo, $rateKey);
+        if (!$row || empty($row['blocked_until'])) {
+            continue;
+        }
+        $blockedUntil = strtotime((string) $row['blocked_until']);
+        if ($blockedUntil !== false && $blockedUntil > time()) {
+            $retryAfter = max(1, $blockedUntil - time());
+            failure('ADMIN_LOGIN_RATE_LIMITED', 'Too many admin login attempts, please try again later', [
+                'retry_after_seconds' => $retryAfter,
+            ], 429);
+        }
+    }
+}
+
+function admin_login_record_failure(PDO $pdo, string $account, string $ip): void
+{
+    $windowSeconds = admin_login_limit_window_seconds();
+    $blockSeconds = admin_login_limit_block_seconds();
+    $maxAttempts = admin_login_limit_max_attempts();
+    $normalizedAccount = normalize_admin_account($account);
+    $now = now_iso();
+
+    foreach (admin_login_rate_limit_keys($normalizedAccount, $ip) as $rateKey) {
+        $row = admin_login_throttle_row($pdo, $rateKey);
+        $count = 1;
+        $firstFailureAt = $now;
+        if ($row) {
+            $firstAttemptTs = !empty($row['first_failure_at']) ? strtotime((string) $row['first_failure_at']) : false;
+            if ($firstAttemptTs !== false && (time() - $firstAttemptTs) < $windowSeconds) {
+                $count = ((int) ($row['failure_count'] ?? 0)) + 1;
+                $firstFailureAt = (string) $row['first_failure_at'];
+            }
+        }
+        $blockedUntil = $count >= $maxAttempts ? gmdate('c', time() + $blockSeconds) : null;
+        if ($row) {
+            $pdo->prepare('UPDATE admin_login_rate_limits
+                SET account = :account, ip = :ip, failure_count = :failure_count, first_failure_at = :first_failure_at,
+                    last_attempt_at = :last_attempt_at, blocked_until = :blocked_until, updated_at = :updated_at
+                WHERE rate_key = :rate_key')
+                ->execute([
+                    ':account' => $normalizedAccount,
+                    ':ip' => $ip,
+                    ':failure_count' => $count,
+                    ':first_failure_at' => $firstFailureAt,
+                    ':last_attempt_at' => $now,
+                    ':blocked_until' => $blockedUntil,
+                    ':updated_at' => $now,
+                    ':rate_key' => $rateKey,
+                ]);
+            continue;
+        }
+        $pdo->prepare('INSERT INTO admin_login_rate_limits (
+            rate_key, account, ip, failure_count, first_failure_at, last_attempt_at, blocked_until, created_at, updated_at
+        ) VALUES (
+            :rate_key, :account, :ip, :failure_count, :first_failure_at, :last_attempt_at, :blocked_until, :created_at, :updated_at
+        )')->execute([
+            ':rate_key' => $rateKey,
+            ':account' => $normalizedAccount,
+            ':ip' => $ip,
+            ':failure_count' => $count,
+            ':first_failure_at' => $firstFailureAt,
+            ':last_attempt_at' => $now,
+            ':blocked_until' => $blockedUntil,
+            ':created_at' => $now,
+            ':updated_at' => $now,
+        ]);
+    }
+}
+
+function admin_login_clear_failures(PDO $pdo, string $account, string $ip): void
+{
+    $keys = admin_login_rate_limit_keys($account, $ip);
+    $placeholders = implode(', ', array_fill(0, count($keys), '?'));
+    $stmt = $pdo->prepare("DELETE FROM admin_login_rate_limits WHERE rate_key IN ({$placeholders})");
+    $stmt->execute($keys);
+}
+
+function admin_login_account_failure_threshold(): int
+{
+    return 3;
+}
+
+function admin_first_lock_seconds(): int
+{
+    return max(60, (int) env_string('ADMIN_FIRST_LOCK_SECONDS', '1800'));
+}
+
+function admin_temp_locked_until(array $admin): ?string
+{
+    $lockedUntil = trim((string) ($admin['login_locked_until'] ?? ''));
+    if ($lockedUntil === '') {
+        return null;
+    }
+    $timestamp = strtotime($lockedUntil);
+    if ($timestamp === false || $timestamp <= time()) {
+        return null;
+    }
+    return $lockedUntil;
+}
+
+function admin_is_permanently_locked(array $admin): bool
+{
+    return (($admin['status'] ?? '') !== 'normal') && !empty($admin['login_permanent_locked_at']);
+}
+
+function admin_effective_status(array $admin): string
+{
+    if (admin_is_permanently_locked($admin)) {
+        return 'disabled';
+    }
+    if (admin_temp_locked_until($admin)) {
+        return 'locked';
+    }
+    return (string) ($admin['status'] ?? 'normal');
+}
+
+function admin_lock_state(array $admin): string
+{
+    if (admin_is_permanently_locked($admin)) {
+        return 'permanent';
+    }
+    if (admin_temp_locked_until($admin)) {
+        return 'temporary';
+    }
+    return 'none';
+}
+
+function admin_clear_account_lock_metadata(PDO $pdo, int $adminUserId, bool $resetLockLevel = false): void
+{
+    $pdo->prepare('UPDATE admin_users SET
+        login_failure_count = 0,
+        login_first_failure_at = null,
+        login_last_failure_at = null,
+        login_locked_until = null,
+        login_lock_level = CASE WHEN :reset_lock_level = 1 THEN 0 ELSE login_lock_level END,
+        login_permanent_locked_at = CASE WHEN :reset_lock_level = 1 THEN null ELSE login_permanent_locked_at END,
+        updated_at = :updated_at
+        WHERE id = :id')
+        ->execute([
+            ':reset_lock_level' => $resetLockLevel ? 1 : 0,
+            ':updated_at' => now_iso(),
+            ':id' => $adminUserId,
+        ]);
+}
+
+function admin_register_failed_login(PDO $pdo, array $admin): array
+{
+    $failureCount = (int) ($admin['login_failure_count'] ?? 0) + 1;
+    $firstFailureAt = (string) ($admin['login_first_failure_at'] ?? '');
+    $now = now_iso();
+    if ($firstFailureAt === '') {
+        $firstFailureAt = $now;
+    }
+    $lockLevel = (int) ($admin['login_lock_level'] ?? 0);
+    $next = [
+        'failure_count' => $failureCount,
+        'first_failure_at' => $firstFailureAt,
+        'last_failure_at' => $now,
+        'locked_until' => null,
+        'lock_level' => $lockLevel,
+        'permanent_locked_at' => $admin['login_permanent_locked_at'] ?? null,
+        'status' => (string) ($admin['status'] ?? 'normal'),
+        'locked' => false,
+        'permanent' => false,
+    ];
+
+    if ($failureCount >= admin_login_account_failure_threshold()) {
+        if ($lockLevel < 1) {
+            $next['failure_count'] = 0;
+            $next['first_failure_at'] = null;
+            $next['locked_until'] = gmdate('c', time() + admin_first_lock_seconds());
+            $next['lock_level'] = 1;
+            $next['locked'] = true;
+        } else {
+            $next['failure_count'] = 0;
+            $next['first_failure_at'] = null;
+            $next['locked_until'] = null;
+            $next['lock_level'] = 2;
+            $next['permanent_locked_at'] = $now;
+            $next['status'] = 'disabled';
+            $next['locked'] = true;
+            $next['permanent'] = true;
+        }
+    }
+
+    $pdo->prepare('UPDATE admin_users SET
+        status = :status,
+        login_failure_count = :login_failure_count,
+        login_first_failure_at = :login_first_failure_at,
+        login_last_failure_at = :login_last_failure_at,
+        login_locked_until = :login_locked_until,
+        login_lock_level = :login_lock_level,
+        login_permanent_locked_at = :login_permanent_locked_at,
+        updated_at = :updated_at
+        WHERE id = :id')
+        ->execute([
+            ':status' => $next['status'],
+            ':login_failure_count' => $next['failure_count'],
+            ':login_first_failure_at' => $next['first_failure_at'],
+            ':login_last_failure_at' => $next['last_failure_at'],
+            ':login_locked_until' => $next['locked_until'],
+            ':login_lock_level' => $next['lock_level'],
+            ':login_permanent_locked_at' => $next['permanent_locked_at'],
+            ':updated_at' => $now,
+            ':id' => (int) $admin['id'],
+        ]);
+
+    return $next;
+}
+
+function serialize_admin_user(array $item, ?PDO $pdo = null): array
+{
+    $roleCodes = admin_role_codes($item);
+    $permissions = admin_permissions($item);
+    $isSuperAdmin = in_array('super_admin', $roleCodes, true);
+    $displayName = trim((string) ($item['display_name'] ?? ''));
+    $staffInvite = trim((string) ($item['staff_invite_code'] ?? ''));
+    return [
+        'id' => (int) $item['id'],
+        'account' => $item['name'],
+        'display_name' => $displayName,
+        'staff_invite_code' => $staffInvite !== '' ? strtoupper($staffInvite) : null,
+        'admin_group_code' => admin_group_code($item) !== '' ? admin_group_code($item) : null,
+        'admin_group_name' => admin_group_name($item) !== '' ? admin_group_name($item) : null,
+        'can_view_group_global_data' => admin_can_view_group_global_data($item),
+        'login_ip_allowlist_enabled' => !empty($item['login_ip_allowlist_enabled']),
+        'login_ip_allowlist' => admin_user_ip_allowlist($item),
+        'status' => (string) $item['status'],
+        'display_status' => admin_effective_status($item),
+        'lock_state' => admin_lock_state($item),
+        'lock_level' => (int) ($item['login_lock_level'] ?? 0),
+        'temporary_locked_until' => admin_temp_locked_until($item),
+        'permanent_locked_at' => !empty($item['login_permanent_locked_at']) ? (string) $item['login_permanent_locked_at'] : null,
+        'role_codes' => $roleCodes,
+        'role_template' => admin_role_template($item, $pdo),
+        'permissions' => $permissions,
+        'module_access' => admin_module_access_from_permissions($permissions, $isSuperAdmin),
+        'is_super_admin' => $isSuperAdmin,
+        'created_by_admin_id' => isset($item['created_by_admin_id']) && $item['created_by_admin_id'] !== null && $item['created_by_admin_id'] !== ''
+            ? (int) $item['created_by_admin_id']
+            : null,
+        'created_by_admin_account' => $item['created_by_admin_account'] ?? null,
+        'created_by_admin_display_name' => $item['created_by_admin_display_name'] ?? null,
+        'parent_admin_id' => isset($item['parent_admin_id']) && $item['parent_admin_id'] !== null && $item['parent_admin_id'] !== ''
+            ? (int) $item['parent_admin_id']
+            : null,
+        'parent_admin_account' => $item['parent_admin_account'] ?? null,
+        'parent_admin_display_name' => $item['parent_admin_display_name'] ?? null,
+        'password_must_change' => !empty($item['password_must_change']),
+        'created_at' => $item['created_at'] ?? null,
+        'updated_at' => $item['updated_at'] ?? null,
+    ];
+}
+
+function normalize_admin_display_name(mixed $raw): string
+{
+    $value = trim((string) $raw);
+
+    return mb_substr($value, 0, 64);
+}
+
+function normalize_admin_staff_invite_code(mixed $raw): ?string
+{
+    $code = trim((string) $raw);
+    if ($code === '') {
+        return null;
+    }
+    if (!preg_match('/^\d{6}$/', $code)) {
+        failure('ADMIN_STAFF_INVITE_CODE_INVALID', 'Staff invite code must be 6 digits');
+    }
+
+    return $code;
+}
+
+function admin_staff_invite_code_taken(PDO $pdo, string $code, ?int $excludeAdminId): bool
+{
+    $inviteCheck = $pdo->prepare('SELECT 1 FROM invitation_codes WHERE code = :code LIMIT 1');
+    $inviteCheck->execute([':code' => $code]);
+    if ($inviteCheck->fetch()) {
+        return true;
+    }
+    $userCheck = $pdo->prepare('SELECT 1 FROM users WHERE invitation_code = :code LIMIT 1');
+    $userCheck->execute([':code' => $code]);
+    if ($userCheck->fetch()) {
+        return true;
+    }
+    $sql = 'SELECT 1 FROM admin_users WHERE staff_invite_code = :code';
+    $params = [':code' => $code];
+    if ($excludeAdminId !== null) {
+        $sql .= ' AND id != :id';
+        $params[':id'] = $excludeAdminId;
+    }
+    $sql .= ' LIMIT 1';
+    $adminCheck = $pdo->prepare($sql);
+    $adminCheck->execute($params);
+
+    return (bool) $adminCheck->fetch();
+}
+
+function generate_admin_staff_invite_code(PDO $pdo, ?int $excludeAdminId = null): string
+{
+    while (true) {
+        $code = (string) random_int(100000, 999999);
+        if (!admin_staff_invite_code_taken($pdo, $code, $excludeAdminId)) {
+            return $code;
+        }
+    }
+}
+
+function ensure_admin_staff_invite_code(PDO $pdo, array &$admin): string
+{
+    $adminId = (int) ($admin['admin_user_id'] ?? $admin['id'] ?? 0);
+    $code = trim((string) ($admin['staff_invite_code'] ?? ''));
+    if ($adminId <= 0) {
+        return preg_match('/^\d{6}$/', $code) ? $code : '';
+    }
+    if (preg_match('/^\d{6}$/', $code)) {
+        return $code;
+    }
+    $code = generate_admin_staff_invite_code($pdo, $adminId);
+    $pdo->prepare('UPDATE admin_users SET staff_invite_code = :code, updated_at = :updated_at WHERE id = :id')
+        ->execute([
+            ':code' => $code,
+            ':updated_at' => now_iso(),
+            ':id' => $adminId,
+        ]);
+    $admin['staff_invite_code'] = $code;
+    return $code;
+}
+
+function admin_visible_admin_ids(PDO $pdo, array $admin): array
+{
+    if (admin_is_root_admin($admin)) {
+        $rows = $pdo->query('SELECT id FROM admin_users ORDER BY id ASC')->fetchAll();
+        return array_map(static fn (array $row): int => (int) $row['id'], $rows);
+    }
+
+    $groupCode = current_admin_group_required($admin);
+    if (admin_is_super_admin($admin) || admin_can_view_group_global_data($admin)) {
+        $stmt = $pdo->prepare('SELECT id FROM admin_users WHERE COALESCE(admin_group_code, "") = :group_code ORDER BY id ASC');
+        $stmt->execute([':group_code' => $groupCode]);
+        return array_map(static fn (array $row): int => (int) $row['id'], $stmt->fetchAll());
+    }
+
+    $rootId = (int) ($admin['admin_user_id'] ?? $admin['id'] ?? 0);
+    if ($rootId <= 0) {
+        return [];
+    }
+
+    $stmt = $pdo->prepare('WITH RECURSIVE admin_tree AS (
+        SELECT id FROM admin_users WHERE id = :root AND COALESCE(admin_group_code, "") = :group_code
+        UNION ALL
+        SELECT a.id FROM admin_users a INNER JOIN admin_tree t ON a.parent_admin_id = t.id
+        WHERE COALESCE(a.admin_group_code, "") = :group_code
+    ) SELECT id FROM admin_tree ORDER BY id ASC');
+    $stmt->execute([':root' => $rootId, ':group_code' => $groupCode]);
+
+    return array_map(static fn (array $row): int => (int) $row['id'], $stmt->fetchAll());
+}
+
+function admin_can_access_admin(PDO $pdo, array $admin, int $targetAdminId): bool
+{
+    if (admin_is_root_admin($admin)) {
+        return true;
+    }
+    return in_array($targetAdminId, admin_visible_admin_ids($pdo, $admin), true);
+}
+
+function admin_user_scope_sql(PDO $pdo, array $admin, string $userAlias = 'u', string $paramPrefix = 'scope_admin'): array
+{
+    if (admin_is_root_admin($admin)) {
+        return ['sql' => '', 'params' => []];
+    }
+
+    $groupCode = current_admin_group_required($admin);
+    if (admin_can_view_group_global_data($admin)) {
+        return [
+            'sql' => "COALESCE({$userAlias}.admin_group_code, '') = :{$paramPrefix}_group_code",
+            'params' => [':' . $paramPrefix . '_group_code' => $groupCode],
+        ];
+    }
+
+    $adminIds = admin_visible_admin_ids($pdo, $admin);
+    if ($adminIds === []) {
+        return ['sql' => '1 = 0', 'params' => []];
+    }
+
+    $seed = [];
+    $params = [];
+    foreach ($adminIds as $idx => $adminId) {
+        $ph = ':' . $paramPrefix . '_' . $idx;
+        $seed[] = $ph;
+        $params[$ph] = $adminId;
+    }
+    $seedSql = implode(', ', $seed);
+
+    return [
+        'sql' => "COALESCE({$userAlias}.admin_group_code, '') = :{$paramPrefix}_group_code AND {$userAlias}.id IN (
+            WITH RECURSIVE visible_users AS (
+                SELECT id FROM users WHERE invited_by_admin_id IN ({$seedSql})
+                UNION ALL
+                SELECT child.id FROM users child INNER JOIN visible_users vu ON child.invited_by_user_id = vu.id
+            ) SELECT id FROM visible_users
+        )",
+        'params' => array_merge($params, [':' . $paramPrefix . '_group_code' => $groupCode]),
+    ];
+}
+
+/** 儀表板區間：以台北日曆日換算為 UTC ISO，供與 VARCHAR created_at 比對 */
+function admin_dashboard_day_range_utc(string $startYmd, string $endYmd): array
+{
+    $tz = new DateTimeZone('Asia/Taipei');
+    $start = DateTime::createFromFormat('Y-m-d', $startYmd, $tz);
+    if (!$start) {
+        $start = new DateTime('today', $tz);
+    }
+    $start->setTime(0, 0, 0);
+    $end = DateTime::createFromFormat('Y-m-d', $endYmd, $tz);
+    if (!$end) {
+        $end = clone $start;
+    }
+    $end->setTime(23, 59, 59);
+    $utc = new DateTimeZone('UTC');
+
+    return [
+        'start_utc' => (clone $start)->setTimezone($utc)->format('c'),
+        'end_utc' => (clone $end)->setTimezone($utc)->format('c'),
+    ];
+}
+
+function admin_dashboard_bind_user_scope(string $scopeSql, string $userAlias = 'u'): string
+{
+    if ($scopeSql === '') {
+        return '';
+    }
+    if ($scopeSql === '1 = 0') {
+        return ' AND 1=0';
+    }
+    if ($userAlias !== 'u') {
+        return ' AND (' . str_replace('u.', $userAlias . '.', $scopeSql) . ')';
+    }
+
+    return ' AND (' . $scopeSql . ')';
+}
+
+function admin_dashboard_count_with_user_scope(
+    PDO $pdo,
+    array $admin,
+    string $sql,
+    array $baseParams = []
+): int {
+    $scope = admin_user_scope_sql($pdo, $admin, 'u');
+    $fullSql = $sql . admin_dashboard_bind_user_scope($scope['sql']);
+    $stmt = $pdo->prepare($fullSql);
+    foreach (array_merge($baseParams, $scope['params']) as $key => $value) {
+        $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+    }
+    $stmt->execute();
+
+    return (int) $stmt->fetchColumn();
+}
+
+function admin_dashboard_sum_approved_usdt_equiv(
+    PDO $pdo,
+    array $admin,
+    string $tableName,
+    string $startUtc,
+    string $endUtc,
+    float $eurPerUsdt
+): string {
+    if (!in_array($tableName, ['deposit_requests', 'withdrawal_requests'], true)) {
+        return '0';
+    }
+    $alias = 'x';
+    $usdtPerEur = $eurPerUsdt > 0 ? (1.0 / $eurPerUsdt) : 0.0;
+    $scope = admin_user_scope_sql($pdo, $admin, 'u');
+    $scopeTail = admin_dashboard_bind_user_scope($scope['sql']);
+    $sql = "SELECT COALESCE(SUM(
+            CASE
+                WHEN UPPER(TRIM({$alias}.asset_code)) = 'USDT' THEN CAST({$alias}.amount AS DECIMAL(36,18))
+                WHEN UPPER(TRIM({$alias}.asset_code)) = 'EUR' THEN CAST({$alias}.amount AS DECIMAL(36,18)) * :eur_to_usdt
+                ELSE CAST({$alias}.amount AS DECIMAL(36,18))
+            END
+        ), 0) AS total
+        FROM {$tableName} {$alias}
+        INNER JOIN users u ON u.id = {$alias}.user_id
+        WHERE {$alias}.status = 'approved'
+        AND {$alias}.created_at >= :range_start
+        AND {$alias}.created_at <= :range_end
+        {$scopeTail}";
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':eur_to_usdt', $usdtPerEur);
+    $stmt->bindValue(':range_start', $startUtc, PDO::PARAM_STR);
+    $stmt->bindValue(':range_end', $endUtc, PDO::PARAM_STR);
+    foreach ($scope['params'] as $key => $value) {
+        $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+    }
+    $stmt->execute();
+    $row = $stmt->fetch();
+    $total = $row ? (string) $row['total'] : '0';
+
+    return number_format((float) $total, 0, '.', '');
+}
+
+function admin_dashboard_trading_orders_count(PDO $pdo, array $admin): int
+{
+    $scope = admin_user_scope_sql($pdo, $admin, 'u');
+    $sql = 'SELECT COUNT(DISTINCT o.id) FROM c2c_orders o
+        INNER JOIN users u ON (u.id = o.buyer_user_id OR u.id = o.seller_user_id)
+        WHERE o.status IN ("pending_payment", "paid_pending_release", "disputed")';
+    $sql .= admin_dashboard_bind_user_scope($scope['sql']);
+    $stmt = $pdo->prepare($sql);
+    foreach ($scope['params'] as $key => $value) {
+        $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+    }
+    $stmt->execute();
+
+    return (int) $stmt->fetchColumn();
+}
+
+function require_admin_can_access_user(PDO $pdo, array $admin, int $userId): void
+{
+    if (admin_can_access_user($pdo, $admin, $userId)) {
+        return;
+    }
+    failure('ADMIN_FORBIDDEN', 'Permission denied');
+}
+
+function admin_can_access_user(PDO $pdo, array $admin, int $userId): bool
+{
+    if (admin_is_root_admin($admin)) {
+        return true;
+    }
+    $scope = admin_user_scope_sql($pdo, $admin, 'u');
+    $stmt = $pdo->prepare('SELECT 1 FROM users u WHERE u.id = :user_id AND ' . $scope['sql'] . ' LIMIT 1');
+    $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+    foreach ($scope['params'] as $key => $value) {
+        $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+    }
+    $stmt->execute();
+    return (bool) $stmt->fetch();
+}
+
+function count_user_downline_members(PDO $pdo, int $rootUserId): int
+{
+    $stmt = $pdo->prepare('WITH RECURSIVE tree AS (
+        SELECT id FROM users WHERE invited_by_user_id = :root
+        UNION ALL
+        SELECT u.id FROM users u INNER JOIN tree t ON u.invited_by_user_id = t.id
+    ) SELECT COUNT(*) FROM tree');
+    $stmt->execute([':root' => $rootUserId]);
+
+    return (int) $stmt->fetchColumn();
+}
+
+/**
+ * @return list<array{id:int, username:string, depth:int, invited_by_user_id:?int, invited_by_admin_id:?int}>
+ */
+function list_user_downline_members(PDO $pdo, int $rootUserId): array
+{
+    $stmt = $pdo->prepare('WITH RECURSIVE tree AS (
+        SELECT id, username, invited_by_user_id, invited_by_admin_id, 1 AS depth FROM users WHERE invited_by_user_id = :root
+        UNION ALL
+        SELECT u.id, u.username, u.invited_by_user_id, u.invited_by_admin_id, t.depth + 1
+        FROM users u INNER JOIN tree t ON u.invited_by_user_id = t.id
+    ) SELECT id, username, invited_by_user_id, invited_by_admin_id, depth FROM tree ORDER BY depth ASC, id ASC');
+    $stmt->execute([':root' => $rootUserId]);
+    $rows = $stmt->fetchAll();
+    $items = [];
+    foreach ($rows as $row) {
+        $items[] = [
+            'id' => (int) $row['id'],
+            'username' => (string) $row['username'],
+            'depth' => (int) $row['depth'],
+            'invited_by_user_id' => $row['invited_by_user_id'] !== null ? (int) $row['invited_by_user_id'] : null,
+            'invited_by_admin_id' => $row['invited_by_admin_id'] !== null ? (int) $row['invited_by_admin_id'] : null,
+        ];
+    }
+
+    return $items;
+}
+
+function format_user_upline_label(
+    ?int $invitedByUserId,
+    ?int $invitedByAdminId,
+    ?string $inviterUsername,
+    ?string $adminDisplayName,
+    ?string $adminAccount
+): string {
+    if ($invitedByAdminId !== null && $invitedByAdminId > 0) {
+        $label = trim((string) ($adminDisplayName !== '' && $adminDisplayName !== null ? $adminDisplayName : ($adminAccount ?? '')));
+
+        return $label !== '' ? ('管理＊' . $label) : '管理＊—';
+    }
+    if ($invitedByUserId !== null && $invitedByUserId > 0 && $inviterUsername !== null && $inviterUsername !== '') {
+        return '会员﹡' . $inviterUsername;
+    }
+
+    return '-';
+}
+
+function normalize_admin_module_access(mixed $value): array
+{
+    if (!is_array($value)) {
+        return [];
+    }
+    $normalized = [];
+    foreach ($value as $moduleKey => $accessLevel) {
+        $module = trim((string) $moduleKey);
+        $level = trim((string) $accessLevel);
+        if ($module === '' || $level === '') {
+            continue;
+        }
+        $normalized[$module] = $level;
+    }
+    return $normalized;
+}
+
+function normalize_admin_role_template(mixed $value, ?PDO $pdo = null): string
+{
+    $template = trim((string) $value);
+    if ($template === '' || $template === 'custom' || $template === 'super_admin') {
+        return $template === 'super_admin' ? 'custom' : ($template ?: 'custom');
+    }
+    $catalog = $pdo ? admin_role_template_all($pdo) : admin_role_template_catalog();
+
+    return array_key_exists($template, $catalog) ? $template : 'custom';
+}
+
+function admin_module_access_from_permissions(array $permissions, bool $isSuperAdmin = false): array
+{
+    $catalog = admin_module_catalog();
+    if ($isSuperAdmin) {
+        return array_fill_keys(array_keys($catalog), 'write');
+    }
+    $lookup = array_fill_keys($permissions, true);
+    $access = [];
+    foreach ($catalog as $moduleKey => $meta) {
+        $hasRead = false;
+        $hasWrite = false;
+        foreach ($meta['permissions'] as $permission) {
+            if (!isset($lookup[$permission])) {
+                continue;
+            }
+            if (str_ends_with($permission, '.write')) {
+                $hasWrite = true;
+            } else {
+                $hasRead = true;
+            }
+        }
+        if ($hasWrite) {
+            $access[$moduleKey] = 'write';
+        } elseif ($hasRead) {
+            $access[$moduleKey] = 'read';
+        }
+    }
+    return $access;
+}
+
+function admin_module_access_within_grant(array $grantAccess, array $requestedAccess): bool
+{
+    foreach ($requestedAccess as $moduleKey => $accessLevel) {
+        $requested = trim((string) $accessLevel);
+        if (!in_array($requested, ['read', 'write'], true)) {
+            return false;
+        }
+        $granted = $grantAccess[$moduleKey] ?? '';
+        if ($granted === 'write') {
+            continue;
+        }
+        if ($granted === 'read' && $requested === 'read') {
+            continue;
+        }
+        return false;
+    }
+
+    return true;
+}
+
+function admin_module_access_within_admin_grant(array $admin, array $requestedAccess): bool
+{
+    $grantAccess = admin_module_access_from_permissions(
+        admin_permissions($admin),
+        in_array('super_admin', admin_role_codes($admin), true)
+    );
+
+    return admin_module_access_within_grant($grantAccess, $requestedAccess);
+}
+
+function require_admin_module_access_within_grant(array $admin, array $requestedAccess): void
+{
+    if (!admin_module_access_within_admin_grant($admin, $requestedAccess)) {
+        failure('ADMIN_PERMISSION_EXCEEDS_GRANT', 'Cannot grant permissions beyond current admin permissions');
+    }
+}
+
+function admin_role_template_owner_sql(array $admin): array
+{
+    $sql = 'created_by_admin_id = :owner_admin_id';
+    if (admin_is_root_admin($admin)) {
+        $sql = '(created_by_admin_id = :owner_admin_id OR created_by_admin_id IS NULL)';
+    }
+
+    return [
+        'sql' => $sql,
+        'params' => [':owner_admin_id' => (int) $admin['admin_user_id']],
+    ];
+}
+
+function admin_permissions_from_access(array $moduleAccess, bool $isSuperAdmin = false): array
+{
+    $catalog = admin_module_catalog();
+    $resolved = [];
+    $accessMap = $isSuperAdmin ? array_fill_keys(array_keys($catalog), 'write') : $moduleAccess;
+    foreach ($accessMap as $moduleKey => $accessLevel) {
+        if (!isset($catalog[$moduleKey])) {
+            continue;
+        }
+        $level = trim((string) $accessLevel);
+        if (!in_array($level, ['read', 'write'], true)) {
+            continue;
+        }
+        foreach ($catalog[$moduleKey]['permissions'] as $permission) {
+            if ($level === 'read' && str_ends_with($permission, '.write')) {
+                continue;
+            }
+            $resolved[$permission] = true;
+        }
+    }
+    return array_keys($resolved);
+}
+
+function admin_required_permissions_for_request(string $path, string $method): array
+{
+    $readWriteMap = [
+        '#^/api/admin/dashboard-summary$#' => ['read' => ['users.read', 'deposits.read', 'withdrawals.read', 'orders.read'], 'write' => []],
+        '#^/api/admin/users(?:/\d+|/batch)?(?:/audit-logs)?$#' => ['read' => ['users.read'], 'write' => ['users.write']],
+        '#^/api/admin/users/\d+/network-members$#' => ['read' => ['users.read'], 'write' => ['users.write']],
+        '#^/api/admin/users/\d+/status$#' => ['write' => ['users.write']],
+        '#^/api/admin/users/\d+/invitation-status$#' => ['write' => ['users.write']],
+        '#^/api/admin/invitations(?:/\d+)?$#' => ['read' => ['invitations.read'], 'write' => ['invitations.write']],
+        '#^/api/admin/users/\d+/invitations$#' => ['write' => ['invitations.write']],
+        '#^/api/admin/invitations/\d+/disable$#' => ['write' => ['invitations.write']],
+        '#^/api/admin/verifications(?:/\d+)?$#' => ['read' => ['auth.read']],
+        '#^/api/admin/users/\d+/wallets(?:/[A-Za-z0-9_\-]+)?(?:/ledger)?$#' => ['read' => ['wallets.read'], 'write' => ['wallets.write']],
+        '#^/api/admin/users/\d+/tier-profile$#' => ['read' => ['tiers.read'], 'write' => ['tiers.write']],
+        '#^/api/admin/tier-templates(?:/\d+)?$#' => ['read' => ['tiers.read'], 'write' => ['tiers.write']],
+        '#^/api/admin/deposit-requests(?:/\d+)?$#' => ['read' => ['deposits.read'], 'write' => ['deposits.write']],
+        '#^/api/admin/deposit-addresses(?:/\d+)?$#' => ['read' => ['deposit_addresses.read'], 'write' => ['deposit_addresses.write']],
+        '#^/api/admin/financial-products(?:/\d+)?$#' => ['read' => ['financial_products.read'], 'write' => ['financial_products.write']],
+        '#^/api/admin/uploads$#' => ['write' => ['deposit_addresses.write', 'home_content.write']],
+        '#^/api/admin/withdrawal-requests(?:/\d+)?$#' => ['read' => ['withdrawals.read'], 'write' => ['withdrawals.write']],
+        '#^/api/admin/withdrawal-settings/eur-swap(?:/(?:copy|history))?$#' => ['read' => ['withdrawals.read'], 'write' => ['withdrawals.write']],
+        '#^/api/admin/orders(?:/\d+)?$#' => ['read' => ['orders.read'], 'write' => ['orders.write']],
+        '#^/api/admin/orders/\d+/(status|release|dispute|evidences)$#' => ['write' => ['orders.write']],
+        '#^/api/admin/financial-subscriptions(?:/\d+)?$#' => ['read' => ['financial_orders.read'], 'write' => ['financial_orders.write']],
+        '#^/api/admin/financial-subscriptions/\d+/(return-policy|return)$#' => ['write' => ['financial_orders.write']],
+        '#^/api/admin/kyc-applications(?:/\d+)?$#' => ['read' => ['kyc.read'], 'write' => ['kyc.write']],
+        '#^/api/admin/payout-methods(?:/\d+)?$#' => ['read' => ['payout_methods.read'], 'write' => ['payout_methods.write']],
+        '#^/api/admin/listings(?:/\d+)?$#' => ['read' => ['listings.read'], 'write' => ['listings.write']],
+        '#^/api/admin/trade-feed-events(?:/(?:random|\d+))?$#' => ['read' => ['trade_feed.read'], 'write' => ['trade_feed.write']],
+        '#^/api/admin/home-content(?:/notice|/banners(?:/\d+)?|/tutorial-links(?:/\d+)?)?$#' => ['read' => ['home_content.read'], 'write' => ['home_content.write']],
+        '#^/api/admin/auth/events(?:/\d+)?$#' => ['read' => ['auth.read']],
+        '#^/api/admin/system/configs(?:/[A-Za-z0-9_\-]+/[A-Za-z0-9_\-]+)?$#' => ['read' => ['system.read'], 'write' => ['system.write']],
+        '#^/api/admin/admin-users(?:/\d+)?(?:/password|/audit-logs|/unlock)?$#' => ['read' => ['admins.read'], 'write' => ['admins.write']],
+        '#^/api/admin/admin-groups(?:/\d+)?$#' => ['read' => ['admins.read'], 'write' => ['admins.write']],
+        '#^/api/admin/role-templates(?:/[a-z0-9_]+)?$#' => ['read' => ['admins.read'], 'write' => ['admins.write']],
+        '#^/api/admin/support-tickets(?:/\d+)?$#' => ['read' => ['system.read'], 'write' => ['system.write']],
+    ];
+
+    $action = in_array($method, ['POST', 'PATCH', 'DELETE'], true) ? 'write' : 'read';
+    foreach ($readWriteMap as $pattern => $permissionMap) {
+        if (preg_match($pattern, $path)) {
+            return $permissionMap[$action] ?? [];
+        }
+    }
+    return [];
+}
+
+function require_admin_request_permission(array $admin, string $path, string $method): void
+{
+    if (admin_is_super_admin($admin)) {
+        return;
+    }
+    $requiredPermissions = admin_required_permissions_for_request($path, $method);
+    if ($requiredPermissions === []) {
+        return;
+    }
+    $grantedPermissions = array_fill_keys(admin_permissions($admin), true);
+    foreach ($requiredPermissions as $permission) {
+        if (isset($grantedPermissions[$permission])) {
+            return;
+        }
+    }
+    failure('ADMIN_FORBIDDEN', 'Permission denied');
+}
+
+function require_admin(PDO $pdo): array
+{
+    enforce_admin_ip_allowlist();
+    $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    if (!preg_match('/Bearer\s+(.+)/i', $header, $matches)) {
+        failure('ADMIN_UNAUTHORIZED', 'Unauthorized');
+    }
+
+    $token = trim($matches[1]);
+    $stmt = $pdo->prepare('SELECT t.*, a.name, a.email, a.display_name, a.staff_invite_code, a.status, a.role_codes, a.permissions, a.admin_group_code, a.admin_group_name, a.can_view_group_global_data, a.login_ip_allowlist_enabled, a.login_ip_allowlist, a.created_by_admin_id, a.parent_admin_id, a.password_must_change
+        FROM admin_tokens t
+        JOIN admin_users a ON a.id = t.admin_user_id
+        WHERE t.token = :token AND t.revoked_at IS NULL');
+    $stmt->execute([':token' => $token]);
+    $admin = $stmt->fetch();
+
+    if (!$admin) {
+        failure('ADMIN_TOKEN_INVALID', 'Admin token is invalid');
+    }
+
+    if (strtotime((string) $admin['expires_at']) < time()) {
+        failure('ADMIN_TOKEN_EXPIRED', 'Admin token is expired');
+    }
+
+    if (($admin['status'] ?? '') !== 'normal') {
+        failure('ADMIN_ACCOUNT_LOCKED', 'Admin account is locked');
+    }
+    enforce_admin_user_ip_allowlist($admin);
+    ensure_admin_staff_invite_code($pdo, $admin);
+
+    $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+    $requestMethod = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+    $passwordAllowedPaths = ['/api/admin/auth/me', '/api/admin/auth/logout', '/api/admin/auth/password'];
+    if (!empty($admin['password_must_change']) && !in_array($requestPath, $passwordAllowedPaths, true)) {
+        failure('ADMIN_PASSWORD_CHANGE_REQUIRED', 'Password change required', null, 403);
+    }
+    require_admin_request_permission($admin, $requestPath, $requestMethod);
+
+    return $admin;
+}
+
+function json_bool(mixed $value): bool
+{
+    return filter_var($value, FILTER_VALIDATE_BOOL);
+}
+
+
 function normalize_mobile(string $mobile): ?array
 {
     $mobile = preg_replace('/[\s\-()]/', '', trim($mobile));
@@ -3734,6 +5130,70 @@ function ensure_wallet_balance(PDO $pdo, int $userId, string $walletCode, string
         ':created_at' => $now,
         ':updated_at' => $now,
     ]);
+}
+
+function default_user_wallets(): array
+{
+    return [
+        ['wallet_code' => 'cash_usdt', 'currency_code' => 'USDT'],
+        ['wallet_code' => 'eur', 'currency_code' => 'EUR'],
+        ['wallet_code' => 'eur_reserved', 'currency_code' => 'EUR'],
+        ['wallet_code' => 'cny', 'currency_code' => 'CNY'],
+    ];
+}
+
+function initialize_user_defaults(PDO $pdo, int $userId): void
+{
+    if ($userId <= 0) {
+        return;
+    }
+
+    foreach (default_user_wallets() as $wallet) {
+        ensure_wallet_balance($pdo, $userId, (string) $wallet['wallet_code'], (string) $wallet['currency_code']);
+    }
+
+    $tierStmt = $pdo->prepare('SELECT id FROM user_tier_profiles WHERE user_id = :user_id LIMIT 1');
+    $tierStmt->execute([':user_id' => $userId]);
+    if ($tierStmt->fetch()) {
+        return;
+    }
+
+    $now = now_iso();
+    $pdo->prepare('INSERT INTO user_tier_profiles (
+        user_id, level, group_code, score, merchant_enabled, is_verified, daily_trade_limit,
+        min_sell_amount, margin_amount, margin_ratio, risk_status, violation_message, created_at, updated_at
+    ) VALUES (
+        :user_id, 1, :group_code, 30, 0, 0, :daily_trade_limit,
+        "0.00000000", "0.00000000", "0.0000", "normal", null, :created_at, :updated_at
+    )')->execute([
+        ':user_id' => $userId,
+        ':group_code' => tier_group_code_for_level(1),
+        ':daily_trade_limit' => tier_daily_sell_limit_for_level(1),
+        ':created_at' => $now,
+        ':updated_at' => $now,
+    ]);
+}
+
+function backfill_missing_user_defaults(PDO $pdo): void
+{
+    if (!db_table_has_column($pdo, 'user_wallet_balances', 'wallet_code') || !db_table_has_column($pdo, 'user_tier_profiles', 'user_id')) {
+        return;
+    }
+
+    $defaultWalletCodes = array_map(static fn (array $wallet): string => (string) $wallet['wallet_code'], default_user_wallets());
+    $placeholders = implode(',', array_fill(0, count($defaultWalletCodes), '?'));
+    $stmt = $pdo->prepare("SELECT u.id, MAX(CASE WHEN t.user_id IS NULL THEN 1 ELSE 0 END) AS tier_missing
+        FROM users u
+        LEFT JOIN user_tier_profiles t ON t.user_id = u.id
+        LEFT JOIN user_wallet_balances w ON w.user_id = u.id AND w.wallet_code IN ({$placeholders})
+        GROUP BY u.id
+        HAVING tier_missing = 1 OR COUNT(DISTINCT w.wallet_code) < ?");
+    $params = array_merge($defaultWalletCodes, [count($defaultWalletCodes)]);
+    $stmt->execute($params);
+    $userIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    foreach ($userIds as $userId) {
+        initialize_user_defaults($pdo, (int) $userId);
+    }
 }
 
 function c2c_fiat_wallet_meta(string $fiatCode): array
@@ -5194,15 +6654,18 @@ if (($path === '/index.php/api/user/payout-methods' || $path === '/api/user/payo
 
     $maskedAccount = $accountNo !== '' && mb_strlen($accountNo) > 4 ? str_repeat('*', max(0, mb_strlen($accountNo) - 4)) . mb_substr($accountNo, -4) : $accountNo;
     $now = now_iso();
+    $initialStatus = $channelType === 'bank' ? 'approved' : 'pending';
+    $reviewedAt = $channelType === 'bank' ? $now : null;
     $pdo->prepare('INSERT INTO user_payout_methods (
         user_id, channel_type, status, bank_name, account_holder, account_no_masked, usdt_network,
         payout_address, pix_key, is_default, review_note, reviewed_by_admin_id, reviewed_at, created_at, updated_at
     ) VALUES (
-        :user_id, :channel_type, "pending", :bank_name, :account_holder, :account_no_masked, :usdt_network,
-        :payout_address, :pix_key, :is_default, null, null, null, :created_at, :updated_at
+        :user_id, :channel_type, :status, :bank_name, :account_holder, :account_no_masked, :usdt_network,
+        :payout_address, :pix_key, :is_default, null, null, :reviewed_at, :created_at, :updated_at
     )')->execute([
         ':user_id' => (int) $user['user_id'],
         ':channel_type' => $channelType,
+        ':status' => $initialStatus,
         ':bank_name' => $bankName !== '' ? $bankName : null,
         ':account_holder' => $accountHolder !== '' ? $accountHolder : null,
         ':account_no_masked' => $maskedAccount !== '' ? $maskedAccount : null,
@@ -5210,6 +6673,7 @@ if (($path === '/index.php/api/user/payout-methods' || $path === '/api/user/payo
         ':payout_address' => $payoutAddress !== '' ? $payoutAddress : null,
         ':pix_key' => $pixKey !== '' ? $pixKey : null,
         ':is_default' => $isDefault,
+        ':reviewed_at' => $reviewedAt,
         ':created_at' => $now,
         ':updated_at' => $now,
     ]);
@@ -5986,6 +7450,7 @@ if (($path === '/index.php/api/user/orders' || $path === '/api/user/orders') && 
                 FROM c2c_orders
                 WHERE seller_user_id = :seller_user_id
                   AND side = "sell"
+                  AND status <> "cancelled"
                   AND created_at >= :day_start
                   AND created_at <= :day_end');
             $dailySellCountStmt->execute([
@@ -9021,6 +10486,7 @@ if (preg_match('#^/api/admin/users/(\d+)/wallets$#', $path, $matches) && $method
     if (!$userStmt->fetch()) {
         failure('ADMIN_USER_NOT_FOUND', 'User not found');
     }
+    initialize_user_defaults($pdo, $userId);
     $stmt = $pdo->prepare('SELECT wallet_code, currency_code, available_balance, reserved_balance, updated_at
         FROM user_wallet_balances
         WHERE user_id = :user_id
@@ -9083,6 +10549,7 @@ if (preg_match('#^/api/admin/users/(\d+)/wallets/([A-Za-z0-9_\-]+)$#', $path, $m
     $admin = require_admin($pdo);
     $userId = (int) $matches[1];
     require_admin_can_access_user($pdo, $admin, $userId);
+    initialize_user_defaults($pdo, $userId);
     $walletCode = $matches[2];
     $operation = trim((string) ($input['operation'] ?? ''));
     $amount = trim((string) ($input['amount'] ?? ''));
@@ -9443,11 +10910,12 @@ if ($path === '/api/admin/deposit-requests' && $method === 'GET') {
         $item['user_id'] = (int) $item['user_id'];
         $item['admin_group_code'] = normalize_admin_group_code($item['admin_group_code'] ?? '') ?: null;
         $item['admin_group'] = group_label_from_code($item['admin_group_code'] ?? null);
-        return $item;
+        return localize_timestamps_on_row($item, ['created_at', 'reviewed_at']);
     }, $stmt->fetchAll());
 
     success('ADMIN_DEPOSIT_REQUESTS_SUCCESS', 'ok', [
         'items' => $items,
+        'timezone' => request_timezone(),
         'pagination' => [
             'page' => $page,
             'page_size' => $pageSize,
@@ -9473,7 +10941,8 @@ if (preg_match('#^/api/admin/deposit-requests/(\d+)$#', $path, $matches) && $met
     $requestItem['id'] = (int) $requestItem['id'];
     $requestItem['user_id'] = (int) $requestItem['user_id'];
     $requestItem['reviewed_by_admin_id'] = $requestItem['reviewed_by_admin_id'] !== null ? (int) $requestItem['reviewed_by_admin_id'] : null;
-    success('ADMIN_DEPOSIT_REQUEST_DETAIL_SUCCESS', 'ok', ['request' => $requestItem]);
+    $requestItem = localize_timestamps_on_row($requestItem, ['created_at', 'reviewed_at', 'updated_at']);
+    success('ADMIN_DEPOSIT_REQUEST_DETAIL_SUCCESS', 'ok', ['request' => $requestItem, 'timezone' => request_timezone()]);
 }
 
 if (preg_match('#^/api/admin/deposit-requests/(\d+)$#', $path, $matches) && $method === 'PATCH') {
@@ -9605,11 +11074,12 @@ if ($path === '/api/admin/withdrawal-requests' && $method === 'GET') {
         $item['admin_group_code'] = normalize_admin_group_code($item['admin_group_code'] ?? '') ?: null;
         $item['admin_group'] = group_label_from_code($item['admin_group_code'] ?? null);
         $item['remark'] = derive_withdrawal_remark($item);
-        return $item;
+        return localize_timestamps_on_row($item, ['created_at', 'reviewed_at']);
     }, $stmt->fetchAll());
 
     success('ADMIN_WITHDRAWAL_REQUESTS_SUCCESS', 'ok', [
         'items' => $items,
+        'timezone' => request_timezone(),
         'pagination' => [
             'page' => $page,
             'page_size' => $pageSize,
@@ -9638,7 +11108,8 @@ if (preg_match('#^/api/admin/withdrawal-requests/(\d+)$#', $path, $matches) && $
     $requestItem['payout_method_id'] = $requestItem['payout_method_id'] !== null ? (int) $requestItem['payout_method_id'] : null;
     $requestItem['reviewed_by_admin_id'] = $requestItem['reviewed_by_admin_id'] !== null ? (int) $requestItem['reviewed_by_admin_id'] : null;
     $requestItem['remark'] = derive_withdrawal_remark($requestItem);
-    success('ADMIN_WITHDRAWAL_REQUEST_DETAIL_SUCCESS', 'ok', ['request' => $requestItem]);
+    $requestItem = localize_timestamps_on_row($requestItem, ['created_at', 'reviewed_at', 'updated_at']);
+    success('ADMIN_WITHDRAWAL_REQUEST_DETAIL_SUCCESS', 'ok', ['request' => $requestItem, 'timezone' => request_timezone()]);
 }
 
 if (preg_match('#^/api/admin/withdrawal-requests/(\d+)$#', $path, $matches) && $method === 'PATCH') {
@@ -9830,11 +11301,12 @@ if ($path === '/api/admin/orders' && $method === 'GET') {
         $item['merchant_user_id'] = $merchantUserId;
         $item['merchant_source'] = ((string) ($item['side'] ?? '') === 'buy') ? $item['seller_source'] : $item['buyer_source'];
         unset($item['buyer_invited_by_admin_id'], $item['seller_invited_by_admin_id']);
-        return $item;
+        return localize_timestamps_on_row($item, ['created_at']);
     }, $stmt->fetchAll());
 
     success('ADMIN_ORDERS_SUCCESS', 'ok', [
         'items' => $items,
+        'timezone' => request_timezone(),
         'pagination' => [
             'page' => $page,
             'page_size' => $pageSize,
@@ -9867,6 +11339,7 @@ if (preg_match('#^/api/admin/orders/(\d+)$#', $path, $matches) && $method === 'G
     $order['merchant_user_id'] = ((string) ($order['side'] ?? '') === 'buy') ? (int) $order['seller_user_id'] : (int) $order['buyer_user_id'];
     $order['merchant_source'] = ((string) ($order['side'] ?? '') === 'buy') ? $order['seller_source'] : $order['buyer_source'];
     unset($order['buyer_invited_by_admin_id'], $order['seller_invited_by_admin_id']);
+    $order = localize_timestamps_on_row($order, ['created_at', 'updated_at', 'completed_at']);
     $evidenceStmt = $pdo->prepare('SELECT id, actor_type, actor_id, evidence_type, content, attachment_url, created_at
         FROM order_evidences
         WHERE order_id = :order_id
@@ -9877,8 +11350,9 @@ if (preg_match('#^/api/admin/orders/(\d+)$#', $path, $matches) && $method === 'G
         'evidences' => array_map(static function (array $item): array {
             $item['id'] = (int) $item['id'];
             $item['actor_id'] = $item['actor_id'] !== null ? (int) $item['actor_id'] : null;
-            return $item;
+            return localize_timestamps_on_row($item, ['created_at']);
         }, $evidenceStmt->fetchAll()),
+        'timezone' => request_timezone(),
     ]);
 }
 
@@ -10586,7 +12060,7 @@ if ($path === '/api/admin/payout-methods' && $method === 'GET') {
     $total = (int) $countStmt->fetchColumn();
 
     $offset = ($page - 1) * $pageSize;
-    $stmt = $pdo->prepare("SELECT p.id, p.user_id, u.username, u.email, u.mobile_e164, u.invitation_code, u.admin_group_code, p.channel_type, p.status, p.bank_name, p.account_no_masked, p.usdt_network, p.payout_address, p.is_default, p.created_at, p.reviewed_at
+    $stmt = $pdo->prepare("SELECT p.id, p.user_id, u.username, u.email, u.mobile_e164, u.invitation_code, u.admin_group_code, p.channel_type, p.status, p.bank_name, p.account_holder, p.account_no_masked, p.usdt_network, p.payout_address, p.pix_key, p.is_default, p.created_at, p.reviewed_at
         FROM user_payout_methods p
         JOIN users u ON u.id = p.user_id
         {$whereSql}
@@ -10643,12 +12117,6 @@ if (preg_match('#^/api/admin/payout-methods/(\d+)$#', $path, $matches) && $metho
     $methodId = (int) $matches[1];
     $action = trim((string) ($input['action'] ?? ''));
     $reason = trim((string) ($input['reason'] ?? ''));
-    if (!in_array($action, ['approve', 'reject', 'disable'], true)) {
-        failure('ADMIN_PAYOUT_METHOD_ACTION_INVALID', 'Payout method action is invalid');
-    }
-    if ($reason === '') {
-        failure('ADMIN_REASON_REQUIRED', 'Reason is required');
-    }
 
     $stmt = $pdo->prepare('SELECT * FROM user_payout_methods WHERE id = :id LIMIT 1');
     $stmt->execute([':id' => $methodId]);
@@ -10657,6 +12125,63 @@ if (preg_match('#^/api/admin/payout-methods/(\d+)$#', $path, $matches) && $metho
         failure('ADMIN_PAYOUT_METHOD_NOT_FOUND', 'Payout method not found');
     }
     require_admin_can_access_user($pdo, $admin, (int) $methodItem['user_id']);
+
+    if ($action === '') {
+        $channelType = (string) ($methodItem['channel_type'] ?? '');
+        $bankName = trim((string) ($input['bank_name'] ?? ($methodItem['bank_name'] ?? '')));
+        $accountHolder = trim((string) ($input['account_holder'] ?? ($methodItem['account_holder'] ?? '')));
+        $accountNo = trim((string) ($input['account_no_masked'] ?? ($methodItem['account_no_masked'] ?? '')));
+        $usdtNetwork = trim((string) ($input['usdt_network'] ?? ($methodItem['usdt_network'] ?? '')));
+        $payoutAddress = trim((string) ($input['payout_address'] ?? ($methodItem['payout_address'] ?? '')));
+        $pixKey = trim((string) ($input['pix_key'] ?? ($methodItem['pix_key'] ?? '')));
+
+        if ($channelType === 'bank' && ($bankName === '' || $accountHolder === '' || $accountNo === '')) {
+            failure('ADMIN_INVALID_PARAMS', 'Bank name, account holder and account number are required');
+        }
+        if ($channelType === 'usdt' && $payoutAddress === '') {
+            failure('ADMIN_INVALID_PARAMS', 'USDT payout address is required');
+        }
+        if ($channelType === 'pix' && $pixKey === '') {
+            failure('ADMIN_INVALID_PARAMS', 'PIX key is required');
+        }
+
+        $now = now_iso();
+        $pdo->prepare('UPDATE user_payout_methods
+            SET bank_name = :bank_name,
+                account_holder = :account_holder,
+                account_no_masked = :account_no_masked,
+                usdt_network = :usdt_network,
+                payout_address = :payout_address,
+                pix_key = :pix_key,
+                updated_at = :updated_at
+            WHERE id = :id')
+            ->execute([
+                ':bank_name' => $bankName !== '' ? $bankName : null,
+                ':account_holder' => $accountHolder !== '' ? $accountHolder : null,
+                ':account_no_masked' => $accountNo !== '' ? $accountNo : null,
+                ':usdt_network' => $usdtNetwork !== '' ? $usdtNetwork : null,
+                ':payout_address' => $payoutAddress !== '' ? $payoutAddress : null,
+                ':pix_key' => $pixKey !== '' ? $pixKey : null,
+                ':updated_at' => $now,
+                ':id' => $methodId,
+            ]);
+        audit($pdo, 'admin', 'payout_method_edited', 'admin', (int) $admin['admin_user_id'], 'payout_method', $methodId, $reason, null, [
+            'bank_name' => $bankName,
+            'account_holder' => $accountHolder,
+            'account_no_masked' => $accountNo,
+            'usdt_network' => $usdtNetwork,
+            'payout_address' => $payoutAddress,
+            'pix_key' => $pixKey,
+        ]);
+        success('ADMIN_PAYOUT_METHOD_UPDATED', 'ok', []);
+    }
+
+    if (!in_array($action, ['approve', 'reject', 'disable'], true)) {
+        failure('ADMIN_PAYOUT_METHOD_ACTION_INVALID', 'Payout method action is invalid');
+    }
+    if ($reason === '') {
+        failure('ADMIN_REASON_REQUIRED', 'Reason is required');
+    }
 
     $nextStatus = match ($action) {
         'approve' => 'approved',

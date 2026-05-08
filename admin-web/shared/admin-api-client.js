@@ -13,6 +13,16 @@
     ADMIN_PASSWORD_CHANGE_REQUIRED: "此後台帳號首次登入需先修改密碼，完成後才能使用此功能。"
   };
 
+  function getDeviceTimezone() {
+    try {
+      if (window.Intl && window.Intl.DateTimeFormat) {
+        var timezone = window.Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return typeof timezone === "string" ? timezone.trim() : "";
+      }
+    } catch (e) {}
+    return "";
+  }
+
   var endpointByView = {
     dashboard: "/api/admin/auth/events?page=1&page_size=5",
     users: "/api/admin/users?page=1&page_size=10",
@@ -40,6 +50,8 @@
     options = options || {};
     token = window.localStorage.getItem(tokenKey) || "";
     var headers = { "Content-Type": "application/json" };
+    var timezone = getDeviceTimezone();
+    if (timezone) headers["X-Timezone"] = timezone;
     if (token && !options.skipAuth) headers.Authorization = "Bearer " + token;
     return fetch(adminClientApiBaseUrl() + path, {
       method: options.method || "GET",

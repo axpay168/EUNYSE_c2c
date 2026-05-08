@@ -259,7 +259,6 @@
     var group = item && item.admin_group ? item.admin_group : null;
     var name = String((group && group.name) || (item && item.admin_group_name) || "").trim();
     var code = String((group && group.code) || (item && item.admin_group_code) || "").trim();
-    if (name && code && name !== code) return name + "（" + code + "）";
     return name || code || "—";
   }
 

@@ -5938,6 +5938,20 @@
     return "其他方式";
   }
 
+  function payoutMethodEditField(name, label, value, placeholder) {
+    return (
+      '<label class="admin-field" style="min-width:180px;flex:1 1 180px"><span>' +
+      esc(label) +
+      '</span><input class="admin-input" name="' +
+      esc(name) +
+      '" value="' +
+      esc(value || "") +
+      '" placeholder="' +
+      esc(placeholder || "") +
+      '"/></label>'
+    );
+  }
+
   function aggregatePayoutMethodsByUser(items) {
     var byUser = {};
     items.forEach(function (it) {
@@ -5973,7 +5987,7 @@
     return list;
   }
 
-  function renderPayoutMethodCards(items) {
+  function renderPayoutMethodCards(items, userId) {
     if (!items.length) return '<div class="admin-muted">此用戶暫無收款方式。</div>';
     return items
       .map(function (it) {
@@ -5990,18 +6004,78 @@
         var netLine = it.usdt_network
           ? '<div class="admin-cell-sub">網路：' + esc(chainNetworkLabelZh(it.usdt_network)) + "</div>"
           : "";
+        var holderLine = it.account_holder
+          ? '<div class="admin-cell-sub">戶名：' + esc(it.account_holder) + "</div>"
+          : "";
+        var pixLine = it.pix_key
+          ? '<div class="admin-cell-sub mono">PIX：' + esc(it.pix_key) + "</div>"
+          : "";
+        var editFields =
+          ch === "bank"
+            ? payoutMethodEditField("bank_name", "銀行", it.bank_name, "銀行名稱") +
+              payoutMethodEditField("account_holder", "戶名", it.account_holder, "收款戶名") +
+              payoutMethodEditField("account_no_masked", "卡號", it.account_no_masked, "銀行帳號")
+            : ch === "usdt"
+              ? payoutMethodEditField("usdt_network", "網路", it.usdt_network, "TRC20 / ERC20") +
+                payoutMethodEditField("payout_address", "地址", it.payout_address, "鏈上地址")
+              : payoutMethodEditField("pix_key", "PIX", it.pix_key, "PIX key");
         return (
           '<div class="admin-card" style="margin-bottom:10px">' +
-          "<div><div>" +
+          "<div><div><strong>" +
           esc(payoutMethodCardTitle(it)) +
-          "</div>" +
-          (ch === "bank" ? bankLine + accountLine : addrLine + netLine) +
+          "</strong></div>" +
+          (ch === "bank" ? bankLine + holderLine + accountLine : ch === "usdt" ? addrLine + netLine : pixLine) +
           '<div class="admin-cell-sub mono">方式 ID：' +
           esc(it.id) +
-          "</div></div></div>"
+          '</div></div><form data-pm-edit-form data-pm-id="' +
+          esc(it.id) +
+          '" data-pm-user-id="' +
+          esc(userId || it.user_id || "") +
+          '" style="margin-top:12px"><div class="admin-filters" style="gap:10px;margin:0">' +
+          editFields +
+          '<button type="submit" class="admin-btn admin-btn--primary admin-btn--sm">保存</button></div><p class="admin-footnote" data-pm-save-message style="margin:8px 0 0"></p></form></div>'
         );
       })
       .join("");
+  }
+
+  function bindPayoutDetailEditor() {
+    var cardsEl = document.getElementById("view-pm-detail-cards");
+    if (!cardsEl || cardsEl.dataset.pmEditBound === "1") return;
+    cardsEl.dataset.pmEditBound = "1";
+    cardsEl.addEventListener("submit", function (e) {
+      var form = e.target && e.target.closest ? e.target.closest("[data-pm-edit-form]") : null;
+      if (!form || !cardsEl.contains(form)) return;
+      e.preventDefault();
+      if (!api()) return;
+      var methodId = form.getAttribute("data-pm-id");
+      var userId = form.getAttribute("data-pm-user-id");
+      var msg = form.querySelector("[data-pm-save-message]");
+      var submitBtn = form.querySelector('button[type="submit"]');
+      var body = {};
+      Array.prototype.forEach.call(form.querySelectorAll("input[name]"), function (input) {
+        body[input.name] = String(input.value || "").trim();
+      });
+      if (msg) msg.textContent = "保存中…";
+      if (submitBtn) submitBtn.disabled = true;
+      api()
+        .requestJson("/api/admin/payout-methods/" + encodeURIComponent(methodId), {
+          method: "PATCH",
+          body: body,
+          fallbackMessage: "保存收款資料失敗"
+        })
+        .then(function () {
+          if (msg) msg.textContent = "已保存";
+          if (userId) openPayoutUserDetailModal(userId);
+          loadViewPayoutMethods();
+        })
+        .catch(function (err) {
+          if (msg) msg.textContent = (err && err.message) || "保存失敗";
+        })
+        .finally(function () {
+          if (submitBtn) submitBtn.disabled = false;
+        });
+    });
   }
 
   function openPayoutUserDetailModal(userId) {
@@ -6010,6 +6084,7 @@
     var bodyEl = document.getElementById("view-pm-detail-body");
     var sumEl = document.getElementById("view-pm-detail-summary");
     var cardsEl = document.getElementById("view-pm-detail-cards");
+    bindPayoutDetailEditor();
     if (emptyEl) emptyEl.style.display = "";
     if (bodyEl) bodyEl.style.display = "none";
     if (emptyEl) emptyEl.textContent = "載入中…";
@@ -6035,7 +6110,7 @@
             esc(addressCount) +
             "</strong> 個";
         }
-        if (cardsEl) cardsEl.innerHTML = renderPayoutMethodCards(items);
+        if (cardsEl) cardsEl.innerHTML = renderPayoutMethodCards(items, userId);
         if (emptyEl) emptyEl.style.display = "none";
         if (bodyEl) bodyEl.style.display = "";
         if (window.AdminModals && window.AdminModals.open) {

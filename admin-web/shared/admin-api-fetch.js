@@ -22,6 +22,16 @@
     }
   }
 
+  function getDeviceTimezone() {
+    try {
+      if (window.Intl && window.Intl.DateTimeFormat) {
+        var timezone = window.Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return typeof timezone === "string" ? timezone.trim() : "";
+      }
+    } catch (e) {}
+    return "";
+  }
+
   var ADMIN_ERROR_MESSAGES = {
     ADMIN_INVALID_PARAMS: "請確認輸入資料是否完整。",
     ADMIN_UNAUTHORIZED: "請先登入後台。",
@@ -74,6 +84,8 @@
     options = options || {};
     var method = options.method || "GET";
     var headers = Object.assign({}, options.headers || {});
+    var timezone = getDeviceTimezone();
+    if (timezone && !headers["X-Timezone"] && !headers["x-timezone"]) headers["X-Timezone"] = timezone;
     var token = getToken();
     if (!options.skipAuth && token) headers.Authorization = "Bearer " + token;
     if (options.body != null && !headers["Content-Type"]) {

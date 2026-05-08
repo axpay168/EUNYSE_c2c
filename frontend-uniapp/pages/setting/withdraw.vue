@@ -43,13 +43,25 @@
           </div>
 
           <div id="fiat-bank-selected" :class="selectedBank ? '' : 'hidden'" v-show="selectedBank">
-            <div class="rounded-[18px] border-2 border-primary/35 bg-gradient-to-br from-white to-surface-container-low/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+            <div class="selected-bank-card">
               <div class="flex flex-wrap items-center gap-2">
-                <span id="fiat-bank-name" class="font-headline text-base font-bold">{{ selectedBank ? selectedBank.name : '—' }}</span>
+                <span class="bank-card-title">已選擇收款銀行</span>
                 <span id="fiat-bank-default-badge" class="rounded-md bg-primary-container/80 px-2 py-0.5 text-[10px] font-bold text-primary-dim" :class="{ hidden: !selectedBank || !selectedBank.default }">預設</span>
               </div>
-              <p id="fiat-bank-holder" class="mt-1 text-sm text-on-surface">{{ selectedBank ? selectedBank.holder : '—' }}</p>
-              <p id="fiat-bank-iban" class="mt-2 font-mono text-xs tracking-wide text-on-surface-variant">{{ selectedBank ? selectedBank.iban : '—' }}</p>
+              <div class="mt-3 space-y-2">
+                <div class="bank-info-row">
+                  <span>戶名</span>
+                  <strong id="fiat-bank-holder">{{ selectedBank ? selectedBank.holder : '—' }}</strong>
+                </div>
+                <div class="bank-info-row">
+                  <span>銀行名</span>
+                  <strong id="fiat-bank-name">{{ selectedBank ? selectedBank.name : '—' }}</strong>
+                </div>
+                <div class="bank-info-row">
+                  <span>銀行帳號</span>
+                  <strong id="fiat-bank-iban" class="font-mono tracking-wide">{{ selectedBank ? selectedBank.iban : '—' }}</strong>
+                </div>
+              </div>
             </div>
             <button type="button" id="open-bank-picker-change" class="mt-3 w-full rounded-xl border border-outline-variant/30 bg-white py-2.5 text-sm font-bold text-primary-dim transition-colors hover:bg-surface-container-low" @click="showModal">選擇其他銀行</button>
           </div>
@@ -98,36 +110,54 @@
     </main>
 
     <Nc2cCenterSheet :visible.sync="modalOpen" title="選擇收款銀行" title-id="bank-picker-title">
-      <p class="mt-2 text-sm leading-relaxed text-slate-600">僅展示已驗證帳戶，選擇後於提現頁只顯示該筆資料。</p>
+      <div class="bank-picker-shell">
+        <p class="bank-picker-desc">請選擇本次提現要使用的銀行帳戶，確認後提現頁只會帶入該筆收款資料。</p>
       <a
         href="#/pages/setting/bindinfo"
-        class="mt-3 flex w-full items-center justify-center rounded-2xl border-2 border-primary/30 bg-primary/5 py-3 text-sm font-bold text-primary-dim shadow-sm transition-colors hover:bg-primary/10"
+        class="bank-picker-add-btn"
         @click="hideModal"
-      >新增銀行</a>
-      <div id="bank-picker-list" class="mt-4 max-h-[min(52vh,360px)] space-y-2 overflow-y-auto">
-        <p v-if="!banks.length" class="py-8 text-center text-sm text-on-surface-variant">尚無已審核銀行帳戶，請先新增銀行並等待平台審核。</p>
+      >
+        <span class="material-symbols-outlined text-[18px]">add_card</span>
+        <span>新增銀行</span>
+      </a>
+      <div id="bank-picker-list" class="bank-picker-list">
+        <p v-if="!banks.length" class="rounded-2xl border border-dashed border-slate-300 bg-white/70 px-4 py-8 text-center text-sm text-on-surface-variant">尚未綁定銀行帳戶，請先新增銀行。</p>
         <button
           v-for="b in banks"
           :key="b.id"
           type="button"
-          class="bank-pick w-full rounded-2xl p-4 text-left transition-colors"
-          :class="pendingId === b.id ? 'bank-pick--selected border-2 border-primary bg-sky-50 ring-2 ring-primary/25 shadow-sm' : 'border border-slate-300/90 bg-white hover:bg-slate-50'"
+          class="bank-pick"
+          :class="{ 'bank-pick--selected': pendingId === b.id }"
           :data-id="b.id"
           @click="pendingId = b.id"
         >
-          <div class="min-w-0">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="font-headline text-base font-bold text-slate-900">{{ b.name }}</span>
-              <span v-if="b.default" class="rounded-md border border-primary/35 bg-white px-2 py-0.5 text-[10px] font-bold text-primary-dim shadow-sm">預設</span>
+          <div class="bank-pick-head">
+            <div>
+              <span class="bank-pick-title">銀行收款帳戶</span>
+              <span v-if="b.default" class="bank-pick-badge">預設</span>
             </div>
-            <p class="mt-1 text-sm font-medium text-slate-700">{{ b.holder }}</p>
-            <p class="mt-2 font-mono text-[13px] leading-snug tracking-wide text-slate-800">{{ b.iban }}</p>
+            <span class="bank-pick-radio" aria-hidden="true"></span>
+          </div>
+          <div class="bank-pick-fields">
+            <div class="bank-pick-field">
+              <span>戶名</span>
+              <strong>{{ b.holder }}</strong>
+            </div>
+            <div class="bank-pick-field">
+              <span>銀行名</span>
+              <strong>{{ b.name }}</strong>
+            </div>
+            <div class="bank-pick-field">
+              <span>銀行帳號</span>
+              <strong class="font-mono tracking-wide">{{ b.iban }}</strong>
+            </div>
           </div>
         </button>
       </div>
       <div class="mt-5 flex gap-3">
         <button type="button" id="bank-picker-cancel" class="flex-1 rounded-full border-2 border-slate-300 bg-white py-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50" @click="hideModal">取消</button>
         <button type="button" id="bank-picker-confirm" class="bank-picker-confirm-btn flex-1 rounded-full py-3 text-sm font-bold text-white shadow-[0_10px_22px_rgba(47,115,205,0.35)]" @click="confirmPicker">確定</button>
+      </div>
       </div>
     </Nc2cCenterSheet>
 
@@ -327,6 +357,184 @@ export default {
 
 <style scoped>
 /* 銀行選擇彈窗：與全域 preview 按鈕覆寫脫鉤，確保主按鈕與選中列對比足夠 */
+.selected-bank-card {
+  border: 1.5px solid rgba(47, 115, 205, 0.34);
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 248, 255, 0.96)),
+    radial-gradient(circle at top right, rgba(59, 154, 232, 0.15), transparent 40%);
+  box-shadow: 0 14px 30px rgba(29, 80, 135, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  padding: 16px;
+}
+.bank-card-title {
+  color: #0f2742;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+}
+.bank-info-row {
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+.bank-info-row span {
+  color: #64748b;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+}
+.bank-info-row strong {
+  color: #0f172a;
+  flex: 1 1 auto;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: right;
+  word-break: break-word;
+}
+.bank-picker-shell {
+  margin-top: 8px;
+}
+.bank-picker-desc {
+  background: linear-gradient(135deg, rgba(239, 248, 255, 0.95), rgba(255, 255, 255, 0.96));
+  border: 1px solid rgba(47, 115, 205, 0.14);
+  border-radius: 16px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.65;
+  padding: 12px 14px;
+}
+.bank-picker-add-btn {
+  align-items: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(238, 247, 255, 0.96));
+  border: 1.5px solid rgba(47, 115, 205, 0.24);
+  border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(29, 80, 135, 0.08);
+  color: #1e5cad;
+  display: flex;
+  font-size: 14px;
+  font-weight: 800;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 12px 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  width: 100%;
+}
+.bank-picker-add-btn:hover {
+  background: #f8fbff;
+  box-shadow: 0 12px 28px rgba(29, 80, 135, 0.12);
+  transform: translateY(-1px);
+}
+.bank-picker-list {
+  margin-top: 14px;
+  max-height: min(52vh, 380px);
+  overflow-y: auto;
+  padding: 2px 2px 4px;
+}
+.bank-pick {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.98)),
+    radial-gradient(circle at top right, rgba(59, 154, 232, 0.1), transparent 38%);
+  border: 1.5px solid rgba(148, 163, 184, 0.34);
+  border-radius: 20px;
+  box-shadow: 0 12px 28px rgba(15, 39, 66, 0.08);
+  display: block;
+  margin-bottom: 10px;
+  padding: 14px;
+  text-align: left;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+  width: 100%;
+}
+.bank-pick:hover {
+  border-color: rgba(47, 115, 205, 0.38);
+  box-shadow: 0 16px 32px rgba(29, 80, 135, 0.12);
+  transform: translateY(-1px);
+}
+.bank-pick--selected {
+  background:
+    linear-gradient(135deg, rgba(239, 248, 255, 0.98), rgba(255, 255, 255, 0.98)),
+    radial-gradient(circle at top right, rgba(59, 154, 232, 0.18), transparent 44%);
+  border-color: #2f73cd;
+  box-shadow: 0 16px 36px rgba(47, 115, 205, 0.18), 0 0 0 3px rgba(47, 115, 205, 0.12);
+}
+.bank-pick-head {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+.bank-pick-title {
+  color: #0f2742;
+  font-size: 14px;
+  font-weight: 900;
+}
+.bank-pick-badge {
+  background: #ffffff;
+  border: 1px solid rgba(47, 115, 205, 0.28);
+  border-radius: 999px;
+  color: #1e5cad;
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 900;
+  margin-left: 8px;
+  padding: 2px 8px;
+}
+.bank-pick-radio {
+  border: 2px solid rgba(100, 116, 139, 0.36);
+  border-radius: 999px;
+  flex: 0 0 18px;
+  height: 18px;
+  position: relative;
+  width: 18px;
+}
+.bank-pick--selected .bank-pick-radio {
+  border-color: #2f73cd;
+}
+.bank-pick--selected .bank-pick-radio::after {
+  background: #2f73cd;
+  border-radius: 999px;
+  content: "";
+  height: 8px;
+  left: 3px;
+  position: absolute;
+  top: 3px;
+  width: 8px;
+}
+.bank-pick-fields {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.bank-pick-field {
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 9px 11px;
+}
+.bank-pick-field span {
+  color: #64748b;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 800;
+}
+.bank-pick-field strong {
+  color: #0f172a;
+  flex: 1 1 auto;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: right;
+  word-break: break-word;
+}
 .bank-picker-confirm-btn {
   background: linear-gradient(135deg, #3b9ae8, #1e5cad) !important;
   color: #ffffff !important;

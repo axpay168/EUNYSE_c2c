@@ -128,14 +128,13 @@
       </div>
     </div>
 
-    <div class="overlay" :class="{ open: showPostRegisterModal }" id="postRegisterModal" @click.self="showPostRegisterModal = false">
-      <div class="sheet">
-        <div style="font-size:20px;font-weight:700;" id="bindTitle">{{ texts.bindTitle }}</div>
-        <p style="font-size:14px;line-height:1.6;color:#5f7594;margin:10px 0 0;" id="bindBody">{{ texts.bindBody }}</p>
-        <div class="modal-row">
-          <button class="modal-btn secondary" id="bindLaterBtn" type="button" @click="onBindLater">{{ texts.bindLater }}</button>
-          <button class="modal-btn primary" id="bindNowBtn" type="button" @click="onBindNow">{{ texts.bindNow }}</button>
+    <div class="register-success-overlay" :class="{ open: showRegisterSuccessModal }" id="registerSuccessModal">
+      <div class="register-success-dialog">
+        <div class="register-success-icon" aria-hidden="true">
+          <span class="material-symbols-outlined">check</span>
         </div>
+        <h2>{{ registerSuccessTitle }}</h2>
+        <p>{{ registerLoggingInPrefix }}<strong>{{ loginCountdown }}</strong></p>
       </div>
     </div>
 
@@ -238,6 +237,8 @@ var TEXTS = {
     passwordMismatch: "兩次輸入的密碼不一致",
     agreementRequired: "請先勾選用戶協議與隱私政策",
     registerSuccess: "註冊資料驗證完成。",
+    registerDoneTitle: "註冊成功",
+    loggingInPrefix: "正在登入中",
     registerFailed: "註冊失敗，請稍後再試。",
     languageTitle: "語言",
     bindTitle: "註冊成功！",
@@ -275,6 +276,8 @@ var TEXTS = {
     passwordMismatch: "两次输入的密码不一致",
     agreementRequired: "请先勾选用户协议与隐私政策",
     registerSuccess: "注册资料验证完成。",
+    registerDoneTitle: "注册成功",
+    loggingInPrefix: "正在登入中",
     registerFailed: "注册失败，请稍后再试。",
     languageTitle: "语言",
     bindTitle: "注册成功！",
@@ -312,6 +315,8 @@ var TEXTS = {
     passwordMismatch: "Passwords do not match",
     agreementRequired: "Please agree to the terms first",
     registerSuccess: "Registration validated.",
+    registerDoneTitle: "Registration successful",
+    loggingInPrefix: "Logging in ",
     registerFailed: "Registration failed. Please try again later.",
     languageTitle: "Language",
     bindTitle: "Registration Success!",
@@ -392,6 +397,8 @@ export default {
       successMessage: "",
       errorShow: false,
       successShow: false,
+      showRegisterSuccessModal: false,
+      loginCountdown: 2,
       showPostRegisterModal: false,
       showBiometricModal: false,
       showLangOverlay: false,
@@ -410,6 +417,15 @@ export default {
         if (LANGS[i].value === self.currentLang) { hit = LANGS[i]; break; }
       }
       return hit || LANGS[0];
+    },
+    registerSuccessTitle: function () {
+      if (this.currentLang === "zh-Hans") return "注册成功";
+      if (this.currentLang === "zh-Hant") return "註冊成功";
+      return "Registration successful";
+    },
+    registerLoggingInPrefix: function () {
+      if (this.currentLang === "zh-Hans" || this.currentLang === "zh-Hant") return "正在登入中";
+      return "Logging in ";
     }
   },
   watch: {
@@ -470,6 +486,7 @@ export default {
       window.__eurforexAreaPickerOnSelect = this.__prevAreaPickerOnSelect;
     }
     if (this.__onLangChange) window.removeEventListener("app:langchange", this.__onLangChange);
+    if (this.__registerLoginTimer) clearTimeout(this.__registerLoginTimer);
   },
   methods: {
     loadAreaPickerScript: function () {
@@ -559,6 +576,18 @@ export default {
         window.location.href = "#/pages/index/index";
       }, 500);
     },
+    showRegisterCountdown: function () {
+      var self = this;
+      if (this.__registerLoginTimer) clearTimeout(this.__registerLoginTimer);
+      this.loginCountdown = 2;
+      this.showRegisterSuccessModal = true;
+      this.__registerLoginTimer = setTimeout(function () {
+        self.loginCountdown = 1;
+        self.__registerLoginTimer = setTimeout(function () {
+          self.finalizeRegister();
+        }, 1000);
+      }, 1000);
+    },
     handleRegister: function () {
       this.clearStatus();
 
@@ -609,7 +638,7 @@ export default {
           assignRandomAvatarForUser(self.pendingRegisterAccount);
           try { sessionStorage.setItem("preview_register_payload", JSON.stringify(payload)); } catch (e) {}
           self.showSuccess(texts.registerSuccess);
-          self.showPostRegisterModal = true;
+          self.showRegisterCountdown();
         })
         .catch(function (error) {
           self.showError(localizedRegisterError(error, self.currentLang, texts.registerFailed));
@@ -651,4 +680,78 @@ export default {
 @import url("../../static/previews/nc2c/css/preview-entry.css");
 @import url("../../static/previews/nc2c/css/page-register.css");
 
+.register-success-overlay {
+  align-items: center;
+  background: rgba(9, 25, 43, 0.42);
+  backdrop-filter: blur(10px);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  opacity: 0;
+  padding: 24px;
+  pointer-events: none;
+  position: fixed;
+  transition: opacity 0.18s ease;
+  z-index: 120;
+}
+.register-success-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.register-success-dialog {
+  align-items: center;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(236, 248, 255, 0.98)),
+    radial-gradient(circle at top right, rgba(65, 184, 255, 0.2), transparent 42%);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 28px;
+  box-shadow: 0 28px 70px rgba(9, 35, 68, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  color: #10243f;
+  display: flex;
+  flex-direction: column;
+  max-width: 340px;
+  padding: 28px 26px 26px;
+  text-align: center;
+  transform: translateY(8px) scale(0.98);
+  transition: transform 0.18s ease;
+  width: min(86vw, 340px);
+}
+.register-success-overlay.open .register-success-dialog {
+  transform: translateY(0) scale(1);
+}
+.register-success-icon {
+  align-items: center;
+  background: linear-gradient(135deg, #4bb7ff, #1f68d7);
+  border-radius: 999px;
+  box-shadow: 0 12px 24px rgba(47, 115, 205, 0.3);
+  color: #ffffff;
+  display: flex;
+  height: 52px;
+  justify-content: center;
+  margin-bottom: 14px;
+  width: 52px;
+}
+.register-success-icon .material-symbols-outlined {
+  font-size: 30px;
+  font-weight: 800;
+}
+.register-success-dialog h2 {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+.register-success-dialog p {
+  color: #5b7190;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.6;
+  margin: 10px 0 0;
+}
+.register-success-dialog strong {
+  color: #1f68d7;
+  font-size: 20px;
+  font-weight: 900;
+  margin-left: 2px;
+}
 </style>
